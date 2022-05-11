@@ -1,0 +1,27 @@
+First prototype tool that can calculate wp formulas
+
+Results: wp(C)(f)
+
+Inputs:
+C Probabilistic Programm
+f (post) expectation
+k (Co-domain expectations)
+m (Co-domain variables)
+sigma (Var, initial state) 
+
+Steps:
+1. We need a parser  for the formula and evaluation 
+(https://mathparser.org/) or check further online
+<dependency>
+   <groupid>org.mariuszgromada.math</groupid>
+   <artifactid>MathParser.org-mXparser</artifactid>
+   <version>5.0.2</version>
+</dependency>
+
+
+Output: Stdout (for the beginning)
+
+2. Test formulas from presentation (perhaps limit by boolean 0,1)
+
+3. Call again
+
