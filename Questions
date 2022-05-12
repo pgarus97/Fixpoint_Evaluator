@@ -1,7 +1,7 @@
 Questions:
 
 Can a command start with an if clause? 
-Like C = if(x<5){x=x+1}else{x=x-1} => because we dont have assigned any value to x yet, correct?
+Like C = if(x<5){x=x+1}else{x=x-1} => because we dont have assigned any value to x yet, right?
 so wp[C] can only be calculated in this case if if would be something like C1;C2 where C1 = x := 3 and C2 = if(x<5){x=x+1}else{x=x-1}
 
 Can we have multiple variables in the postexpectation?
