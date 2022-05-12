@@ -3,7 +3,20 @@ Questions:
 Can a command start with an if clause? 
 Like C = if(x<5){x=x+1}else{x=x-1} => because we dont have assigned any value to x yet, right?
 so wp[C] can only be calculated in this case if if would be something like C1;C2 where C1 = x := 3 and C2 = if(x<5){x=x+1}else{x=x-1}
+=> we would need a fixed variable assignment for that which is basically sigma right? Can we do that? Or is it supposed to be "open" and not defined?
+
 
 Can we have multiple variables in the postexpectation?
 What would C1;C2 with C1 = x:= 3 and C2 = y:=4 with f1 = x^2 and f2= x^2+y look like?
 wp[C](f1) would be 9 and wp[C](f2) would be 13?
+
+Should make this program specifically for "our" usage with the MV Algebras etc.? Because then I need to write an own Parser etc.
+(Now I use a library that calculates formulas, but it does not support truncated addition and so on)
+
+What is the end-purpose of this software? Should it be able to calculate the lower bounds of wp-while-formulas via our Upside Down technique?
+Should it do so on concrete values or abstract ones? Or should it just be able to perform a couple of handpicked examples? 
+
+Should we choose a fixed limit for the Co-Domains k & m? (not so important at the moment in the beginning)
+
+//we want to show a candidate for a lower bound; in other words because "I" is the smallest fixpoint, does our technique work for that
+smallest fixpoint?

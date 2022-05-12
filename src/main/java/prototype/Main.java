@@ -34,7 +34,8 @@ public class Main {
 		System.out.println("wp["+C+"]("+f+")" );	
 		
 		if(C.startsWith(" if ")) {
-			System.out.println("Enter conditional if"); 
+			//conditional process
+			System.out.println("Enter conditional process"); 
 
 			String condition = C.substring(C.indexOf("(")+1,C.indexOf(")"));
 			System.out.println("Conditional: "+condition); 
@@ -79,68 +80,31 @@ public class Main {
 			String resultC1 = wp(C1,f);
 			String resultC2 = wp(C2,f);
 			System.out.println("Breaking down into: if("+condition+") then "+ resultC1 +" else "+ resultC2); 
-			//TODO no idea what happens in this case. Like page 10 but no x to evaluate phi
 			String result = "if("+condition+","+ resultC1 + "," + resultC2 + ")";
 
 			return result;
 		}
 		
 		else if(C.contains(";")) {
-			System.out.println("Enter sequential if"); 
+			//sequential process
+			System.out.println("Enter sequential process"); 
 
 			String C1 = C.substring(0, C.indexOf(";")-1);
 			String C2 = C.substring(C.indexOf(";")+1);
 			System.out.println("Breaking down into: wp["+C1+"](wp["+C2+"]("+f+"))"); 
 			return wp(C1,(wp(C2,f)));
 		}else {
-			// TODO probably need new assignment functionality as variables need to be stored separately to access f
-			// TODO wp[x=x+1](x^2) should result in (x+1)^2 String without calculation.
-			// TODO calculation should only happen if we have a non dependent assignment
-			// TODO on lowest recursion point we need to merge and fix together the strings that we will return later as result of wp
-		
-			//TODO check here if variable contains only numbers x = 5 or also dependent variables. Actually maybe not, just string it together somehow?
-			
+			//variable assignments
+					
+			//TODO cutC disregards multiple variables like y = 4 and x = 4 is the same and will both be substituted
+			//TODO perhaps check what variables are defined in f and then use those in cutC?
+			C = C.replace(" ", "");
+			String indexC = C.substring(0,1);
 			String cutC = C.substring(C.indexOf("=")+1);
-			String result = f.replace("x", "("+cutC+")");
+			String result = f.replace(indexC, "("+cutC+")");
 			System.out.println(result);
 			return result;
 		}
 	}
 	
-	// C = x:=...
-	//Example:  C: x=5 ; f: x^2
-	public static int assignment(String C, String f) {
-		Argument x = new Argument(C);
-		Expression e = new Expression(f, x);
-		return (int) e.calculate();
-	}
-	
-	// C = if (phi) { C1 } else { C2 }
-	// Expression e = new Expression("if(sin(x) > 5, 1, 0)", x);
-	//if(x,y,z) if x then y else z
-	public static int conditional() {
-		int result=0;
-		Argument x = new Argument("x = 5");
-		Expression e = new Expression("sin(x)", x);
-		e.calculate();
-		return result;
-	}
-	
-	// C = C1 ; C2
-	public static int consecutive() {
-		int result=0;
-		Argument x = new Argument("x = 5");
-		Expression e = new Expression("sin(x)", x);
-		e.calculate();
-		return result;
-	}
-	
-	// C = { C1 } [p] { C2 }
-	public static int probability() {
-		int result=0;
-		Argument x = new Argument("x = 5");
-		Expression e = new Expression("sin(x)", x);
-		e.calculate();
-		return result;
-	}
 }
