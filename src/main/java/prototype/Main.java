@@ -49,7 +49,7 @@ public class Main {
 			int bracketCount = 1;
 			String C1 = "";
 			String tempC1 = C.substring(C.indexOf("{")+1);
-			//TODO makea separate method for getInsideBracket(String)
+			//TODO make a separate method for getInsideBracket(String)
 			for(int i = 0; i < tempC1.length(); i++) {
 				char character = tempC1.charAt(i);
 				if(character == '{') {

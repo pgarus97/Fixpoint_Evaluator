@@ -3,20 +3,45 @@ Questions:
 Can a command start with an if clause? 
 Like C = if(x<5){x=x+1}else{x=x-1} => because we dont have assigned any value to x yet, right?
 so wp[C] can only be calculated in this case if if would be something like C1;C2 where C1 = x := 3 and C2 = if(x<5){x=x+1}else{x=x-1}
-=> we would need a fixed variable assignment for that which is basically sigma right? Can we do that? Or is it supposed to be "open" and not defined?
+=> we would need a fixed variable assignment from the beginning on which is "sigma".
+Can we do that? Or is it supposed to be "open" and not defined?
+In that case the result would be dependent on some variables like wp[C](f) = x^2 + 2x+ 1 or something. Instead of a concrete value. 
 
-
-Can we have multiple variables in the postexpectation?
-What would C1;C2 with C1 = x:= 3 and C2 = y:=4 with f1 = x^2 and f2= x^2+y look like?
-wp[C](f1) would be 9 and wp[C](f2) would be 13?
-
-Should make this program specifically for "our" usage with the MV Algebras etc.? Because then I need to write an own Parser etc.
-(Now I use a library that calculates formulas, but it does not support truncated addition and so on)
 
 What is the end-purpose of this software? Should it be able to calculate the lower bounds of wp-while-formulas via our Upside Down technique?
-Should it do so on concrete values or abstract ones? Or should it just be able to perform a couple of handpicked examples? 
+Should it do so on concrete values or abstract ones? Or should it just be able to perform a couple of handpicked examples 
+(like the while loop from the presentation that we have discussed)? 
 
-Should we choose a fixed limit for the Co-Domains k & m? (not so important at the moment in the beginning)
+Should make this program specifically for "our" usage with the MV Algebras etc.? 
+Because then I need to write an own Parser etc.
+(Now I use a library that calculates formulas, but it does not support truncated addition and so on)
+
+For the implementation of the while-loop: We need the lfp X or at least the lower bound I. What would be the best
+way to determine something like this? For example Prof. König said that we would need to recalculate the lfp for the loop
+if we restrict the x with 3 in the example. Can this be computed somehow/ are there known algorithms for this
+/how do you proceed with something like this? 
+Or is it something we would give as an input? 
+Fixpointiteration? 
+f (⊥), f (f (⊥)), f^3(⊥), . . . bis die Folge stationär wird, d.h., f^i(⊥) = f^i+1(⊥). 
+Man erhält dadurch den kleinsten Fixpunkt.
+Unser Bottom Element wäre dann: konstante 0 Funktion, egal welcher State => 0.
+=> wie würde man das machen?
+
+What are the next steps with the proofs and with the software?
+
+Should we choose a fixed limit for the Co-Domains k & m? 
+or make it variable for the user to input? 
+(not so important at the moment in the beginning)
+
+TODO 
+focus on while loop implementation
+implement sigma input = how many variables ? 
+
+
 
 //we want to show a candidate for a lower bound; in other words because "I" is the smallest fixpoint, does our technique work for that
 smallest fixpoint?
+
+Understanding: Can we have multiple variables in the postexpectation?
+What would C1;C2 with C1 = x:= 3 and C2 = y:=4 with f1 = x^2 and f2= x^2+y look like?
+wp[C](f1) would be 9 and wp[C](f2) would be 13?
