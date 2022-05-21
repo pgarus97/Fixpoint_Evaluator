@@ -19,9 +19,12 @@ class MainTest {
 	@Test
 	void testProbability() {
 		
-		//probability 
-		assert Main.calculation(Main.wp("{x=5}[4/5]{x=10})","x^2")).equals("40.0");
-		assert Main.calculation(Main.wp("{skip}[1/2]{x=x+2})","x")).equals("1/2 * x + 0.5 * (x+2)");
+		//probability with initial assignment x=5
+		assert Main.calculation(Main.wp("{x=5}[4/5]{x=10}","x^2")).equals("40.0");
+		assert Main.calculation(Main.wp("x=5;{x=5}[4/5]{x=10}","x^2")).equals("40.0");
+		assert Main.calculation(Main.wp("{skip}[1/2]{x=x+2}","x")).equals("1/2 * x + 0.5 * (x+2)");
+		assert Main.calculation(Main.wp("x=5;{skip}[1/2]{x=x+2}","x")).equals("6.0");
+
 	}
 	
 	@Test

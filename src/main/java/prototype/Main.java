@@ -13,12 +13,24 @@ public class Main {
 	    Scanner input = new Scanner(System.in);
 
 	    //get inputs from console
+	    System.out.print("Enter initial variable assignments: (Multiple possible: e.g. 'x=5;y=3;z=2");
+	    String sigma = input.nextLine();
+	    if(sigma.isEmpty()) {
+	    	//throw expection;
+	    	System.out.println("You have to input an initial variable assignment");
+	    	return;
+	    }
+	    
 	    System.out.print("Enter C: ");
 	    String C = input.nextLine();
 	    System.out.print("Enter f: ");
 	    String f = input.nextLine();
-	    
+	    C = sigma+C;
+
+
 		System.out.println("wp["+C+"]("+f+") =" );
+		//Variables variables = new Variables(inputtedVariables);
+		//append variables C1 = x=5 etc. as C1;C2;C3;C
 		System.out.println(wp(C,f));
 	}
 	
