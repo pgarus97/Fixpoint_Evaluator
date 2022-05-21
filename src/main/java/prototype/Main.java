@@ -3,19 +3,21 @@ package prototype;
 import java.util.HashMap;
 import java.util.Scanner;
 
-import org.mariuszgromada.math.mxparser.Argument;
 import org.mariuszgromada.math.mxparser.Expression;
+//Parser Documentation: https://github.com/mariuszgromada/MathParser.org-mXparser
 
 public class Main {
 
-//Parser Documentation: https://github.com/mariuszgromada/MathParser.org-mXparser
+static HashMap<String, String> variables = new HashMap<String,String>();
 	
+
+
 	public static void main(String[] args) {
 	    Scanner input = new Scanner(System.in);
 
 	    //get inputs from console
-	    System.out.print("Enter initial variable assignments: (Multiple possible: e.g. 'x=5;y=3;z=2");
-	    String sigma = input.nextLine();
+	    System.out.print("Enter initial variable assignments: (Multiple possible: e.g. 'x=5,y=3,z=2");
+	    String sigma = input.nextLine()+',';
 	    if(sigma.isEmpty()) {
 	    	//throw exception;
 	    	System.out.println("You have to input an initial variable assignment");
@@ -26,13 +28,17 @@ public class Main {
 	    String C = input.nextLine();
 	    System.out.print("Enter f: ");
 	    String f = input.nextLine();
-	    C = sigma+C;
 
 	    //TODO new persistent variable implementation
-	    HashMap<String, String> variables = new HashMap<String,String>();
+	    //TODO check last value empty , index
+	    sigma = sigma.replace(" ", "");
+	    for(int i=0; i < sigma.length(); i++) {
+	    	String variableName = C.substring(0,1);
+			String variableValue = C.substring(C.indexOf("=")+1,C.indexOf(','));
+			variables.put(variableName,variableValue);
+			sigma = sigma.substring(variableValue.length());
+	    }
 		System.out.println("wp["+C+"]("+f+") =" );
-		//Variables variables = new Variables(inputtedVariables);
-		//append variables C1 = x=5 etc. as C1;C2;C3;C
 		System.out.println(wp(C,f));
 	}
 	
@@ -157,6 +163,37 @@ public class Main {
 				//variable assignments
 				System.out.println("Enter assignment process"); 
 				
+				if(C.startsWith("skip")){
+					for(int i=0; i < f.length(); i++) {
+						char varName = f.charAt(i);
+						if(variables.containsKey(Character.toString(varName))) {
+							f = f.replace(Character.toString(varName), "("+variables.get(Character.toString(varName))+")");
+						}
+					}
+					String result = C.replace("skip", f);
+					System.out.println(result);
+					return result;
+				}else {
+					//updates variable values on assignment
+					String varName = C.substring(0,1); 
+					String assignExp = C.substring(C.indexOf("=")+1); 
+					if(variables.containsKey(varName)) {
+						Expression calculatedValue = new Expression (assignExp.replace(varName,variables.get(varName)));
+						variables.put(varName,Double.toString(calculatedValue.calculate())); 
+
+						String result = f.replace(varName, "("+variables.get(varName)+")");
+						System.out.println(result);
+						return result;
+					}else {
+						//throw exception
+						System.out.println("There is an unknown variable assignment");
+						//else it would also be possible to create a new variable.
+						return null;
+					}
+					/* Old assignment from behind
+					 * //variable assignments
+				System.out.println("Enter assignment process"); 
+				
 				if(C.contains("skip")){
 					String result = C.replace("skip", f);
 					System.out.println(result);
@@ -168,12 +205,22 @@ public class Main {
 					System.out.println(result);
 					return result;
 				}
+					 */
+					
+				}
 				
 			}
 		
 		}
 		
 	}	
-		
+	
+	public static HashMap<String, String> getVariables() {
+		return variables;
+	}
+
+	public static void setVariables(HashMap<String, String> variables) {
+		Main.variables = variables;
+	}	
 	
 }

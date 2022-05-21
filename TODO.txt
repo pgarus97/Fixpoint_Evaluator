@@ -25,3 +25,14 @@ Output: Stdout (for the beginning)
 
 3. Call again
 
+
+BIG TODO:
+1) DONE New Sequential System with prior parsing check 
+2) New Variable System with persistent variables 
+=> fix variable substitution order
+=> fix variable flush for testing
+=> need more concrete examples for working out the variable assignment problem
+3) While Loop implementation 
+4) More test cases
+5) User Interface implementation
+
