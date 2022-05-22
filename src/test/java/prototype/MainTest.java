@@ -38,7 +38,7 @@ class MainTest {
 		assert Main.calculation(Main.wp("{x=5}[4/5]{x=10}","x^2")).equals("40.0");
 		//TODO why does this work? => f is already 36 on entry of first variables
 		assert Main.calculation(Main.wp("{x=5}[4/5]{x=10};x=6","x^2")).equals("36.0");
-		assert Main.calculation(Main.wp("{skip}[1/2]{x=x+2}","x")).equals("1.0");
+		assert Main.calculation(Main.wp("x=0;y=0;{skip}[1/2]{x=x+2}","x")).equals("1.0");
 		assert Main.calculation(Main.wp("x=5;{skip}[1/2]{x=x+2}","x")).equals("6.0");
 
 		//two problems: variables dont flush 

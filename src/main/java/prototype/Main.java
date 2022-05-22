@@ -16,8 +16,9 @@ static HashMap<String, String> variables = new HashMap<String,String>();
 	    Scanner input = new Scanner(System.in);
 
 	    //get inputs from console
-	    System.out.print("Enter initial variable assignments: (Multiple possible: e.g. 'x=5,y=3,z=2");
-	    String sigma = input.nextLine()+',';
+	    System.out.print("Enter initial variable assignments: (Multiple possible: e.g. 'x=5;y=3;z=2");
+	    String sigma = input.nextLine()+';';
+
 	    if(sigma.isEmpty()) {
 	    	//throw exception;
 	    	System.out.println("You have to input an initial variable assignment");
@@ -28,16 +29,19 @@ static HashMap<String, String> variables = new HashMap<String,String>();
 	    String C = input.nextLine();
 	    System.out.print("Enter f: ");
 	    String f = input.nextLine();
+	    C = sigma+C;
 
 	    //TODO new persistent variable implementation
 	    //TODO check last value empty , index
-	    sigma = sigma.replace(" ", "");
+	    /*sigma = sigma.replace(" ", "");
 	    for(int i=0; i < sigma.length(); i++) {
 	    	String variableName = C.substring(0,1);
 			String variableValue = C.substring(C.indexOf("=")+1,C.indexOf(','));
 			variables.put(variableName,variableValue);
 			sigma = sigma.substring(variableValue.length());
-	    }
+	    }*/
+	    
+	    
 		System.out.println("wp["+C+"]("+f+") =" );
 		System.out.println(wp(C,f));
 	}
@@ -161,7 +165,7 @@ static HashMap<String, String> variables = new HashMap<String,String>();
 				
 			}else {
 				//variable assignments
-				System.out.println("Enter assignment process"); 
+				/*System.out.println("Enter assignment process"); 
 				
 				if(C.startsWith("skip")){
 					for(int i=0; i < f.length(); i++) {
@@ -189,9 +193,9 @@ static HashMap<String, String> variables = new HashMap<String,String>();
 						System.out.println("There is an unknown variable assignment");
 						//else it would also be possible to create a new variable.
 						return null;
-					}
-					/* Old assignment from behind
-					 * //variable assignments
+					}*/
+					 //Old assignment from behind
+					 //variable assignments
 				System.out.println("Enter assignment process"); 
 				
 				if(C.contains("skip")){
@@ -205,15 +209,15 @@ static HashMap<String, String> variables = new HashMap<String,String>();
 					System.out.println(result);
 					return result;
 				}
-					 */
 					
-				}
-				
+					
 			}
-		
+			
 		}
+	
+	}
 		
-	}	
+		
 	
 	public static HashMap<String, String> getVariables() {
 		return variables;
