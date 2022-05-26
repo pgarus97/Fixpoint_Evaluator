@@ -1,0 +1,13 @@
+{x=x+1}[1/2]{c=0}
+if(c=1,1/2*0+1/2*x,x)
+
+if(c=1,1/2 * if(c=1,0,(x+1)) + 0.5 * if((0)=1,0,x),x) 
+= X^2 ; needs to be surrounded with yet another if c=1,...,..
+
+With new double if X^3:
+1/2 * if(c=1,1/2 * if(c=1,0,((x+1)+1)) + 0.5 * if((0)=1,0,(x+1)),(x+1)) + 0.5 * if((0)=1,1/2 * if((0)=1,0,(x+1)) + 0.5 * if((0)=1,0,x),x)
+
+WORKS!!!, need to always first calculate theoretically , then insert our sigma as a new C= x=1;c=1
+
+if(c=1,1/2 * if(c=1,1/2 * if(c=1,0,((x+1)+1)) + 0.5 * if((0)=1,0,(x+1)),(x+1)) + 0.5 * if((0)=1,1/2 * if((0)=1,0,(x+1)) + 0.5 * if((0)=1,0,x),x),x)
+ 

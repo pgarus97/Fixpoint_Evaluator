@@ -40,7 +40,7 @@ public JTextArea result = new JTextArea();
 	    JLabel Fdesc = new JLabel("Input the postexpectation (f) here:");
 	    Fdesc.setBounds(200,0,200, 20);
 	    JTextField F = new JTextField();
-	    F.setBounds(200,20,50, 20);
+	    F.setBounds(200,20,200, 20);
 	    
 	    JLabel sigmaDesc = new JLabel("Enter initial variable assignments: (Multiple possible: e.g. 'x=5;y=3;z=2')");
 	    sigmaDesc.setBounds(5,50,400, 20);
@@ -59,7 +59,7 @@ public JTextArea result = new JTextArea();
 	    frame.add(sigma);
 	    frame.add(calcButton);
 	    
-	    result.setBounds(10,200 ,500, 400); 
+	    result.setBounds(10,200 ,800, 400); 
 	    result.setEditable(false);
 	    frame.add(result);
 	    
