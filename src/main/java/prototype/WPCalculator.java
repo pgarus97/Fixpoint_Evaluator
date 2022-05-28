@@ -34,17 +34,17 @@ public JTextArea result = new JTextArea();
 	    
 	    JLabel Cdesc = new JLabel("Input the Program (C) here:");
 	    Cdesc.setBounds(5,0,170, 20);
-	    JTextField C = new JTextField();
+	    final JTextField C = new JTextField();
 	    C.setBounds(5,20,170, 20);
 	    
 	    JLabel Fdesc = new JLabel("Input the postexpectation (f) here:");
 	    Fdesc.setBounds(200,0,200, 20);
-	    JTextField F = new JTextField();
+	    final JTextField F = new JTextField();
 	    F.setBounds(200,20,200, 20);
 	    
 	    JLabel sigmaDesc = new JLabel("Enter initial variable assignments: (Multiple possible: e.g. 'x=5;y=3;z=2')");
 	    sigmaDesc.setBounds(5,50,400, 20);
-	    JTextField sigma = new JTextField();
+	    final JTextField sigma = new JTextField();
 	    sigma.setBounds(5,70,400, 20);
 
 	    JButton calcButton = new JButton("Calculate!");
@@ -189,19 +189,22 @@ public JTextArea result = new JTextArea();
 				String resultC1 = wp(probC1,f);
 				String resultC2 = wp(probC2,f);
 				result.setText(result.getText() + "\n" + "Probability process. Breaking down into: "+probability+" * "+ resultC1 +" + "+ negProbability.calculate() +" * "+ resultC2); 
-				String result = probability+" * "+resultC1+" + "+negProbability.calculate()+" * "+resultC2;
+				String result = "("+probability+" * "+resultC1+" + "+negProbability.calculate()+" * "+resultC2+")";
 
 				return result;
 			}
 			else if(C.startsWith("while")){
 				//while process TODO
+				//TODO implement sigma forward parsing? then we could check condition before doing fixpoint iteration for performance boost
+				//TODO try first how fast it grows
 				System.out.println("Enter while process"); 
 				String condition = C.substring(C.indexOf("(")+1,C.indexOf(")"));
 				System.out.println("Condition: "+condition);
-						//parse "if condition, then take f, else wp C 0 ? with X(0) = f = 0?
-				String result = "";
-
-				return result;
+				String whileC = C.substring(condition.length());
+				whileC = getInsideBracket(whileC.substring(whileC.indexOf("{")+1));
+				System.out.println("whileC: "+whileC);
+				
+				return fixpointIterationIterativ(condition, whileC, f, 10);
 				
 			}else {
 				//variable assignments
@@ -236,13 +239,14 @@ public JTextArea result = new JTextArea();
 					}*/
 					 //Old assignment from behind
 					 //variable assignments
-				System.out.println("Enter assignment process"); 
 				
 				if(C.contains("skip")){
+					System.out.println("Enter skip process"); 
 					String skipResult = C.replace("skip", f);
 					result.setText(result.getText() + "\n" + "Assignment skip process." + skipResult);
 					return skipResult;
 				}else {
+					System.out.println("Enter assignment process"); 
 					String indexC = C.substring(0,1);
 					String cutC = C.substring(C.indexOf("=")+1);
 					String assignResult = f.replace(indexC, "("+cutC+")");
@@ -257,7 +261,17 @@ public JTextArea result = new JTextArea();
 	
 	}
 		
-		
+	public String fixpointIterationIterativ(String condition, String C, String f, int count) {
+		String caseF = "0"; //X^0 initialization
+		for(int i=0; i<count; i++) {
+			String X = wp(C, caseF);
+			caseF = "if("+condition+","+X+","+f+")";	
+		}
+		//sigma has to be parameterized via forwardparsing or result of while stays in term form.
+		//TODO problem with that is that we cannot do the delta comparison
+		//String result = wp(sigma,caseF);
+		return caseF;
+	}
 	
 	public HashMap<String, String> getVariables() {
 		return variables;
