@@ -10,6 +10,12 @@ class MainTest {
     HashMap<String, String> variables = new HashMap<String,String>();
 	WPCalculator mainCalculator = new WPCalculator();
 
+	
+	@Test
+	void calcTest() {
+		System.out.println(mainCalculator.calculation("((5)-1)^2)"));
+	}
+
 	@Test
 	void testAssignments() {
 		variables.put("x", "0");
@@ -56,6 +62,7 @@ class MainTest {
 		//TODO check examples here in the presentation etc. => where does sigma get updated?
 		//if worked because we pushed x as a variable forward and then later calculated it
 		assert mainCalculator.calculation(mainCalculator.wp("x=5;if (x<5) {x=x+1} else {x=x-1}", "x^2")).equals("16.0");
+		assert mainCalculator.calculation(mainCalculator.wp("x=5;if (x<5) {x=x+1} else {x=x-1};x=8", "x^2")).equals("64.0");
 		assert mainCalculator.calculation(mainCalculator.wp("x=5;{x=3}[1/2]{x=10};if (x<5) {x=x+1} else {x=x-1}", "x")).equals("6.5");
 
 	}
@@ -67,6 +74,6 @@ class MainTest {
 		mainCalculator.setVariables(variables);
 		
 		assert mainCalculator.calculation(mainCalculator.wp("c=0;x=1; while(c=1){{x=x+1}[1/2]{c=0}}", "x")).equals("1.0");
-		assert mainCalculator.calculation(mainCalculator.wp("c=1;x=1; while(c=1){{x=x+1}[1/2]{c=0}}", "x")).equals("1.978515625");
+		assert mainCalculator.calculation(mainCalculator.wp("c=1;x=1; while(c=1){{x=x+1}[1/2]{c=0}}", "x")).equals("1.978515625"); //count=8
 	}
 }

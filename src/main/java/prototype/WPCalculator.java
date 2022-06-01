@@ -10,6 +10,7 @@ import javax.swing.JLabel;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
+import org.mariuszgromada.math.mxparser.Argument;
 import org.mariuszgromada.math.mxparser.Expression;
 //Parser Documentation: https://github.com/mariuszgromada/MathParser.org-mXparser
 
@@ -88,7 +89,8 @@ public JTextArea result = new JTextArea();
 	
 	//TODO probably obsolete if we require initial variable assignments
 	public String calculation(String exp) {
-		Expression e = new Expression(exp);
+		Argument x = new Argument("x");
+		Expression e = new Expression(exp,x);
 		System.out.println("Expression:" + exp);
 		Double result = e.calculate();
 		if(!result.isNaN()) {
@@ -120,6 +122,26 @@ public JTextArea result = new JTextArea();
 		return result;
 	}
 	
+	public static String getInsideIf(String C) {
+		int commaCount = 1;
+		String result = "";
+		for(int i = 0; i < C.length(); i++) {
+			char character = C.charAt(i);
+			if(character == 'i') {
+				commaCount += 2;
+			}
+			if(character == ',') {
+				commaCount--;
+			}
+			if(commaCount != 0) {
+				result = result + character;
+			}else {
+				break;
+			}
+		}
+		return result;
+	}
+	
 	public static String getSequentialCut(String C) {
 		int bracketCount = 0;
 		String result = "";
@@ -142,6 +164,8 @@ public JTextArea result = new JTextArea();
 	
 	
 	public String wp(String C, String f) {
+		//TODO somehow parse through C and check on calculation if there is any assignment > k ; 
+		//=> substitute all assignments to min function if we still work with terms 
 		C = C.replace(" ", "");
 		result.setText(result.getText() + "\n" + "wp["+C+"]("+f+")");
 		System.out.println("C "+ C);
@@ -168,9 +192,16 @@ public JTextArea result = new JTextArea();
 				String resultC1 = wp(ifC1,f);
 				String resultC2 = wp(ifC2,f);
 				result.setText(result.getText() + "\n" + "Conditional process. Breaking down into: if("+condition+") then "+ resultC1 +" else "+ resultC2); 
-				String result = "if("+condition+","+ resultC1 + "," + resultC2 + ")";
-				
-				return result;
+				//TODO here we could calculate if clauses directly before putting them together into long strings
+
+				if(calculation(condition).equals("1.0")) {
+					return resultC1;
+				}
+				if(calculation(condition).equals("0.0")) {
+					return resultC2;
+				}
+				return calculation("if(" + condition + "," + resultC1 + "," + resultC2 + ")");
+
 			}
 			
 			else if(C.startsWith("{")){
@@ -186,10 +217,10 @@ public JTextArea result = new JTextArea();
 				System.out.println("C2= "+probC2);
 				System.out.println("Probability:" + probability);
 				Expression negProbability = new Expression ("1-"+probability);
-				String resultC1 = wp(probC1,f);
-				String resultC2 = wp(probC2,f);
+				String resultC1 = calculation(wp(probC1,f));
+				String resultC2 = calculation(wp(probC2,f));
 				result.setText(result.getText() + "\n" + "Probability process. Breaking down into: "+probability+" * "+ resultC1 +" + "+ negProbability.calculate() +" * "+ resultC2); 
-				String result = "("+probability+" * "+resultC1+" + "+negProbability.calculate()+" * "+resultC2+")";
+				String result = calculation("("+probability+" * "+resultC1+" + "+negProbability.calculate()+" * "+resultC2+")");
 
 				return result;
 			}
@@ -244,14 +275,37 @@ public JTextArea result = new JTextArea();
 					System.out.println("Enter skip process"); 
 					String skipResult = C.replace("skip", f);
 					result.setText(result.getText() + "\n" + "Assignment skip process." + skipResult);
-					return skipResult;
+					return calculation(skipResult);
 				}else {
 					System.out.println("Enter assignment process"); 
 					String indexC = C.substring(0,1);
 					String cutC = C.substring(C.indexOf("=")+1);
 					String assignResult = f.replace(indexC, "("+cutC+")");
+					
+					//if mid calculation
+					if(assignResult.startsWith("if")) {
+						System.out.println("Enter conditional process"); 
+						String condition = assignResult.substring(assignResult.indexOf("(")+1,assignResult.indexOf(","));
+						System.out.println("Conditional: "+condition); 
+						String ifC1 = assignResult.substring(condition.length()+4);	
+						System.out.println("ifC1= "+ifC1); 
+						
+						ifC1 = getInsideIf(ifC1); 
+
+						String ifC2 = assignResult.substring(condition.length()+4+ifC1.length()+1);
+						ifC2 = ifC2.substring(0,ifC2.length()-1);
+						System.out.println("ifC1= "+ifC1); 
+						System.out.println("ifC2= "+ifC2);
+						if(calculation(condition).equals("1.0")) {
+							return calculation(ifC1);
+						}
+						if(calculation(condition).equals("0.0")) {
+							return calculation(ifC2);
+						}
+					}
+					
 					result.setText(result.getText() + "\n" + "Assignment process." + assignResult);
-					return assignResult;
+					return calculation(assignResult);
 				}
 					
 					
