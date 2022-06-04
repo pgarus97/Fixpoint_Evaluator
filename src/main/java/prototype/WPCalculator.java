@@ -5,6 +5,7 @@ import java.awt.event.ActionListener;
 import java.util.HashMap;
 
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
@@ -12,7 +13,6 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
 import org.apache.commons.lang3.math.NumberUtils;
-import org.mariuszgromada.math.mxparser.Argument;
 import org.mariuszgromada.math.mxparser.Expression;
 //Parser Documentation: https://github.com/mariuszgromada/MathParser.org-mXparser
 
@@ -20,6 +20,7 @@ public class WPCalculator {
 
 private HashMap<String, String> variables = new HashMap<String,String>();
 public JTextArea result = new JTextArea();
+JCheckBox allSigma = new JCheckBox("Enable all-sigma fixpoint-iteration.");
 private double restriction;
 private int iterationCount = 10;
 
@@ -53,16 +54,21 @@ private int iterationCount = 10;
 	    final JTextField restrictionField = new JTextField();
 	    restrictionField.setBounds(430,20,200, 20);
 	    
+	    
+	    
+	    
 	    JLabel sigmaDesc = new JLabel("Enter initial variable assignments: (Multiple possible: e.g. 'x=5;y=3;z=2')");
 	    sigmaDesc.setBounds(5,50,400, 20);
 	    final JTextField sigma = new JTextField();
 	    sigma.setBounds(5,70,400, 20);
 
 	    JButton calcButton = new JButton("Calculate!");
-	    calcButton.setBounds(5,100,100, 40); 
+	    calcButton.setBounds(5,100,150, 40); 
 	       
-	    JScrollPane scroll = new JScrollPane(result);
 	    
+	    allSigma.setBounds(200,100,300, 50);
+	    frame.add(allSigma);
+	  
 	    frame.add(Cdesc);
 	    frame.add(C);
 	    frame.add(Fdesc);
@@ -73,6 +79,7 @@ private int iterationCount = 10;
 	    frame.add(sigma);
 	    frame.add(calcButton);
 	    
+	    JScrollPane scroll = new JScrollPane(result);
 	    scroll.setBounds(10,200 ,800, 400); 
 	    result.setEditable(false);
 	    
@@ -88,16 +95,16 @@ private int iterationCount = 10;
 	    		
 	    		result.setText(""); 	
 	    		
-	    		if(sigma.getText().isEmpty()) {
+	    		/*if(sigma.getText().isEmpty()) {
 	    	    	//throw exception;
 	    			result.setText("You have to input an initial variable assignment!");
 	    	    	return;
-	    	    }
+	    	    } */
 	    		if(restrictionField.getText().isEmpty()) {
 	    	    	//throw exception;
 	    			result.setText("You have to set a restriction for the variables!");
 	    	    	return;
-	    	    }
+	    	    } 
 	    		setRestriction(Double.parseDouble(restrictionField.getText()));
 	    		//can get sigma text out of here if it works properly?
 	    	    String calcResult = calculation(wp(sigma.getText()+";"+C.getText(),F.getText())); 
@@ -168,9 +175,8 @@ private int iterationCount = 10;
 				return result;
 			}
 			else if(C.startsWith("while")){
-				//while process TODO
+				//while process
 				//TODO implement sigma forward parsing? then we could check condition before doing fixpoint iteration for performance boost
-				//TODO try first how fast it grows
 				System.out.println("Enter while process"); 
 				String condition = C.substring(C.indexOf("(")+1,C.indexOf(")"));
 				System.out.println("Condition: "+condition);
@@ -178,41 +184,21 @@ private int iterationCount = 10;
 				whileC = getInsideBracket(whileC.substring(whileC.indexOf("{")+1));
 				System.out.println("whileC: "+whileC);
 				
-				return fixpointIterationIterativ(condition, whileC, f, iterationCount);
+				if (allSigma.isSelected()) {
+					 
+					//return fixpointIterationAllSigma(condition, whileC, f, iterationCount); still in development ; needs HashMap<String, String> sigma as parameter in wp
+					return fixpointIterationIterativ(condition, whileC, f, iterationCount); 
+
+				 
+				} else {
+				 
+					return fixpointIterationIterativ(condition, whileC, f, iterationCount);
+				 
+				}
+				
 				
 			}else {
 				//variable assignments
-				/*System.out.println("Enter assignment process"); 
-				
-				if(C.startsWith("skip")){
-					for(int i=0; i < f.length(); i++) {
-						char varName = f.charAt(i);
-						if(variables.containsKey(Character.toString(varName))) {
-							f = f.replace(Character.toString(varName), "("+variables.get(Character.toString(varName))+")");
-						}
-					}
-					String result = C.replace("skip", f);
-					System.out.println(result);
-					return result;
-				}else {
-					//updates variable values on assignment
-					String varName = C.substring(0,1); 
-					String assignExp = C.substring(C.indexOf("=")+1); 
-					if(variables.containsKey(varName)) {
-						Expression calculatedValue = new Expression (assignExp.replace(varName,variables.get(varName)));
-						variables.put(varName,Double.toString(calculatedValue.calculate())); 
-
-						String result = f.replace(varName, "("+variables.get(varName)+")");
-						System.out.println(result);
-						return result;
-					}else {
-						//throw exception
-						System.out.println("There is an unknown variable assignment");
-						//else it would also be possible to create a new variable.
-						return null;
-					}*/
-					 //Old assignment from behind
-					 //variable assignments
 				
 				if(C.contains("skip")){
 					System.out.println("Enter skip process"); 
@@ -261,6 +247,8 @@ private int iterationCount = 10;
 		}
 	
 	}
+	
+	
 	
 	
 	//TODO probably obsolete if we require initial variable assignments
@@ -325,6 +313,18 @@ private int iterationCount = 10;
 		//sigma has to be parameterized via forwardparsing or result of while stays in term form.
 		//TODO problem with that is that we cannot do the delta comparison
 		//String result = wp(sigma,caseF);
+		return caseF;
+	}
+	
+	public String fixpointIterationAllSigma(String condition, String C, String f, int count) {
+		//iterate through array of all sigmas and get X for each sigma => save that and compare to next loop => Result Hashmap
+		//check condition first, if wrong with sigma then skip
+		String caseF = "0"; //X^0 initialization
+		for(int i=0; i<count; i++) {
+			String X = wp(C, caseF);
+			caseF = "if("+condition+","+X+","+f+")";	
+		}
+		
 		return caseF;
 	}
 	
