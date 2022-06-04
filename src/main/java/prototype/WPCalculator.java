@@ -7,6 +7,7 @@ import java.util.HashMap;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
@@ -60,6 +61,7 @@ private int iterationCount = 10;
 	    JButton calcButton = new JButton("Calculate!");
 	    calcButton.setBounds(5,100,100, 40); 
 	       
+	    JScrollPane scroll = new JScrollPane(result);
 	    
 	    frame.add(Cdesc);
 	    frame.add(C);
@@ -71,9 +73,10 @@ private int iterationCount = 10;
 	    frame.add(sigma);
 	    frame.add(calcButton);
 	    
-	    result.setBounds(10,200 ,800, 400); 
+	    scroll.setBounds(10,200 ,800, 400); 
 	    result.setEditable(false);
-	    frame.add(result);
+	    
+	    frame.getContentPane().add(scroll);
 	    
 	    
 	    frame.setSize(1000,700);
@@ -96,6 +99,7 @@ private int iterationCount = 10;
 	    	    	return;
 	    	    }
 	    		setRestriction(Double.parseDouble(restrictionField.getText()));
+	    		//can get sigma text out of here if it works properly?
 	    	    String calcResult = calculation(wp(sigma.getText()+";"+C.getText(),F.getText())); 
 	    	    result.setText(result.getText() + "\n" + "Result: " + calcResult);
     	   }  
@@ -105,8 +109,6 @@ private int iterationCount = 10;
 	}
 	
 	public String wp(String C, String f) {
-		//TODO somehow parse through C and check on calculation if there is any assignment > k ; 
-		//=> substitute all assignments to min function if we still work with terms 
 		C = C.replace(" ", "");
 		result.setText(result.getText() + "\n" + "wp["+C+"]("+f+")");
 		System.out.println("C "+ C);
