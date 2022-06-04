@@ -17,6 +17,8 @@ class MainTest {
 		System.out.println(NumberUtils.isCreatable("-1"));
 		System.out.println(mainCalculator.calculation("(5-6)"));
 		System.out.println(mainCalculator.calculation("min(2,4)"));
+		System.out.println(mainCalculator.calculation("if(1=1,x+1,x)"));
+
 	}
 
 	
@@ -81,14 +83,14 @@ class MainTest {
 		variables.put("x", "0");
 		variables.put("y", "0");
 		mainCalculator.setVariables(variables);
-		mainCalculator.setRestriction(10);
+		mainCalculator.setRestriction(15);
 
 		
-		assert mainCalculator.calculation(mainCalculator.wp("x=5;if (x<5) {x=x+1} else {x=x-1}", "x^2")).equals("16.0");
-		assert mainCalculator.calculation(mainCalculator.wp("x=5;if (x<5) {x=x+1} else {x=x-1};x=8", "x^2")).equals("64.0");
-		assert mainCalculator.calculation(mainCalculator.wp("x=5;{x=3}[1/2]{x=10};if (x<5) {x=x+1} else {x=x-1}", "x")).equals("6.5");
-		assert mainCalculator.calculation(mainCalculator.wp("x=5;if (x<5) {x=x+1} else {if(x=5){x=3}else{x=8}}", "x")).equals("3.0");
-		assert mainCalculator.calculation(mainCalculator.wp("x=5;if (x<5) {x=x+1} else {min{x=x+1}{x=3}", "x")).equals("3.0");
+		assert mainCalculator.calculation(mainCalculator.wp("x=5;if {x<5} {x=x+1} else {x=x-1}", "x^2")).equals("16.0");
+		assert mainCalculator.calculation(mainCalculator.wp("x=5;if {x<5} {x=x+1} else {x=x-1};x=8", "x^2")).equals("64.0");
+		assert mainCalculator.calculation(mainCalculator.wp("x=5;{x=3}[1/2]{x=10};if {x<5} {x=x+1} else {x=x-1}", "x")).equals("6.5");
+		assert mainCalculator.calculation(mainCalculator.wp("x=5;if {x<5} {x=x+1} else {if{x=5}{x=3}else{x=8}}", "x")).equals("3.0");
+		assert mainCalculator.calculation(mainCalculator.wp("x=5;if {x<5} {x=x+1} else {min{x=x+1}{x=3}", "x")).equals("3.0");
 
 
 

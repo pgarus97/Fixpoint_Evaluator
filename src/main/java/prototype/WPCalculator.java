@@ -28,16 +28,6 @@ private int iterationCount = 10;
 
 	public WPCalculator() {
 		JFrame frame = new JFrame("wp-Calculator");	
-
-	    //TODO new persistent variable implementation
-	    //TODO check last value empty , index
-	    /*sigma = sigma.replace(" ", "");
-	    for(int i=0; i < sigma.length(); i++) {
-	    	String variableName = C.substring(0,1);
-			String variableValue = C.substring(C.indexOf("=")+1,C.indexOf(','));
-			variables.put(variableName,variableValue);
-			sigma = sigma.substring(variableValue.length());
-	    }*/
 	    
 	    JLabel Cdesc = new JLabel("Input the Program (C) here:");
 	    Cdesc.setBounds(5,0,170, 20);
@@ -150,9 +140,10 @@ private int iterationCount = 10;
 			else if(C.startsWith("if")) {
 				//conditional process
 				System.out.println("Enter conditional process"); 
-				String condition = C.substring(C.indexOf("(")+1,C.indexOf(")")); //TODO does not allow double parentheses; needs getInsideBracket solution
+				String condition = getInsideBracket(C.substring(C.indexOf("{")+1));
 				System.out.println("Conditional: "+condition); 
-				String ifC1 = getInsideBracket(C.substring(C.indexOf("{")+1));	
+				String ifC1 = C.substring(condition.length()+4);
+				ifC1 = getInsideBracket(ifC1.substring(ifC1.indexOf("{")+1));	//does not get correct value
 				String ifC2 = C.substring(C.indexOf(ifC1));
 				ifC2 = getInsideBracket(ifC2.substring(ifC2.indexOf("{")+1));
 				
@@ -183,11 +174,11 @@ private int iterationCount = 10;
 				System.out.println("C1= "+probC1); 
 				System.out.println("C2= "+probC2);
 				System.out.println("Probability:" + probability);
-				Expression negProbability = new Expression ("1-"+probability);
-				String resultC1 = calculation(wp(probC1,f));
-				String resultC2 = calculation(wp(probC2,f));
-				result.setText(result.getText() + "\n" + "Probability process. Breaking down into: "+probability+" * "+ resultC1 +" + "+ negProbability.calculate() +" * "+ resultC2); 
-				String result = calculation("("+probability+" * "+resultC1+" + "+negProbability.calculate()+" * "+resultC2+")");
+				Expression negProbability = new Expression ("1-"+probability); //TODO does this work for greater 1 probabilities? Or should it even work?
+				String resultC1 = wp(probC1,f);
+				String resultC2 = wp(probC2,f);
+				result.setText(result.getText() + "\n" + "Probability process. Breaking down into: " + probability + " * " + resultC1 +" + "+ negProbability.calculate() + " * " + resultC2); 
+				String result = calculation("(" + probability + " * "+ resultC1 +" + "+ negProbability.calculate() + " * " + resultC2+")");
 
 				return result;
 			}
@@ -226,32 +217,27 @@ private int iterationCount = 10;
 					System.out.println("Enter assignment process"); 
 					String indexC = C.substring(0,1);
 					String cutC = C.substring(C.indexOf("=")+1);
-					//TODO change min functionality to default mathparser
-					String assignResult = f.replace(indexC, "#{("+cutC+")}");
+					String assignResult = f.replace(indexC, "min(" + cutC + "," + restriction + ")");
+
 					
-					//truncation after assignment
-					if(NumberUtils.isDigits(cutC) && !assignResult.equals(f)) {
-						assignResult = truncate(assignResult);
-					}
-					
-					//if mid calculation optimization ; can increase the if clause with more strict conditions to make more runtime optimizations
+					//if mid calculation optimization
 					if(assignResult.startsWith("if")) {
 						System.out.println("Enter conditional process"); 
-						String condition = assignResult.substring(assignResult.indexOf("(")+1,assignResult.indexOf(","));
+						String condition = getInsideIf(assignResult.substring(3)); // if (min(1,2)==1 , then, else)
 						System.out.println("Conditional: "+condition); 
-						String ifC1 = assignResult.substring(condition.length()+4);	
-						System.out.println("ifC1= "+ifC1); 
+						String assignifC1 = assignResult.substring(condition.length()+4);	
+						System.out.println("ifC1= "+assignifC1); 
 						
-						ifC1 =  getInsideIf(ifC1);
-						String ifC2 = assignResult.substring(condition.length()+4+ifC1.length()+1);
-						ifC2 = ifC2.substring(0,ifC2.length()-1);
-						System.out.println("ifC1= "+ifC1); 
-						System.out.println("ifC2= "+ifC2);
+						assignifC1 =  getInsideIf(assignifC1);
+						String assignifC2 = assignResult.substring(condition.length()+4+assignifC1.length()+1);
+						assignifC2 = assignifC2.substring(0,assignifC2.length()-1);
+						System.out.println("assignifC1= "+assignifC1); 
+						System.out.println("assignifC2= "+assignifC2);
 						if(calculation(condition).equals("1.0")) {
-							return calculation(ifC1);
+							return calculation(assignifC1);
 						}
 						if(calculation(condition).equals("0.0")) {
-							return calculation(ifC2);
+							return calculation(assignifC2);
 						}
 					}
 					
@@ -283,8 +269,9 @@ private int iterationCount = 10;
 		}
 	}
 		
-	//TODO probably deprecated as min functionality is supported my mathparser
-	public String truncate(String input) {
+	/*
+	 * Deprecated method to calculate restrictions on variables
+	 * public String truncate(String input) {
 		String result ="";
 		for(int i = 0; i < input.length(); i++) {
 			char character = input.charAt(i);
@@ -322,6 +309,7 @@ private int iterationCount = 10;
 		}
 		return result;
 	}
+	*/
 	
 	public String fixpointIterationIterativ(String condition, String C, String f, int count) {
 		String caseF = "0"; //X^0 initialization
@@ -374,7 +362,7 @@ private int iterationCount = 10;
 		for(int i = 0; i < C.length(); i++) {
 			char character = C.charAt(i);
 			//if inside if case
-			if(character == 'i') {
+			if(character == 'f') {
 				commaCount += 2;
 			}
 			//min inside if case
