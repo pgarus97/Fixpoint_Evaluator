@@ -106,7 +106,6 @@ private int iterationCount = 10;
 	    	    	return;
 	    	    } 
 	    		setRestriction(Double.parseDouble(restrictionField.getText()));
-	    		//can get sigma text out of here if it works properly?
 	    	    String calcResult = calculation(wp(sigma.getText()+";"+C.getText(),F.getText())); 
 	    	    result.setText(result.getText() + "\n" + "Result: " + calcResult);
     	   }  
@@ -116,6 +115,8 @@ private int iterationCount = 10;
 	}
 	
 	public String wp(String C, String f) {
+		//TODO check which calculations can be skipped
+		
 		C = C.replace(" ", "");
 		result.setText(result.getText() + "\n" + "wp["+C+"]("+f+")");
 		System.out.println("C "+ C);
@@ -128,10 +129,28 @@ private int iterationCount = 10;
 			result.setText(result.getText() + "\n" + "Sequential process. Breaking down into: wp["+C1+"](wp["+C2+"]("+f+"))"); 
 			return wp(C1,(wp(C2,f)));
 		}else {
-			if(C.startsWith("if")) {
+			if(C.startsWith("min{")) {
+				//demonic choice process
+				System.out.println("Enter demonic choice process"); 
+				String demC1 = getInsideBracket(C.substring(C.indexOf("{")+1));	
+				String demC2 = C.substring(C.indexOf(demC1));
+				demC2 = getInsideBracket(demC2.substring(demC2.indexOf("{")+1));
+				
+				System.out.println("demC1= "+demC1); 
+				System.out.println("demC2= "+demC2);
+				String resultC1 = wp(demC1,f);
+				String resultC2 = wp(demC2,f);
+
+				result.setText(result.getText() + "\n" + "Demonic Choice process. Breaking down into: min(" + resultC1 + "," + resultC2 + ")"); 
+
+				return calculation("min(" + resultC1 + "," + resultC2 + ")");
+
+			}
+			
+			else if(C.startsWith("if")) {
 				//conditional process
 				System.out.println("Enter conditional process"); 
-				String condition = C.substring(C.indexOf("(")+1,C.indexOf(")"));
+				String condition = C.substring(C.indexOf("(")+1,C.indexOf(")")); //TODO does not allow double parentheses; needs getInsideBracket solution
 				System.out.println("Conditional: "+condition); 
 				String ifC1 = getInsideBracket(C.substring(C.indexOf("{")+1));	
 				String ifC2 = C.substring(C.indexOf(ifC1));
@@ -142,15 +161,13 @@ private int iterationCount = 10;
 				String resultC1 = wp(ifC1,f);
 				String resultC2 = wp(ifC2,f);
 				result.setText(result.getText() + "\n" + "Conditional process. Breaking down into: if("+condition+") then "+ resultC1 +" else "+ resultC2); 
-				//TODO here we could calculate if clauses directly before putting them together into long strings
-				//these calculations can be skipped as it never should be the case
 				if(calculation(condition).equals("1.0")) {
-					return resultC1;
+					return calculation(resultC1);
 				}
 				if(calculation(condition).equals("0.0")) {
-					return resultC2;
+					return calculation(resultC2);
 				}
-				return calculation("if(" + condition + "," + resultC1 + "," + resultC2 + ")");
+				return calculation("if(" + condition + "," + resultC1 + "," + resultC2 + ")"); //TODO can skip calculation?
 
 			}
 			
@@ -209,6 +226,7 @@ private int iterationCount = 10;
 					System.out.println("Enter assignment process"); 
 					String indexC = C.substring(0,1);
 					String cutC = C.substring(C.indexOf("=")+1);
+					//TODO change min functionality to default mathparser
 					String assignResult = f.replace(indexC, "#{("+cutC+")}");
 					
 					//truncation after assignment
@@ -265,6 +283,7 @@ private int iterationCount = 10;
 		}
 	}
 		
+	//TODO probably deprecated as min functionality is supported my mathparser
 	public String truncate(String input) {
 		String result ="";
 		for(int i = 0; i < input.length(); i++) {
@@ -354,8 +373,13 @@ private int iterationCount = 10;
 		String result = "";
 		for(int i = 0; i < C.length(); i++) {
 			char character = C.charAt(i);
+			//if inside if case
 			if(character == 'i') {
 				commaCount += 2;
+			}
+			//min inside if case
+			if(character == 'm') {
+				commaCount += 1;
 			}
 			if(character == ',') {
 				commaCount--;

@@ -16,6 +16,7 @@ class MainTest {
 	void calcTest() {
 		System.out.println(NumberUtils.isCreatable("-1"));
 		System.out.println(mainCalculator.calculation("(5-6)"));
+		System.out.println(mainCalculator.calculation("min(2,4)"));
 	}
 
 	
@@ -66,7 +67,6 @@ class MainTest {
 		
 		//probability with initial assignment x=5
 		assert mainCalculator.calculation(mainCalculator.wp("{x=5}[4/5]{x=10}","x^2")).equals("40.0");
-		//TODO why does this work? => f is already 36 on entry of first variables
 		assert mainCalculator.calculation(mainCalculator.wp("{x=5}[1/2]{x=10};{x=3}[1/2]{x=4}","x")).equals("3.5");
 		assert mainCalculator.calculation(mainCalculator.wp("x=0;y=0;{skip}[1/2]{x=x+2}","x")).equals("1.0");
 		assert mainCalculator.calculation(mainCalculator.wp("x=5;{skip}[1/2]{x=x+2}","x")).equals("6.0");
@@ -87,7 +87,23 @@ class MainTest {
 		assert mainCalculator.calculation(mainCalculator.wp("x=5;if (x<5) {x=x+1} else {x=x-1}", "x^2")).equals("16.0");
 		assert mainCalculator.calculation(mainCalculator.wp("x=5;if (x<5) {x=x+1} else {x=x-1};x=8", "x^2")).equals("64.0");
 		assert mainCalculator.calculation(mainCalculator.wp("x=5;{x=3}[1/2]{x=10};if (x<5) {x=x+1} else {x=x-1}", "x")).equals("6.5");
+		assert mainCalculator.calculation(mainCalculator.wp("x=5;if (x<5) {x=x+1} else {if(x=5){x=3}else{x=8}}", "x")).equals("3.0");
+		assert mainCalculator.calculation(mainCalculator.wp("x=5;if (x<5) {x=x+1} else {min{x=x+1}{x=3}", "x")).equals("3.0");
 
+
+
+	}
+	
+	@Test
+	void testDemonicChoice() {
+		variables.put("x", "0");
+		variables.put("y", "0");
+		mainCalculator.setVariables(variables);
+		mainCalculator.setRestriction(10);
+
+		
+		assert mainCalculator.calculation(mainCalculator.wp("x=1;min{x=x+1}{x=3}","x")).equals("2.0");
+		assert mainCalculator.calculation(mainCalculator.wp("x=3;min{x=x+1}{x=3}","x")).equals("3.0");
 	}
 	
 	@Test
