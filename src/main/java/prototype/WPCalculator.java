@@ -44,7 +44,10 @@ private int iterationCount = 10;
 	    final JTextField restrictionField = new JTextField();
 	    restrictionField.setBounds(430,20,200, 20);
 	    
-	    
+	    JLabel iterationDesc = new JLabel("Input the restriction (k) here:");
+	    iterationDesc.setBounds(430,0,200, 20);
+	    final JTextField iterationField = new JTextField();
+	    iterationField.setBounds(430,50,200, 20);
 	    
 	    
 	    JLabel sigmaDesc = new JLabel("Enter initial variable assignments: (Multiple possible: e.g. 'x=5;y=3;z=2')");
@@ -65,6 +68,7 @@ private int iterationCount = 10;
 	    frame.add(F);
 	    frame.add(RestrictionDesc);
 	    frame.add(restrictionField);
+	    frame.add(iterationField);
 	    frame.add(sigmaDesc);
 	    frame.add(sigma);
 	    frame.add(calcButton);
@@ -96,7 +100,15 @@ private int iterationCount = 10;
 	    	    	return;
 	    	    } 
 	    		setRestriction(Double.parseDouble(restrictionField.getText()));
-	    	    String calcResult = calculation(wp(sigma.getText()+";"+C.getText(),F.getText())); 
+	    		if(!iterationField.getText().isEmpty()) {
+		    		setIterationCount(Integer.parseInt(iterationField.getText()));
+	    	    }
+	    		String calcResult = "";
+	    		if(sigma.getText().isEmpty()) {
+		    	    calcResult = calculation(wp(sigma.getText()+C.getText(),F.getText())); 
+	    		}else {
+		    	    calcResult = calculation(wp(sigma.getText()+";"+C.getText(),F.getText())); 
+	    		}
 	    	    result.setText(result.getText() + "\n" + "Result: " + calcResult);
     	   }  
 	    }); 
@@ -106,6 +118,7 @@ private int iterationCount = 10;
 	
 	public String wp(String C, String f) {
 		//TODO check which calculations can be skipped
+		//TODO crash if no assignment prior to while(c=1){{x=x+1}[1/2]{c=0}}?
 		
 		C = C.replace(" ", "");
 		result.setText(result.getText() + "\n" + "wp["+C+"]("+f+")");
@@ -269,9 +282,8 @@ private int iterationCount = 10;
 		}
 	}
 		
-	/*
-	 * Deprecated method to calculate restrictions on variables
-	 * public String truncate(String input) {
+	 // Deprecated method to calculate restrictions on variables
+	  public String truncate(String input) {
 		String result ="";
 		for(int i = 0; i < input.length(); i++) {
 			char character = input.charAt(i);
@@ -309,7 +321,7 @@ private int iterationCount = 10;
 		}
 		return result;
 	}
-	*/
+
 	
 	public String fixpointIterationIterativ(String condition, String C, String f, int count) {
 		String caseF = "0"; //X^0 initialization
