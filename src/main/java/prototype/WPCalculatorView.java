@@ -14,7 +14,8 @@ import javax.swing.JTextField;
 public class WPCalculatorView {
 	
 public JTextArea result = new JTextArea();
-JCheckBox allSigma = new JCheckBox("Enable all-sigma fixpoint-iteration.");
+JCheckBox allSigmaIteration = new JCheckBox("Enable all-sigma fixpoint-iteration.");
+
 private double restriction;
 private int iterationCount = 10;
 private WPCalculator mainCalculator;
@@ -47,13 +48,18 @@ private WPCalculator mainCalculator;
 	    sigmaDesc.setBounds(5,50,400, 20);
 	    JTextField sigma = new JTextField();
 	    sigma.setBounds(5,70,400, 20);
+	    
+	    JLabel usedVarsDesc = new JLabel("Enter all used variables (separate with , ) ");
+	    usedVarsDesc.setBounds(500,90,400, 20);
+	    final JTextField usedVars = new JTextField();
+	    usedVars.setBounds(500,110,400, 20);
 
 	    JButton calcButton = new JButton("Calculate!");
 	    calcButton.setBounds(5,100,150, 40); 
 	       
 	    
-	    allSigma.setBounds(200,100,300, 50);
-	    frame.add(allSigma);
+	    allSigmaIteration.setBounds(200,100,300, 50);
+	    frame.add(allSigmaIteration);
 	  
 	    frame.add(Cdesc);
 	    frame.add(C);
@@ -77,6 +83,18 @@ private WPCalculator mainCalculator;
 	    frame.setLayout(null); 
 	    frame.setVisible(true);
 	    
+	    allSigmaIteration.addActionListener(new ActionListener(){  
+	    	public void actionPerformed(ActionEvent e){  
+	    		if (allSigmaIteration.isSelected()) {
+	    	    	usedVars.setVisible(true);
+	    	    	usedVarsDesc.setVisible(true);
+	    	    }else {
+	    	    	usedVars.setVisible(false);
+	    	    	usedVarsDesc.setVisible(false);
+	    	    }
+    	   }  
+	    });
+	    
 	    calcButton.addActionListener(new ActionListener(){  
 	    	public void actionPerformed(ActionEvent e){  
 	    		
@@ -97,6 +115,9 @@ private WPCalculator mainCalculator;
 		    		setIterationCount(Integer.parseInt(iterationField.getText()));
 	    	    }
 	    		String calcResult = "";
+	    		if (allSigmaIteration.isSelected()) {
+	    	    	//allSigma = getVariableCombinations(usedVars.getText(),restriction); //TODO still needs to be implemented
+	    	    }
 	    		if(sigma.getText().isEmpty()) {
 		    	    calcResult = mainCalculator.calculation(mainCalculator.wp(sigma.getText()+C.getText(),F.getText())); 
 	    		}else {
@@ -131,6 +152,14 @@ private WPCalculator mainCalculator;
 		this.iterationCount = iterationCount;
 	}
 	
+	public JCheckBox getAllSigmaIteration() {
+		return allSigmaIteration;
+	}
+
+	public void setAllSigmaIteration(JCheckBox allSigmaIteration) {
+		this.allSigmaIteration = allSigmaIteration;
+	}
+
 	public void linkCalculator(WPCalculator mainCalculator) {
 		this.mainCalculator = mainCalculator;
 	}

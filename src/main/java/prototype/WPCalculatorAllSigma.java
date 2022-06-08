@@ -1,17 +1,7 @@
 package prototype;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.HashMap;
-
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
 
 import org.apache.commons.lang3.math.NumberUtils;
 import org.mariuszgromada.math.mxparser.Expression;
@@ -20,136 +10,14 @@ import org.mariuszgromada.math.mxparser.Expression;
 public class WPCalculatorAllSigma {
 
 private HashMap<String, String> variables = new HashMap<String,String>();
-JCheckBox allSigmaIteration = new JCheckBox("Enable all-sigma fixpoint-iteration.");
+private WPCalculatorView mainView;
 private ArrayList<HashMap<String, String>> allSigma = new ArrayList<HashMap<String, String>>();
-public JTextArea result = new JTextArea();
-private double restriction;
-private int iterationCount = 10;
-
-
-
-	public WPCalculatorAllSigma() {
-		JFrame frame = new JFrame("wp-Calculator");	
-	    
-		
-	    JLabel Cdesc = new JLabel("Input the Program (C) here:");
-	    Cdesc.setBounds(5,0,170, 20);
-	    final JTextField C = new JTextField();
-	    C.setBounds(5,20,170, 20);
-	    
-	    JLabel Fdesc = new JLabel("Input the postexpectation (f) here:");
-	    Fdesc.setBounds(200,0,200, 20);
-	    final JTextField F = new JTextField();
-	    F.setBounds(200,20,200, 20);
-	    
-	    JLabel RestrictionDesc = new JLabel("Input the restriction (k) here:");
-	    RestrictionDesc.setBounds(430,0,200, 20);
-	    final JTextField restrictionField = new JTextField();
-	    restrictionField.setBounds(430,20,200, 20);
-	    
-	    JLabel iterationDesc = new JLabel("Input the restriction (k) here:");
-	    iterationDesc.setBounds(430,0,200, 20);
-	    final JTextField iterationField = new JTextField();
-	    iterationField.setBounds(430,50,200, 20);
-	    
-	    
-	    JLabel sigmaDesc = new JLabel("Enter initial variable assignments: (Multiple possible: e.g. 'x=5;y=3;z=2')");
-	    sigmaDesc.setBounds(5,50,400, 20);
-	    final JTextField sigma = new JTextField();
-	    sigma.setBounds(5,70,400, 20);
-	    
-	    JLabel usedVarsDesc = new JLabel("Enter all used variables (separate with , ) ");
-	    usedVarsDesc.setBounds(500,90,400, 20);
-	    final JTextField usedVars = new JTextField();
-	    usedVars.setBounds(500,110,400, 20);
-
-	    JButton calcButton = new JButton("Calculate!");
-	    calcButton.setBounds(5,100,150, 40); 
-	       
-	    
-	    allSigmaIteration.setBounds(200,100,300, 50);
-	    frame.add(allSigmaIteration);
-	  
-	    frame.add(Cdesc);
-	    frame.add(C);
-	    frame.add(Fdesc);
-	    frame.add(F);
-	    frame.add(RestrictionDesc);
-	    frame.add(restrictionField);
-	    frame.add(iterationField);
-	    frame.add(sigmaDesc);
-	    frame.add(sigma);
-	    frame.add(calcButton);
-	    
-	    
-	    JScrollPane scroll = new JScrollPane(result);
-	    scroll.setBounds(10,200 ,800, 400); 
-	    result.setEditable(false);
-	    
-	    frame.getContentPane().add(scroll);
-	    
-	    
-	    frame.setSize(1000,700);
-	    frame.setLayout(null); 
-	    frame.setVisible(true);
-	    
-	    frame.add(usedVars);
-	    frame.add(usedVarsDesc);
-	    usedVars.setVisible(false);
-    	usedVarsDesc.setVisible(false);
-	    
-	    allSigmaIteration.addActionListener(new ActionListener(){  
-	    	public void actionPerformed(ActionEvent e){  
-	    		if (allSigmaIteration.isSelected()) {
-	    	    	usedVars.setVisible(true);
-	    	    	usedVarsDesc.setVisible(true);
-	    	    }else {
-	    	    	usedVars.setVisible(false);
-	    	    	usedVarsDesc.setVisible(false);
-	    	    }
-    	   }  
-	    });
-	    
-	    calcButton.addActionListener(new ActionListener(){  
-	    	public void actionPerformed(ActionEvent e){  
-	    		
-	    		result.setText(""); 	
-	    		
-	    		/*if(sigma.getText().isEmpty()) {
-	    	    	//throw exception;
-	    			result.setText("You have to input an initial variable assignment!");
-	    	    	return;
-	    	    } */
-	    		if(restrictionField.getText().isEmpty()) {
-	    	    	//throw exception;
-	    			result.setText("You have to set a restriction for the variables!");
-	    	    	return;
-	    	    } 
-	    		setRestriction(Double.parseDouble(restrictionField.getText()));
-	    		if(!iterationField.getText().isEmpty()) {
-		    		setIterationCount(Integer.parseInt(iterationField.getText()));
-	    	    }
-	    		String calcResult = "";
-	    		if (allSigmaIteration.isSelected()) {
-	    	    	allSigma = getVariableCombinations(usedVars.getText(),restriction); //TODO still needs to be implemented
-	    	    }
-	    		if(sigma.getText().isEmpty()) {
-		    	    calcResult = calculation(wp(sigma.getText()+C.getText(),F.getText(),null));
-	    		}else {
-		    	    calcResult = calculation(wp(sigma.getText()+";"+C.getText(),F.getText(),null)); 
-	    		}
-	    	    result.setText(result.getText() + "\n" + "Result: " + calcResult);
-    	   }  
-	    }); 
-	    
-
-	}
 	
 	public String wp(String C, String f, HashMap<String, String> sigma) {
 		//TODO check which calculations can be skipped
 		
 		C = C.replace(" ", "");
-		result.setText(result.getText() + "\n" + "wp["+C+"]("+f+")");
+		mainView.getResult().setText(mainView.getResult().getText() + "\n" + "wp["+C+"]("+f+")");
 		System.out.println("C "+ C);
 		String C1 = getSequentialCut(C);
 		System.out.println("C1: " + C1);
@@ -157,7 +25,7 @@ private int iterationCount = 10;
 			System.out.println("Enter sequential process"); 
 			String C2 = C.substring(C1.length()+1);
 			System.out.println("C2: " + C2);
-			result.setText(result.getText() + "\n" + "Sequential process. Breaking down into: wp["+C1+"](wp["+C2+"]("+f+"))"); 
+			mainView.getResult().setText(mainView.getResult().getText() + "\n" + "Sequential process. Breaking down into: wp["+C1+"](wp["+C2+"]("+f+"))"); 
 			return wp(C1,(wp(C2,f,sigma)),sigma);
 		}else {
 			if(C.startsWith("min{")) {
@@ -172,7 +40,7 @@ private int iterationCount = 10;
 				String resultC1 = wp(demC1,f,sigma);
 				String resultC2 = wp(demC2,f,sigma);
 
-				result.setText(result.getText() + "\n" + "Demonic Choice process. Breaking down into: min(" + resultC1 + "," + resultC2 + ")"); 
+				mainView.getResult().setText(mainView.getResult().getText() + "\n" + "Demonic Choice process. Breaking down into: min(" + resultC1 + "," + resultC2 + ")"); 
 
 				return calculation("min(" + resultC1 + "," + resultC2 + ")");
 
@@ -192,7 +60,7 @@ private int iterationCount = 10;
 				System.out.println("C2= "+ifC2);
 				String resultC1 = wp(ifC1,f,sigma);
 				String resultC2 = wp(ifC2,f,sigma);
-				result.setText(result.getText() + "\n" + "Conditional process. Breaking down into: if("+condition+") then "+ resultC1 +" else "+ resultC2); 
+				mainView.getResult().setText(mainView.getResult().getText() + "\n" + "Conditional process. Breaking down into: if("+condition+") then "+ resultC1 +" else "+ resultC2); 
 				if(calculation(condition).equals("1.0")) {
 					return calculation(resultC1);
 				}
@@ -215,10 +83,10 @@ private int iterationCount = 10;
 				System.out.println("C1= "+probC1); 
 				System.out.println("C2= "+probC2);
 				System.out.println("Probability:" + probability);
-				Expression negProbability = new Expression ("1-"+probability); //TODO does this work for greater 1 probabilities? Or should it even work?
+				Expression negProbability = new Expression ("1-"+probability);
 				String resultC1 = wp(probC1,f,sigma);
 				String resultC2 = wp(probC2,f,sigma);
-				result.setText(result.getText() + "\n" + "Probability process. Breaking down into: " + probability + " * " + resultC1 +" + "+ negProbability.calculate() + " * " + resultC2); 
+				mainView.getResult().setText(mainView.getResult().getText() + "\n" + "Probability process. Breaking down into: " + probability + " * " + resultC1 +" + "+ negProbability.calculate() + " * " + resultC2); 
 				String result = calculation("(" + probability + " * "+ resultC1 +" + "+ negProbability.calculate() + " * " + resultC2+")");
 
 				return result;
@@ -233,15 +101,15 @@ private int iterationCount = 10;
 				whileC = getInsideBracket(whileC.substring(whileC.indexOf("{")+1));
 				System.out.println("whileC: "+whileC);
 				
-				if (allSigmaIteration.isSelected()) {
+				if (mainView.getAllSigmaIteration().isSelected()) {
 					 
 					//return fixpointIterationAllSigma(condition, whileC, f, iterationCount); still in development ; needs HashMap<String, String> sigma as parameter in wp
-					return fixpointIterationIterativ(condition, whileC, f, iterationCount); 
+					return fixpointIterationIterativ(condition, whileC, f, mainView.getIterationCount()); 
 
 				 
 				} else {
 				 
-					return fixpointIterationIterativ(condition, whileC, f, iterationCount);
+					return fixpointIterationIterativ(condition, whileC, f, mainView.getIterationCount());
 				 
 				}
 				
@@ -252,13 +120,13 @@ private int iterationCount = 10;
 				if(C.contains("skip")){
 					System.out.println("Enter skip process"); 
 					String skipResult = C.replace("skip", f);
-					result.setText(result.getText() + "\n" + "Assignment skip process." + skipResult);
+					mainView.getResult().setText(mainView.getResult().getText() + "\n" + "Assignment skip process." + skipResult);
 					return calculation(skipResult);
 				}else {
 					System.out.println("Enter assignment process"); 
 					String indexC = C.substring(0,1);
 					String cutC = C.substring(C.indexOf("=")+1);
-					String assignResult = f.replace(indexC, "min(" + cutC + "," + restriction + ")");
+					String assignResult = f.replace(indexC, "min(" + cutC + "," + mainView.getRestriction() + ")");
 
 					
 					//if mid calculation optimization
@@ -282,7 +150,7 @@ private int iterationCount = 10;
 						}
 					}
 					
-					result.setText(result.getText() + "\n" + "Assignment process." + assignResult);
+					mainView.getResult().setText(mainView.getResult().getText() + "\n" + "Assignment process." + assignResult);
 					return calculation(assignResult);
 				}
 					
@@ -324,7 +192,7 @@ private int iterationCount = 10;
 						input = input.replace("#{"+inside+"}", "0");
 						i--;
 					}else {
-						String truncatedValue = Double.toString(NumberUtils.min(insideValue,restriction));							
+						String truncatedValue = Double.toString(NumberUtils.min(insideValue,mainView.getRestriction()));							
 						input = input.replace("#{"+inside+"}", truncatedValue);
 						i--;
 					}
@@ -456,30 +324,5 @@ private int iterationCount = 10;
 	public void setVariables(HashMap<String, String> variables) {
 		this.variables = variables;
 	}	
-	
 
-	public JTextArea getResult() {
-		return result;
-	}
-
-	public void setResult(JTextArea result) {
-		this.result = result;
-	}
-	
-	public double getRestriction() {
-		return restriction;
-	}
-
-	public void setRestriction(double restriction) {
-		this.restriction = restriction;
-	}
-	
-
-	public int getIterationCount() {
-		return iterationCount;
-	}
-
-	public void setIterationCount(int iterationCount) {
-		this.iterationCount = iterationCount;
-	}
 }

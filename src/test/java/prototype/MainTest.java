@@ -8,8 +8,11 @@ import org.junit.jupiter.api.Test;
 
 class MainTest {
 	
+	//TODO make systematic border tests etc.
+	
     HashMap<String, String> variables = new HashMap<String,String>();
 	WPCalculator mainCalculator = new WPCalculator();
+	WPCalculatorView mainView = new WPCalculatorView();
 
 	
 	@Test
@@ -24,7 +27,9 @@ class MainTest {
 	
 	@Test
 	void truncateTest() {
-		mainCalculator.setRestriction(10);
+		mainCalculator.linkView(mainView);
+		mainView.linkCalculator(mainCalculator);
+		mainView.setRestriction(10); //TODO change restriction and iterationCount to model and pass/update on click?
 		
 		assert mainCalculator.truncate("#{1}").equals("1.0");
 		assert mainCalculator.truncate("#{-1}").equals("0");
@@ -43,8 +48,10 @@ class MainTest {
 	void testAssignments() {
 		variables.put("x", "0");
 		variables.put("y", "0");
+		mainCalculator.linkView(mainView);
+		mainView.linkCalculator(mainCalculator);
 		mainCalculator.setVariables(variables);
-		mainCalculator.setRestriction(10);
+		mainView.setRestriction(10);
 
 		
 		//assignments
@@ -63,8 +70,10 @@ class MainTest {
 	void testProbability() {
 		variables.put("x", "0");
 		variables.put("y", "0");
+		mainCalculator.linkView(mainView);
+		mainView.linkCalculator(mainCalculator);
 		mainCalculator.setVariables(variables);
-		mainCalculator.setRestriction(10);
+		mainView.setRestriction(10);
 
 		
 		//probability with initial assignment x=5
@@ -82,8 +91,10 @@ class MainTest {
 	void testConditional() {
 		variables.put("x", "0");
 		variables.put("y", "0");
+		mainCalculator.linkView(mainView);
+		mainView.linkCalculator(mainCalculator);
 		mainCalculator.setVariables(variables);
-		mainCalculator.setRestriction(15);
+		mainView.setRestriction(15);
 
 		
 		assert mainCalculator.calculation(mainCalculator.wp("x=5;if {x<5} {x=x+1} else {x=x-1}", "x^2")).equals("16.0");
@@ -100,8 +111,10 @@ class MainTest {
 	void testDemonicChoice() {
 		variables.put("x", "0");
 		variables.put("y", "0");
+		mainCalculator.linkView(mainView);
+		mainView.linkCalculator(mainCalculator);
 		mainCalculator.setVariables(variables);
-		mainCalculator.setRestriction(10);
+		mainView.setRestriction(10);
 
 		
 		assert mainCalculator.calculation(mainCalculator.wp("x=1;min{x=x+1}{x=3}","x")).equals("2.0");
@@ -112,9 +125,11 @@ class MainTest {
 	void testWhile() {	
 		variables.put("x", "1");
 		variables.put("c", "0");
+		mainCalculator.linkView(mainView);
+		mainView.linkCalculator(mainCalculator);
 		mainCalculator.setVariables(variables);
-		mainCalculator.setRestriction(100);
-		mainCalculator.setIterationCount(10);
+		mainView.setRestriction(100);
+		mainView.setIterationCount(10);
 
 		
 		assert mainCalculator.calculation(mainCalculator.wp("c=0;x=1; while(c=1){{x=x+1}[1/2]{c=0}}", "x")).equals("1.0");
