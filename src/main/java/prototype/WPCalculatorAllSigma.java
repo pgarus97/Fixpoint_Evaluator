@@ -2,6 +2,7 @@ package prototype;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import javax.swing.JButton;
@@ -16,21 +17,21 @@ import org.apache.commons.lang3.math.NumberUtils;
 import org.mariuszgromada.math.mxparser.Expression;
 //Parser Documentation: https://github.com/mariuszgromada/MathParser.org-mXparser
 
-//TODO if multiple calculator types => make interface 
-public class WPCalculator {
+public class WPCalculatorAllSigma {
 
 private HashMap<String, String> variables = new HashMap<String,String>();
+JCheckBox allSigmaIteration = new JCheckBox("Enable all-sigma fixpoint-iteration.");
+private ArrayList<HashMap<String, String>> allSigma = new ArrayList<HashMap<String, String>>();
 public JTextArea result = new JTextArea();
-JCheckBox allSigma = new JCheckBox("Enable all-sigma fixpoint-iteration.");
 private double restriction;
 private int iterationCount = 10;
-private WPCalculatorView mainView;
 
 
 
-	public WPCalculator() {
+	public WPCalculatorAllSigma() {
 		JFrame frame = new JFrame("wp-Calculator");	
 	    
+		
 	    JLabel Cdesc = new JLabel("Input the Program (C) here:");
 	    Cdesc.setBounds(5,0,170, 20);
 	    final JTextField C = new JTextField();
@@ -56,13 +57,18 @@ private WPCalculatorView mainView;
 	    sigmaDesc.setBounds(5,50,400, 20);
 	    final JTextField sigma = new JTextField();
 	    sigma.setBounds(5,70,400, 20);
+	    
+	    JLabel usedVarsDesc = new JLabel("Enter all used variables (separate with , ) ");
+	    usedVarsDesc.setBounds(500,90,400, 20);
+	    final JTextField usedVars = new JTextField();
+	    usedVars.setBounds(500,110,400, 20);
 
 	    JButton calcButton = new JButton("Calculate!");
 	    calcButton.setBounds(5,100,150, 40); 
 	       
 	    
-	    allSigma.setBounds(200,100,300, 50);
-	    frame.add(allSigma);
+	    allSigmaIteration.setBounds(200,100,300, 50);
+	    frame.add(allSigmaIteration);
 	  
 	    frame.add(Cdesc);
 	    frame.add(C);
@@ -75,6 +81,7 @@ private WPCalculatorView mainView;
 	    frame.add(sigma);
 	    frame.add(calcButton);
 	    
+	    
 	    JScrollPane scroll = new JScrollPane(result);
 	    scroll.setBounds(10,200 ,800, 400); 
 	    result.setEditable(false);
@@ -85,6 +92,23 @@ private WPCalculatorView mainView;
 	    frame.setSize(1000,700);
 	    frame.setLayout(null); 
 	    frame.setVisible(true);
+	    
+	    frame.add(usedVars);
+	    frame.add(usedVarsDesc);
+	    usedVars.setVisible(false);
+    	usedVarsDesc.setVisible(false);
+	    
+	    allSigmaIteration.addActionListener(new ActionListener(){  
+	    	public void actionPerformed(ActionEvent e){  
+	    		if (allSigmaIteration.isSelected()) {
+	    	    	usedVars.setVisible(true);
+	    	    	usedVarsDesc.setVisible(true);
+	    	    }else {
+	    	    	usedVars.setVisible(false);
+	    	    	usedVarsDesc.setVisible(false);
+	    	    }
+    	   }  
+	    });
 	    
 	    calcButton.addActionListener(new ActionListener(){  
 	    	public void actionPerformed(ActionEvent e){  
@@ -106,10 +130,13 @@ private WPCalculatorView mainView;
 		    		setIterationCount(Integer.parseInt(iterationField.getText()));
 	    	    }
 	    		String calcResult = "";
+	    		if (allSigmaIteration.isSelected()) {
+	    	    	allSigma = getVariableCombinations(usedVars.getText(),restriction); //TODO still needs to be implemented
+	    	    }
 	    		if(sigma.getText().isEmpty()) {
-		    	    calcResult = calculation(wp(sigma.getText()+C.getText(),F.getText())); 
+		    	    calcResult = calculation(wp(sigma.getText()+C.getText(),F.getText(),null));
 	    		}else {
-		    	    calcResult = calculation(wp(sigma.getText()+";"+C.getText(),F.getText())); 
+		    	    calcResult = calculation(wp(sigma.getText()+";"+C.getText(),F.getText(),null)); 
 	    		}
 	    	    result.setText(result.getText() + "\n" + "Result: " + calcResult);
     	   }  
@@ -118,7 +145,7 @@ private WPCalculatorView mainView;
 
 	}
 	
-	public String wp(String C, String f) {
+	public String wp(String C, String f, HashMap<String, String> sigma) {
 		//TODO check which calculations can be skipped
 		
 		C = C.replace(" ", "");
@@ -131,7 +158,7 @@ private WPCalculatorView mainView;
 			String C2 = C.substring(C1.length()+1);
 			System.out.println("C2: " + C2);
 			result.setText(result.getText() + "\n" + "Sequential process. Breaking down into: wp["+C1+"](wp["+C2+"]("+f+"))"); 
-			return wp(C1,(wp(C2,f)));
+			return wp(C1,(wp(C2,f,sigma)),sigma);
 		}else {
 			if(C.startsWith("min{")) {
 				//demonic choice process
@@ -142,8 +169,8 @@ private WPCalculatorView mainView;
 				
 				System.out.println("demC1= "+demC1); 
 				System.out.println("demC2= "+demC2);
-				String resultC1 = wp(demC1,f);
-				String resultC2 = wp(demC2,f);
+				String resultC1 = wp(demC1,f,sigma);
+				String resultC2 = wp(demC2,f,sigma);
 
 				result.setText(result.getText() + "\n" + "Demonic Choice process. Breaking down into: min(" + resultC1 + "," + resultC2 + ")"); 
 
@@ -163,8 +190,8 @@ private WPCalculatorView mainView;
 				
 				System.out.println("C1= "+ifC1); 
 				System.out.println("C2= "+ifC2);
-				String resultC1 = wp(ifC1,f);
-				String resultC2 = wp(ifC2,f);
+				String resultC1 = wp(ifC1,f,sigma);
+				String resultC2 = wp(ifC2,f,sigma);
 				result.setText(result.getText() + "\n" + "Conditional process. Breaking down into: if("+condition+") then "+ resultC1 +" else "+ resultC2); 
 				if(calculation(condition).equals("1.0")) {
 					return calculation(resultC1);
@@ -189,8 +216,8 @@ private WPCalculatorView mainView;
 				System.out.println("C2= "+probC2);
 				System.out.println("Probability:" + probability);
 				Expression negProbability = new Expression ("1-"+probability); //TODO does this work for greater 1 probabilities? Or should it even work?
-				String resultC1 = wp(probC1,f);
-				String resultC2 = wp(probC2,f);
+				String resultC1 = wp(probC1,f,sigma);
+				String resultC2 = wp(probC2,f,sigma);
 				result.setText(result.getText() + "\n" + "Probability process. Breaking down into: " + probability + " * " + resultC1 +" + "+ negProbability.calculate() + " * " + resultC2); 
 				String result = calculation("(" + probability + " * "+ resultC1 +" + "+ negProbability.calculate() + " * " + resultC2+")");
 
@@ -206,7 +233,7 @@ private WPCalculatorView mainView;
 				whileC = getInsideBracket(whileC.substring(whileC.indexOf("{")+1));
 				System.out.println("whileC: "+whileC);
 				
-				if (allSigma.isSelected()) {
+				if (allSigmaIteration.isSelected()) {
 					 
 					//return fixpointIterationAllSigma(condition, whileC, f, iterationCount); still in development ; needs HashMap<String, String> sigma as parameter in wp
 					return fixpointIterationIterativ(condition, whileC, f, iterationCount); 
@@ -295,8 +322,7 @@ private WPCalculatorView mainView;
 					double insideValue = Double.parseDouble(insideCalc);
 					if(insideValue <= 0) {
 						input = input.replace("#{"+inside+"}", "0");
-						i--; //reduce i to read back from new values? TODO check
-						//TODO check if input length actually gets updated
+						i--;
 					}else {
 						String truncatedValue = Double.toString(NumberUtils.min(insideValue,restriction));							
 						input = input.replace("#{"+inside+"}", truncatedValue);
@@ -327,7 +353,7 @@ private WPCalculatorView mainView;
 	public String fixpointIterationIterativ(String condition, String C, String f, int count) {
 		String caseF = "0"; //X^0 initialization
 		for(int i=0; i<count; i++) {
-			String X = wp(C, caseF);
+			String X = wp(C, caseF, null);
 			caseF = "if("+condition+","+X+","+f+")";	
 		}
 		//TODO round calculation result here if it is a number = how much should we round?
@@ -337,9 +363,12 @@ private WPCalculatorView mainView;
 	public String fixpointIterationAllSigma(String condition, String C, String f, int count) {
 		//iterate through array of all sigmas and get X for each sigma => save that and compare to next loop => Result Hashmap
 		//check condition first, if wrong with sigma then skip
+		
+		//TODO how do we do the while fixpoint iteration on a concrete sigma for only one step??? calculate only one step at a time and insert?
+		
 		String caseF = "0"; //X^0 initialization
 		for(int i=0; i<count; i++) {
-			String X = wp(C, caseF);
+			String X = wp(C, caseF,null); //TODO iteration with all sigma here
 			caseF = "if("+condition+","+X+","+f+")";	
 		}
 		
@@ -347,7 +376,7 @@ private WPCalculatorView mainView;
 	}
 	
 	//start with C in one index after first appearance of start char
-	public static String getInsideBracket(String C) {
+	public String getInsideBracket(String C) {
 		int bracketCount = 1;
 		String result = "";
 		for(int i = 0; i < C.length(); i++) {
@@ -367,7 +396,7 @@ private WPCalculatorView mainView;
 		return result;
 	}
 	
-	public static String getInsideIf(String C) {
+	public String getInsideIf(String C) {
 		int commaCount = 1;
 		String result = "";
 		for(int i = 0; i < C.length(); i++) {
@@ -392,7 +421,7 @@ private WPCalculatorView mainView;
 		return result;
 	}
 	
-	public static String getSequentialCut(String C) {
+	public String getSequentialCut(String C) {
 		int bracketCount = 0;
 		String result = "";
 		for(int i = 0; i < C.length(); i++) {
@@ -410,6 +439,13 @@ private WPCalculatorView mainView;
 			}
 		}
 		return result;
+	}
+	
+	public ArrayList<HashMap<String,String>> getVariableCombinations(String varInput, double restriction) {
+		for(int i = 0; i<varInput.length(); i++) {
+		//TODO guava cartesian product 	
+		}
+		return null;
 	}
 	
 	
@@ -445,9 +481,5 @@ private WPCalculatorView mainView;
 
 	public void setIterationCount(int iterationCount) {
 		this.iterationCount = iterationCount;
-	}
-	
-	public void linkView(WPCalculatorView mainView) {
-		this.mainView = mainView;
 	}
 }
