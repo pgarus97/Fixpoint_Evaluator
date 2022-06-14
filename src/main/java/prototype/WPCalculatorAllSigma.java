@@ -2,9 +2,12 @@ package prototype;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import org.apache.commons.lang3.math.NumberUtils;
 import org.mariuszgromada.math.mxparser.Expression;
+
+import com.google.common.collect.Lists;
 //Parser Documentation: https://github.com/mariuszgromada/MathParser.org-mXparser
 
 public class WPCalculatorAllSigma {
@@ -12,6 +15,7 @@ public class WPCalculatorAllSigma {
 private HashMap<String, String> variables = new HashMap<String,String>();
 private WPCalculatorView mainView;
 private ArrayList<HashMap<String, String>> allSigma = new ArrayList<HashMap<String, String>>();
+
 	
 	public String wp(String C, String f, HashMap<String, String> sigma) {
 		//TODO check which calculations can be skipped
@@ -229,6 +233,24 @@ private ArrayList<HashMap<String, String>> allSigma = new ArrayList<HashMap<Stri
 	}
 	
 	public String fixpointIterationAllSigma(String condition, String C, String f, int count) {
+		
+		
+
+
+		/*
+		//converting List<List<String>> to List<Set<String>>
+		for (List<String> tmp : allLists) { 
+		    Set<String> interimSet   = new HashSet<String>(tmp);
+		    interimList.add(interimSet);
+		}
+		System.out.println(interimList);
+		Sets.cartesianProduct(interimList);
+		
+		Lists interimList = 
+		char[] ch = variableString.toCharArray();
+	    for (char c : ch) {
+	    	System.out.println(c);
+        }
 		//iterate through array of all sigmas and get X for each sigma => save that and compare to next loop => Result Hashmap
 		//check condition first, if wrong with sigma then skip
 		
@@ -239,8 +261,8 @@ private ArrayList<HashMap<String, String>> allSigma = new ArrayList<HashMap<Stri
 			String X = wp(C, caseF,null); //TODO iteration with all sigma here
 			caseF = "if("+condition+","+X+","+f+")";	
 		}
-		
-		return caseF;
+		*/
+		return ""; //caseF
 	}
 	
 	//start with C in one index after first appearance of start char
@@ -309,11 +331,33 @@ private ArrayList<HashMap<String, String>> allSigma = new ArrayList<HashMap<Stri
 		return result;
 	}
 	
-	public ArrayList<HashMap<String,String>> getVariableCombinations(String varInput, double restriction) {
-		for(int i = 0; i<varInput.length(); i++) {
-		//TODO guava cartesian product 	
+	public ArrayList<HashMap<String,String>> fillAllSigma(String varInput, double restriction) {
+		allSigma.clear();
+		int varCount = varInput.length();
+		
+		List<List<Character>> preCartesianValues = new ArrayList<List<Character>>(); 
+		
+		String restrictedSet = "";
+		for (int i = 0 ; i < restriction+1; i++) {
+			restrictedSet += i;
 		}
-		return null;
+		
+		List<Character> restrictedList = new ArrayList<Character>(Lists.charactersOf(restrictedSet));
+		
+		for(int i = 0 ; i < varCount ; i++) {	
+			preCartesianValues.add(restrictedList);
+		}
+
+		List<List<Character>> postCartesianValues = Lists.cartesianProduct(preCartesianValues);
+		
+		for(int i = 0 ; i < postCartesianValues.size(); i++){
+			HashMap<String, String> tempMap = new HashMap<String,String>();
+			for(int j = 0 ; j < postCartesianValues.get(i).size(); j++){
+			tempMap.put(String.valueOf(varInput.charAt(j)), postCartesianValues.get(i).get(j).toString());
+			}
+			allSigma.add(tempMap);
+		}
+		return allSigma;
 	}
 	
 	
@@ -325,4 +369,8 @@ private ArrayList<HashMap<String, String>> allSigma = new ArrayList<HashMap<Stri
 		this.variables = variables;
 	}	
 
+	public void linkView(WPCalculatorView mainView) {
+		this.mainView = mainView;
+	}
+	
 }

@@ -19,37 +19,38 @@ JCheckBox allSigmaIteration = new JCheckBox("Enable all-sigma fixpoint-iteration
 private double restriction;
 private int iterationCount = 10;
 private WPCalculator mainCalculator;
+private WPCalculatorAllSigma allSigmaCalculator;
 
 	public WPCalculatorView() {
 		JFrame frame = new JFrame("wp-Calculator");	
 	    
 	    JLabel Cdesc = new JLabel("Input the Program (C) here:");
 	    Cdesc.setBounds(5,0,170, 20);
-	    JTextField C = new JTextField();
+	    final JTextField C = new JTextField();
 	    C.setBounds(5,20,170, 20);
 	    
 	    JLabel Fdesc = new JLabel("Input the postexpectation (f) here:");
 	    Fdesc.setBounds(200,0,200, 20);
-	    JTextField F = new JTextField();
+	    final JTextField F = new JTextField();
 	    F.setBounds(200,20,200, 20);
 	    
 	    JLabel RestrictionDesc = new JLabel("Input the restriction (k) here:");
 	    RestrictionDesc.setBounds(430,0,200, 20);
-	    JTextField restrictionField = new JTextField();
+	    final JTextField restrictionField = new JTextField();
 	    restrictionField.setBounds(430,20,200, 20);
 	    
 	    JLabel iterationDesc = new JLabel("Input the restriction (k) here:");
 	    iterationDesc.setBounds(430,0,200, 20);
-	    JTextField iterationField = new JTextField();
+	    final JTextField iterationField = new JTextField();
 	    iterationField.setBounds(430,50,200, 20);
 	    
 	    
 	    JLabel sigmaDesc = new JLabel("Enter initial variable assignments: (Multiple possible: e.g. 'x=5;y=3;z=2')");
 	    sigmaDesc.setBounds(5,50,400, 20);
-	    JTextField sigma = new JTextField();
+	    final JTextField sigma = new JTextField();
 	    sigma.setBounds(5,70,400, 20);
 	    
-	    JLabel usedVarsDesc = new JLabel("Enter all used variables (separate with , ) ");
+	    final JLabel usedVarsDesc = new JLabel("Enter all used variables (separate with , ) ");
 	    usedVarsDesc.setBounds(500,90,400, 20);
 	    final JTextField usedVars = new JTextField();
 	    usedVars.setBounds(500,110,400, 20);
@@ -163,4 +164,9 @@ private WPCalculator mainCalculator;
 	public void linkCalculator(WPCalculator mainCalculator) {
 		this.mainCalculator = mainCalculator;
 	}
+	
+	public void linkAllSigmaCalculator(WPCalculatorAllSigma allSigmaCalculator) {
+		this.allSigmaCalculator = allSigmaCalculator;
+	}
+	
 }

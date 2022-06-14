@@ -1,6 +1,7 @@
 package prototype;
 
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.apache.commons.lang3.math.NumberUtils;
@@ -12,8 +13,14 @@ class MainTest {
 	
     HashMap<String, String> variables = new HashMap<String,String>();
 	WPCalculator mainCalculator = new WPCalculator();
+	WPCalculatorAllSigma allSigmaCalculator = new WPCalculatorAllSigma();
 	WPCalculatorView mainView = new WPCalculatorView();
 
+	
+	MainTest(){
+		mainCalculator.linkView(mainView);
+		mainView.linkCalculator(mainCalculator);
+	}
 	
 	@Test
 	void calcTest() {
@@ -27,8 +34,6 @@ class MainTest {
 	
 	@Test
 	void truncateTest() {
-		mainCalculator.linkView(mainView);
-		mainView.linkCalculator(mainCalculator);
 		mainView.setRestriction(10); //TODO change restriction and iterationCount to model and pass/update on click?
 		
 		assert mainCalculator.truncate("#{1}").equals("1.0");
@@ -134,5 +139,33 @@ class MainTest {
 		
 		assert mainCalculator.calculation(mainCalculator.wp("c=0;x=1; while(c=1){{x=x+1}[1/2]{c=0}}", "x")).equals("1.0");
 		assert mainCalculator.calculation(mainCalculator.wp("c=1;x=1; while(c=1){{x=x+1}[1/2]{c=0}}", "x")).equals("1.978515625");
+	}
+	
+	@Test
+	void testfillAllSigma() {
+		mainCalculator.linkView(mainView);
+		mainView.linkCalculator(mainCalculator);
+		mainView.linkAllSigmaCalculator(allSigmaCalculator);
+		allSigmaCalculator.linkView(mainView);
+		mainCalculator.setVariables(variables);
+
+		mainView.setRestriction(1);
+		mainView.setIterationCount(10);
+		
+		ArrayList<HashMap<String,String>> testAllSigma = allSigmaCalculator.fillAllSigma("xy", mainView.getRestriction());
+		
+		assert testAllSigma.get(0).get("x").equals("0");
+		assert testAllSigma.get(0).get("y").equals("0");
+		
+		assert testAllSigma.get(1).get("x").equals("0");
+		assert testAllSigma.get(1).get("y").equals("1");
+		
+		assert testAllSigma.get(2).get("x").equals("1");
+		assert testAllSigma.get(2).get("y").equals("0");
+		
+		assert testAllSigma.get(3).get("x").equals("1");
+		assert testAllSigma.get(3).get("y").equals("1");
+		
+
 	}
 }
