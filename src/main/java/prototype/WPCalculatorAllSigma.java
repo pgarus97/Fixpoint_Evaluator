@@ -1,7 +1,7 @@
 package prototype;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -13,12 +13,12 @@ import com.google.common.collect.Lists;
 
 public class WPCalculatorAllSigma {
 
-private HashMap<String, String> variables = new HashMap<String,String>();
+private LinkedHashMap<String, String> variables = new LinkedHashMap<String,String>();
 private WPCalculatorView mainView;
-private ArrayList<HashMap<String, String>> allSigma = new ArrayList<HashMap<String, String>>();
+private ArrayList<LinkedHashMap<String, String>> allSigma = new ArrayList<LinkedHashMap<String, String>>();
 
 	
-	public String wp(String C, String f, HashMap<String, String> sigma) {
+	public String wp(String C, String f, LinkedHashMap<String, String> sigma) {
 		//TODO check which calculations can be skipped for runtime improvement
 		
 		C = C.replace(" ", "");
@@ -129,6 +129,7 @@ private ArrayList<HashMap<String, String>> allSigma = new ArrayList<HashMap<Stri
 					System.out.println("Enter assignment process"); 
 					String indexC = C.substring(0,1);
 					String cutC = C.substring(C.indexOf("=")+1);
+					//TODO need to define minmax function
 					String assignResult = f.replace(indexC, "min(" + cutC + "," + mainView.getRestriction() + ")");
 
 					
@@ -178,7 +179,7 @@ private ArrayList<HashMap<String, String>> allSigma = new ArrayList<HashMap<Stri
 		}
 	}
 		
-	 // Deprecated method to calculate restrictions on variables
+	 // Deprecated method to calculate restrictions on variables //need to define minmax function 
 	  public String truncate(String input) {
 		String result ="";
 		for(int i = 0; i < input.length(); i++) {
@@ -229,25 +230,35 @@ private ArrayList<HashMap<String, String>> allSigma = new ArrayList<HashMap<Stri
 	
 	//TODO WIP
 	public String fixpointIterationAllSigma(String condition, String C, String f, int count) {
-		for(HashMap<String,String> sigma : allSigma) {
+		LinkedHashMap<String,Double> fixpoint = new LinkedHashMap<String, Double>();
+		
+		for(LinkedHashMap<String,String> sigma : allSigma) {
+			double sigmaResult = 0.0;
 			double previousIterationResult = 0.0;
+			String caseF = "0"; //X^0 initialization
+			String identifier = "";
+			for(Map.Entry<String, String> entry : sigma.entrySet()) {
+				identifier += "&("+entry.getKey()+"="+entry.getValue()+")"; //creates identifier based on variables and values
+			}	
+			identifier = identifier.replaceFirst("&","");
 			for(int i=0; i<count; i++) {
-				String caseF = "0"; //X^0 initialization
-				String X = wp(C, caseF, sigma); //TODO need to implement new WP that handles concrete sigma assignments; dont need sigma in wp
+				//TODO improvement: if condition with sigma inserted == false => skip iteration entirely and take f
+				String X = wp(C, caseF, sigma); //TODO need to implement new WP that handles concrete sigma assignments; dont need sigma in wp?
 				caseF = "if("+condition+","+X+","+f+")";
 				System.out.println(caseF);
-				double sigmaResult = calculateConcreteSigma(caseF,sigma);
-				//TODO output HashMap here?
+				sigmaResult = calculateConcreteSigma(caseF,sigma);
 				
 				//TODO after second iteration we can start checking for delta?
-				if(i < 2) {
+				if(i > 2) {
 					//TODO variable delta restriction
 					if(sigmaResult-previousIterationResult < 0.01) {
 						//result = sigmaResult
-						break;
+						//break;
 					}
 				}
 				
+				
+				//TODO output HashMap here?
 				/*
 				 * Output needs to be a List of results for each sigma
 				 * List<HashMap<HashMap<String,String>,double>> ? What do we do want to do with the result is the important question?
@@ -257,24 +268,33 @@ private ArrayList<HashMap<String, String>> allSigma = new ArrayList<HashMap<Stri
 				
 				//TODO either iterationCount, or delta calculation between Xi and Xi+1 or check if Xi = Xi+1 => just equals test is not sufficient
 			}
+			
+		fixpoint.put(identifier, sigmaResult);	
+		
 		}
+		
+		return calculation(fixpointIfConversion(fixpoint));
+		
 		
 		//iterate through array of all sigmas and get X for each sigma => save that and compare to next loop => Result Hashmap
 		//check condition first, if wrong with sigma then skip
 		
 		//TODO how do we do the while fixpoint iteration on a concrete sigma for only one step??? calculate only one step at a time and insert?
-		
-		String caseF = "0"; //X^0 initialization
-		for(int i=0; i<count; i++) {
-			String X = wp(C, caseF,null); //TODO iteration with all sigma here
-			caseF = "if("+condition+","+X+","+f+")";	
+	}
+	
+	//TODO write tests
+	public String fixpointIfConversion(LinkedHashMap<String,Double> fixpoint) {
+		String result = "iff(";
+		for(Map.Entry<String, Double> entry : fixpoint.entrySet()) {
+			result += ";" + entry.getKey()+","+entry.getValue();
 		}
-		
-		return ""; //caseF
+		result = result.replaceFirst(";", "");
+		result += ")";
+		return result;
 	}
 	
 	//TODO add other possibility of calculating concrete sigma: wp("sigma=x=1;c=1";caseF,null); = Xi
-	public Double calculateConcreteSigma(String f, HashMap<String,String> sigma) {
+	public Double calculateConcreteSigma(String f, LinkedHashMap<String,String> sigma) {
 		for(Map.Entry<String, String> entry : sigma.entrySet()) {
 			f = f.replace(entry.getKey(), entry.getValue());
 		}	
@@ -355,7 +375,7 @@ private ArrayList<HashMap<String, String>> allSigma = new ArrayList<HashMap<Stri
 		return result;
 	}
 	
-	public ArrayList<HashMap<String,String>> fillAllSigma(String varInput) {
+	public ArrayList<LinkedHashMap<String,String>> fillAllSigma(String varInput) {
 		allSigma.clear();
 		int varCount = varInput.length();
 		
@@ -375,7 +395,7 @@ private ArrayList<HashMap<String, String>> allSigma = new ArrayList<HashMap<Stri
 		List<List<Character>> postCartesianValues = Lists.cartesianProduct(preCartesianValues);
 		
 		for(int i = 0 ; i < postCartesianValues.size(); i++){
-			HashMap<String, String> tempMap = new HashMap<String,String>();
+			LinkedHashMap<String, String> tempMap = new LinkedHashMap<String,String>();
 			for(int j = 0 ; j < postCartesianValues.get(i).size(); j++){
 			tempMap.put(String.valueOf(varInput.charAt(j)), postCartesianValues.get(i).get(j).toString());
 			}
@@ -385,11 +405,11 @@ private ArrayList<HashMap<String, String>> allSigma = new ArrayList<HashMap<Stri
 	}
 	
 	
-	public HashMap<String, String> getVariables() {
+	public LinkedHashMap<String, String> getVariables() {
 		return variables;
 	}
 
-	public void setVariables(HashMap<String, String> variables) {
+	public void setVariables(LinkedHashMap<String, String> variables) {
 		this.variables = variables;
 	}	
 
