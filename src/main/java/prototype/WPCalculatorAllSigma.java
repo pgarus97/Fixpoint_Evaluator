@@ -243,7 +243,7 @@ private ArrayList<LinkedHashMap<String, String>> allSigma = new ArrayList<Linked
 			identifier = identifier.replaceFirst("&","");
 			for(int i=0; i<count; i++) {
 				//TODO improvement: if condition with sigma inserted == false => skip iteration entirely and take f
-				String X = wp(C, caseF, sigma); //TODO need to implement new WP that handles concrete sigma assignments; dont need sigma in wp?
+				String X = wp(C, caseF, null); //TODO need to implement new WP that handles concrete sigma assignments; dont need sigma in wp?
 				caseF = "if("+condition+","+X+","+f+")";
 				System.out.println(caseF);
 				sigmaResult = calculateConcreteSigma(caseF,sigma);
