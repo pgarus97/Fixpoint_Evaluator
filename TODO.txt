@@ -36,3 +36,6 @@ BIG TODO:
 4) More test cases
 5) User Interface implementation
 
+
+June: 
+need to reimplement #{} min operator for proper 0 and k truncation

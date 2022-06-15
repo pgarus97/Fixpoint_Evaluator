@@ -16,7 +16,7 @@ public class WPCalculatorView {
 public JTextArea result = new JTextArea();
 JCheckBox allSigmaIteration = new JCheckBox("Enable all-sigma fixpoint-iteration.");
 
-private double restriction;
+private double restriction = 2;
 private int iterationCount = 10;
 private WPCalculator mainCalculator;
 private WPCalculatorAllSigma allSigmaCalculator;
@@ -26,33 +26,33 @@ private WPCalculatorAllSigma allSigmaCalculator;
 	    
 	    JLabel Cdesc = new JLabel("Input the Program (C) here:");
 	    Cdesc.setBounds(5,0,170, 20);
-	    final JTextField C = new JTextField();
+	    final JTextField C = new JTextField("while(c=1){{x=x+1}[1/2]{c=0}}");
 	    C.setBounds(5,20,170, 20);
 	    
 	    JLabel Fdesc = new JLabel("Input the postexpectation (f) here:");
 	    Fdesc.setBounds(200,0,200, 20);
-	    final JTextField F = new JTextField();
+	    final JTextField F = new JTextField("x");
 	    F.setBounds(200,20,200, 20);
 	    
 	    JLabel RestrictionDesc = new JLabel("Input the restriction (k) here:");
 	    RestrictionDesc.setBounds(430,0,200, 20);
-	    final JTextField restrictionField = new JTextField();
+	    final JTextField restrictionField = new JTextField("2");
 	    restrictionField.setBounds(430,20,200, 20);
 	    
-	    JLabel iterationDesc = new JLabel("Input the restriction (k) here:");
+	    JLabel iterationDesc = new JLabel("Input the iteration count here:");
 	    iterationDesc.setBounds(430,0,200, 20);
-	    final JTextField iterationField = new JTextField();
+	    final JTextField iterationField = new JTextField("10");
 	    iterationField.setBounds(430,50,200, 20);
 	    
-	    
+	    //might be deprecated
 	    JLabel sigmaDesc = new JLabel("Enter initial variable assignments: (Multiple possible: e.g. 'x=5;y=3;z=2')");
 	    sigmaDesc.setBounds(5,50,400, 20);
 	    final JTextField sigma = new JTextField();
 	    sigma.setBounds(5,70,400, 20);
 	    
-	    final JLabel usedVarsDesc = new JLabel("Enter all used variables (separate with , ) ");
+	    final JLabel usedVarsDesc = new JLabel("Enter all used variables (e.g. xyz) ");
 	    usedVarsDesc.setBounds(500,90,400, 20);
-	    final JTextField usedVars = new JTextField();
+	    final JTextField usedVars = new JTextField("xc");
 	    usedVars.setBounds(500,110,400, 20);
 
 	    JButton calcButton = new JButton("Calculate!");
@@ -101,11 +101,6 @@ private WPCalculatorAllSigma allSigmaCalculator;
 	    		
 	    		result.setText(""); 	
 	    		
-	    		/*if(sigma.getText().isEmpty()) {
-	    	    	//throw exception;
-	    			result.setText("You have to input an initial variable assignment!");
-	    	    	return;
-	    	    } */
 	    		if(restrictionField.getText().isEmpty()) {
 	    	    	//throw exception;
 	    			result.setText("You have to set a restriction for the variables!");
@@ -116,13 +111,18 @@ private WPCalculatorAllSigma allSigmaCalculator;
 		    		setIterationCount(Integer.parseInt(iterationField.getText()));
 	    	    }
 	    		String calcResult = "";
-	    		if (allSigmaIteration.isSelected()) {
-	    	    	//allSigma = getVariableCombinations(usedVars.getText(),restriction); //TODO still needs to be implemented
-	    	    }
 	    		if(sigma.getText().isEmpty()) {
-		    	    calcResult = mainCalculator.calculation(mainCalculator.wp(sigma.getText()+C.getText(),F.getText())); 
+		    		if (allSigmaIteration.isSelected()) {	    	 
+		    	    	calcResult = allSigmaCalculator.calculation(allSigmaCalculator.wp(sigma.getText()+C.getText(),F.getText(),null)); 
+		    	    }else {
+				    	    calcResult = mainCalculator.calculation(mainCalculator.wp(sigma.getText()+C.getText(),F.getText())); 
+		    	    }
 	    		}else {
-		    	    calcResult = mainCalculator.calculation(mainCalculator.wp(sigma.getText()+";"+C.getText(),F.getText())); 
+	    			if (allSigmaIteration.isSelected()) {	    	 
+		    	    	calcResult = allSigmaCalculator.calculation(allSigmaCalculator.wp(sigma.getText()+";"+C.getText(),F.getText(),null)); 
+		    	    }else {
+		    	    	calcResult = mainCalculator.calculation(mainCalculator.wp(sigma.getText()+";"+C.getText(),F.getText())); 
+		    	    }
 	    		}
 	    	    result.setText(result.getText() + "\n" + "Result: " + calcResult);
     	   }  

@@ -3,6 +3,7 @@ package prototype;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang3.math.NumberUtils;
 import org.mariuszgromada.math.mxparser.Expression;
@@ -18,7 +19,7 @@ private ArrayList<HashMap<String, String>> allSigma = new ArrayList<HashMap<Stri
 
 	
 	public String wp(String C, String f, HashMap<String, String> sigma) {
-		//TODO check which calculations can be skipped
+		//TODO check which calculations can be skipped for runtime improvement
 		
 		C = C.replace(" ", "");
 		mainView.getResult().setText(mainView.getResult().getText() + "\n" + "wp["+C+"]("+f+")");
@@ -107,9 +108,7 @@ private ArrayList<HashMap<String, String>> allSigma = new ArrayList<HashMap<Stri
 				
 				if (mainView.getAllSigmaIteration().isSelected()) {
 					 
-					//return fixpointIterationAllSigma(condition, whileC, f, iterationCount); still in development ; needs HashMap<String, String> sigma as parameter in wp
-					return fixpointIterationIterativ(condition, whileC, f, mainView.getIterationCount()); 
-
+					return fixpointIterationAllSigma(condition, whileC, f, mainView.getIterationCount());
 				 
 				} else {
 				 
@@ -120,7 +119,7 @@ private ArrayList<HashMap<String, String>> allSigma = new ArrayList<HashMap<Stri
 				
 			}else {
 				//variable assignments
-				
+				//TODO need to implement new WP that handles concrete sigma assignments
 				if(C.contains("skip")){
 					System.out.println("Enter skip process"); 
 					String skipResult = C.replace("skip", f);
@@ -164,9 +163,6 @@ private ArrayList<HashMap<String, String>> allSigma = new ArrayList<HashMap<Stri
 		}
 	
 	}
-	
-	
-	
 	
 	//TODO probably obsolete if we require initial variable assignments
 	public String calculation(String exp) {
@@ -220,7 +216,6 @@ private ArrayList<HashMap<String, String>> allSigma = new ArrayList<HashMap<Stri
 		}
 		return result;
 	}
-
 	
 	public String fixpointIterationIterativ(String condition, String C, String f, int count) {
 		String caseF = "0"; //X^0 initialization
@@ -232,25 +227,38 @@ private ArrayList<HashMap<String, String>> allSigma = new ArrayList<HashMap<Stri
 		return calculation(caseF);
 	}
 	
+	//TODO WIP
 	public String fixpointIterationAllSigma(String condition, String C, String f, int count) {
-		
-		
-
-
-		/*
-		//converting List<List<String>> to List<Set<String>>
-		for (List<String> tmp : allLists) { 
-		    Set<String> interimSet   = new HashSet<String>(tmp);
-		    interimList.add(interimSet);
+		for(HashMap<String,String> sigma : allSigma) {
+			double previousIterationResult = 0.0;
+			for(int i=0; i<count; i++) {
+				String caseF = "0"; //X^0 initialization
+				String X = wp(C, caseF, sigma); //TODO need to implement new WP that handles concrete sigma assignments; dont need sigma in wp
+				caseF = "if("+condition+","+X+","+f+")";
+				System.out.println(caseF);
+				double sigmaResult = calculateConcreteSigma(caseF,sigma);
+				//TODO output HashMap here?
+				
+				//TODO after second iteration we can start checking for delta?
+				if(i < 2) {
+					//TODO variable delta restriction
+					if(sigmaResult-previousIterationResult < 0.01) {
+						//result = sigmaResult
+						break;
+					}
+				}
+				
+				/*
+				 * Output needs to be a List of results for each sigma
+				 * List<HashMap<HashMap<String,String>,double>> ? What do we do want to do with the result is the important question?
+				 * make a big function of hashmaps and convert them into a calculatable if clause that represents the entire fixpoint?
+				 */
+				//TODO future improvement directly input sigma through assignment = f.replace x with sigma x and keep dependency somehow
+				
+				//TODO either iterationCount, or delta calculation between Xi and Xi+1 or check if Xi = Xi+1 => just equals test is not sufficient
+			}
 		}
-		System.out.println(interimList);
-		Sets.cartesianProduct(interimList);
 		
-		Lists interimList = 
-		char[] ch = variableString.toCharArray();
-	    for (char c : ch) {
-	    	System.out.println(c);
-        }
 		//iterate through array of all sigmas and get X for each sigma => save that and compare to next loop => Result Hashmap
 		//check condition first, if wrong with sigma then skip
 		
@@ -261,8 +269,24 @@ private ArrayList<HashMap<String, String>> allSigma = new ArrayList<HashMap<Stri
 			String X = wp(C, caseF,null); //TODO iteration with all sigma here
 			caseF = "if("+condition+","+X+","+f+")";	
 		}
-		*/
+		
 		return ""; //caseF
+	}
+	
+	//TODO add other possibility of calculating concrete sigma: wp("sigma=x=1;c=1";caseF,null); = Xi
+	public Double calculateConcreteSigma(String f, HashMap<String,String> sigma) {
+		for(Map.Entry<String, String> entry : sigma.entrySet()) {
+			f = f.replace(entry.getKey(), entry.getValue());
+		}	
+		Expression e = new Expression(f);
+		Double result = e.calculate();
+		if(result.isNaN()) {
+			//throw exception and break
+			System.out.println("There are unknown variables in the formula!");
+			return null;
+		}else {
+			return result;
+		}
 	}
 	
 	//start with C in one index after first appearance of start char
@@ -331,14 +355,14 @@ private ArrayList<HashMap<String, String>> allSigma = new ArrayList<HashMap<Stri
 		return result;
 	}
 	
-	public ArrayList<HashMap<String,String>> fillAllSigma(String varInput, double restriction) {
+	public ArrayList<HashMap<String,String>> fillAllSigma(String varInput) {
 		allSigma.clear();
 		int varCount = varInput.length();
 		
 		List<List<Character>> preCartesianValues = new ArrayList<List<Character>>(); 
 		
 		String restrictedSet = "";
-		for (int i = 0 ; i < restriction+1; i++) {
+		for (int i = 0 ; i < mainView.getRestriction()+1; i++) {
 			restrictedSet += i;
 		}
 		

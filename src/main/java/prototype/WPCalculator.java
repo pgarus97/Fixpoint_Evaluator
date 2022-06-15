@@ -40,6 +40,7 @@ private WPCalculatorView mainView;
 
 				mainView.getResult().setText(mainView.getResult().getText() + "\n" + "Demonic Choice process. Breaking down into: min(" + resultC1 + "," + resultC2 + ")"); 
 
+				//TODO change back to truncation method
 				return calculation("min(" + resultC1 + "," + resultC2 + ")");
 
 			}
@@ -124,6 +125,8 @@ private WPCalculatorView mainView;
 					System.out.println("Enter assignment process"); 
 					String indexC = C.substring(0,1);
 					String cutC = C.substring(C.indexOf("=")+1);
+
+					//TODO change back to truncation method
 					String assignResult = f.replace(indexC, "min(" + cutC + "," + mainView.getIterationCount() + ")");
 
 					
