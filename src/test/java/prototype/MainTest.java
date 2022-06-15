@@ -4,7 +4,6 @@ package prototype;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 import org.apache.commons.lang3.math.NumberUtils;
@@ -14,9 +13,8 @@ class MainTest {
 	
 	//TODO make systematic border tests etc.
 	
-    HashMap<String, String> variables = new HashMap<String,String>();
+    LinkedHashMap<String, String> variables = new LinkedHashMap<String,String>();
 	WPCalculator mainCalculator = new WPCalculator();
-	WPCalculatorAllSigma allSigmaCalculator = new WPCalculatorAllSigma();
 	WPCalculatorView mainView = new WPCalculatorView();
 	
 	MainTest(){
@@ -24,8 +22,6 @@ class MainTest {
 		variables.put("y", "0");
 		mainCalculator.setVariables(variables);
 		mainCalculator.linkView(mainView);
-		mainView.linkAllSigmaCalculator(allSigmaCalculator);
-		allSigmaCalculator.linkView(mainView);
 		mainView.linkCalculator(mainCalculator);
 		mainView.setRestriction(10); //default case
 		
@@ -107,7 +103,7 @@ class MainTest {
 
 		mainView.setRestriction(1); //var from {0,1}
 		
-		ArrayList<LinkedHashMap<String,String>> allSigma = allSigmaCalculator.fillAllSigma("xy");
+		ArrayList<LinkedHashMap<String,String>> allSigma = mainCalculator.fillAllSigma("xy");
 		
 		assert allSigma.get(0).get("x").equals("0");
 		assertEquals("0",allSigma.get(0).get("x")); //TODO change all tests to assertEquals notation
@@ -127,13 +123,13 @@ class MainTest {
 	void testCalculateConcreteSigma() {
 		
 		mainView.setRestriction(1); //var from {0,1}
-		ArrayList<LinkedHashMap<String,String>> allSigma = allSigmaCalculator.fillAllSigma("xy");
+		ArrayList<LinkedHashMap<String,String>> allSigma = mainCalculator.fillAllSigma("xy");
 
-		assertEquals(1.0,allSigmaCalculator.calculateConcreteSigma("if(x=0,1,y)", allSigma.get(0)));
-		assertEquals(1.0,allSigmaCalculator.calculateConcreteSigma("if(x=0,1,y)", allSigma.get(1)));
-		assertEquals(0.0,allSigmaCalculator.calculateConcreteSigma("if(x=0,1,y)", allSigma.get(2)));
-		assertEquals(1.0,allSigmaCalculator.calculateConcreteSigma("if(x=0,1,y)", allSigma.get(3)));
-		assertEquals(null,allSigmaCalculator.calculateConcreteSigma("if(x=0,1,z)", allSigma.get(3)));
+		assertEquals(1.0,mainCalculator.calculateConcreteSigma("if(x=0,1,y)", allSigma.get(0)));
+		assertEquals(1.0,mainCalculator.calculateConcreteSigma("if(x=0,1,y)", allSigma.get(1)));
+		assertEquals(0.0,mainCalculator.calculateConcreteSigma("if(x=0,1,y)", allSigma.get(2)));
+		assertEquals(1.0,mainCalculator.calculateConcreteSigma("if(x=0,1,y)", allSigma.get(3)));
+		assertEquals(null,mainCalculator.calculateConcreteSigma("if(x=0,1,z)", allSigma.get(3)));
 	}
 	
 	@Test
@@ -144,6 +140,6 @@ class MainTest {
 		sigma.put("(x=1)&(c=0)", 1.0);
 		sigma.put("(x=1)&(c=1)", 2.0);
 
-		assertEquals("iff((x=0)&(c=0),0.0;(x=0)&(c=1),1.0;(x=1)&(c=0),1.0;(x=1)&(c=1),2.0)", allSigmaCalculator.fixpointIfConversion(sigma));
+		assertEquals("iff((x=0)&(c=0),0.0;(x=0)&(c=1),1.0;(x=1)&(c=0),1.0;(x=1)&(c=1),2.0)", mainCalculator.fixpointIfConversion(sigma));
 	}
 }

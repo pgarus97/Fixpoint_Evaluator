@@ -1,18 +1,25 @@
 package prototype;
 
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.lang3.math.NumberUtils;
 import org.mariuszgromada.math.mxparser.Expression;
+
+import com.google.common.collect.Lists;
 //Parser Documentation: https://github.com/mariuszgromada/MathParser.org-mXparser
 
-//TODO if multiple calculator types => make interface 
 public class WPCalculator {
 
-private HashMap<String, String> variables = new HashMap<String,String>();
+private LinkedHashMap<String, String> variables = new LinkedHashMap<String,String>();
 private WPCalculatorView mainView;
+private ArrayList<LinkedHashMap<String, String>> allSigma = new ArrayList<LinkedHashMap<String, String>>();
+
 	
 	public String wp(String C, String f) {
-		//TODO check which calculations can be skipped
+		//TODO check which calculations can be skipped for runtime improvement
 		
 		C = C.replace(" ", "");
 		mainView.getResult().setText(mainView.getResult().getText() + "\n" + "wp["+C+"]("+f+")");
@@ -102,10 +109,8 @@ private WPCalculatorView mainView;
 				
 				if (mainView.getAllSigmaIteration().isSelected()) {
 					 
-					//return fixpointIterationAllSigma(condition, whileC, f, iterationCount); still in development ; needs HashMap<String, String> sigma as parameter in wp
-					return fixpointIterationIterativ(condition, whileC, f, mainView.getIterationCount()); 
+					return fixpointIterationAllSigma(condition, whileC, f, mainView.getIterationCount());				 
 
-				 
 				} else {
 				 
 					return fixpointIterationIterativ(condition, whileC, f, mainView.getIterationCount());
@@ -115,7 +120,7 @@ private WPCalculatorView mainView;
 				
 			}else {
 				//variable assignments
-				
+				//TODO need to implement new WP that handles concrete sigma assignments
 				if(C.contains("skip")){
 					System.out.println("Enter skip process"); 
 					String skipResult = C.replace("skip", f);
@@ -125,9 +130,8 @@ private WPCalculatorView mainView;
 					System.out.println("Enter assignment process"); 
 					String indexC = C.substring(0,1);
 					String cutC = C.substring(C.indexOf("=")+1);
-
-					//TODO change back to truncation method
-					String assignResult = f.replace(indexC, "min(" + cutC + "," + mainView.getIterationCount() + ")");
+					//TODO need to define minmax function
+					String assignResult = f.replace(indexC, "min(" + cutC + "," + mainView.getRestriction() + ")");
 
 					
 					//if mid calculation optimization
@@ -162,9 +166,6 @@ private WPCalculatorView mainView;
 	
 	}
 	
-	
-	
-	
 	//TODO probably obsolete if we require initial variable assignments
 	public String calculation(String exp) {
 		Expression e = new Expression(exp);
@@ -179,7 +180,7 @@ private WPCalculatorView mainView;
 		}
 	}
 		
-	 // Deprecated method to calculate restrictions on variables
+	 // Deprecated method to calculate restrictions on variables //need to define minmax function 
 	  public String truncate(String input) {
 		String result ="";
 		for(int i = 0; i < input.length(); i++) {
@@ -191,8 +192,7 @@ private WPCalculatorView mainView;
 					double insideValue = Double.parseDouble(insideCalc);
 					if(insideValue <= 0) {
 						input = input.replace("#{"+inside+"}", "0");
-						i--; //reduce i to read back from new values? TODO check
-						//TODO check if input length actually gets updated
+						i--;
 					}else {
 						String truncatedValue = Double.toString(NumberUtils.min(insideValue,mainView.getRestriction()));							
 						input = input.replace("#{"+inside+"}", truncatedValue);
@@ -218,7 +218,6 @@ private WPCalculatorView mainView;
 		}
 		return result;
 	}
-
 	
 	public String fixpointIterationIterativ(String condition, String C, String f, int count) {
 		String caseF = "0"; //X^0 initialization
@@ -230,20 +229,89 @@ private WPCalculatorView mainView;
 		return calculation(caseF);
 	}
 	
+	//TODO WIP
 	public String fixpointIterationAllSigma(String condition, String C, String f, int count) {
-		//iterate through array of all sigmas and get X for each sigma => save that and compare to next loop => Result Hashmap
-		//check condition first, if wrong with sigma then skip
-		String caseF = "0"; //X^0 initialization
-		for(int i=0; i<count; i++) {
-			String X = wp(C, caseF);
-			caseF = "if("+condition+","+X+","+f+")";	
+		LinkedHashMap<String,Double> fixpoint = new LinkedHashMap<String, Double>();
+		
+		for(LinkedHashMap<String,String> sigma : allSigma) {
+			double sigmaResult = 0.0;
+			double previousIterationResult = 0.0;
+			String caseF = "0"; //X^0 initialization
+			String identifier = "";
+			for(Map.Entry<String, String> entry : sigma.entrySet()) {
+				identifier += "&("+entry.getKey()+"="+entry.getValue()+")"; //creates identifier based on variables and values
+			}	
+			identifier = identifier.replaceFirst("&","");
+			for(int i=0; i<count; i++) {
+				//TODO improvement: if condition with sigma inserted == false => skip iteration entirely and take f
+				String X = wp(C, caseF); //TODO need to implement new WP that handles concrete sigma assignments; dont need sigma in wp?
+				caseF = "if("+condition+","+X+","+f+")";
+				System.out.println(caseF);
+				sigmaResult = calculateConcreteSigma(caseF,sigma);
+				
+				//TODO after second iteration we can start checking for delta?
+				if(i > 2) {
+					//TODO variable delta restriction
+					if(sigmaResult-previousIterationResult < 0.01) {
+						//result = sigmaResult
+						//break;
+					}
+				}
+				
+				
+				//TODO output HashMap here?
+				/*
+				 * Output needs to be a List of results for each sigma
+				 * List<HashMap<HashMap<String,String>,double>> ? What do we do want to do with the result is the important question?
+				 * make a big function of hashmaps and convert them into a calculatable if clause that represents the entire fixpoint?
+				 */
+				//TODO future improvement directly input sigma through assignment = f.replace x with sigma x and keep dependency somehow
+				
+				//TODO either iterationCount, or delta calculation between Xi and Xi+1 or check if Xi = Xi+1 => just equals test is not sufficient
+			}
+			
+		fixpoint.put(identifier, sigmaResult);	
+		
 		}
 		
-		return caseF;
+		return fixpointIfConversion(fixpoint);
+		
+		
+		//iterate through array of all sigmas and get X for each sigma => save that and compare to next loop => Result Hashmap
+		//check condition first, if wrong with sigma then skip
+		
+		//TODO how do we do the while fixpoint iteration on a concrete sigma for only one step??? calculate only one step at a time and insert?
+	}
+	
+	//TODO write tests
+	public String fixpointIfConversion(LinkedHashMap<String,Double> fixpoint) {
+		String result = "iff(";
+		for(Map.Entry<String, Double> entry : fixpoint.entrySet()) {
+			result += ";" + entry.getKey()+","+entry.getValue();
+		}
+		result = result.replaceFirst(";", "");
+		result += ")";
+		return result;
+	}
+	
+	//TODO add other possibility of calculating concrete sigma: wp("sigma=x=1;c=1";caseF,null); = Xi
+	public Double calculateConcreteSigma(String f, LinkedHashMap<String,String> sigma) {
+		for(Map.Entry<String, String> entry : sigma.entrySet()) {
+			f = f.replace(entry.getKey(), entry.getValue());
+		}	
+		Expression e = new Expression(f);
+		Double result = e.calculate();
+		if(result.isNaN()) {
+			//throw exception and break
+			System.out.println("There are unknown variables in the formula!");
+			return null;
+		}else {
+			return result;
+		}
 	}
 	
 	//start with C in one index after first appearance of start char
-	public static String getInsideBracket(String C) {
+	public String getInsideBracket(String C) {
 		int bracketCount = 1;
 		String result = "";
 		for(int i = 0; i < C.length(); i++) {
@@ -263,7 +331,7 @@ private WPCalculatorView mainView;
 		return result;
 	}
 	
-	public static String getInsideIf(String C) {
+	public String getInsideIf(String C) {
 		int commaCount = 1;
 		String result = "";
 		for(int i = 0; i < C.length(); i++) {
@@ -288,7 +356,7 @@ private WPCalculatorView mainView;
 		return result;
 	}
 	
-	public static String getSequentialCut(String C) {
+	public String getSequentialCut(String C) {
 		int bracketCount = 0;
 		String result = "";
 		for(int i = 0; i < C.length(); i++) {
@@ -308,17 +376,46 @@ private WPCalculatorView mainView;
 		return result;
 	}
 	
+	public ArrayList<LinkedHashMap<String,String>> fillAllSigma(String varInput) {
+		allSigma.clear();
+		int varCount = varInput.length();
+		
+		List<List<Character>> preCartesianValues = new ArrayList<List<Character>>(); 
+		
+		String restrictedSet = "";
+		for (int i = 0 ; i < mainView.getRestriction()+1; i++) {
+			restrictedSet += i;
+		}
+		
+		List<Character> restrictedList = new ArrayList<Character>(Lists.charactersOf(restrictedSet));
+		
+		for(int i = 0 ; i < varCount ; i++) {	
+			preCartesianValues.add(restrictedList);
+		}
+
+		List<List<Character>> postCartesianValues = Lists.cartesianProduct(preCartesianValues);
+		
+		for(int i = 0 ; i < postCartesianValues.size(); i++){
+			LinkedHashMap<String, String> tempMap = new LinkedHashMap<String,String>();
+			for(int j = 0 ; j < postCartesianValues.get(i).size(); j++){
+			tempMap.put(String.valueOf(varInput.charAt(j)), postCartesianValues.get(i).get(j).toString());
+			}
+			allSigma.add(tempMap);
+		}
+		return allSigma;
+	}
 	
-	public HashMap<String, String> getVariables() {
+	
+	public LinkedHashMap<String, String> getVariables() {
 		return variables;
 	}
 
-	public void setVariables(HashMap<String, String> variables) {
+	public void setVariables(LinkedHashMap<String, String> variables) {
 		this.variables = variables;
 	}	
 
-	
 	public void linkView(WPCalculatorView mainView) {
 		this.mainView = mainView;
 	}
+	
 }

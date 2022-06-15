@@ -1,6 +1,5 @@
 package prototype;
 
-import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -22,7 +21,6 @@ JCheckBox allSigmaIteration = new JCheckBox("Enable all-sigma fixpoint-iteration
 private double restriction = 2;
 private int iterationCount = 10;
 private WPCalculator mainCalculator;
-private WPCalculatorAllSigma allSigmaCalculator;
 
 //Declaration of components
 private JFrame frame;
@@ -105,8 +103,10 @@ private JTextField iterationField;
 	    sigma.setBounds(5,70,400, 20);
 	    
 	    usedVarsDesc = new JLabel("Enter all used variables (e.g. xyz) ");
+	    usedVarsDesc.setVisible(false);
 	    usedVarsDesc.setBounds(500,90,400, 20);
 	    usedVars = new JTextField("xc");
+	    usedVars.setVisible(false);
 	    usedVars.setBounds(500,110,400, 20);
 
 	    JButton calcButton = new JButton("Calculate!");
@@ -171,15 +171,17 @@ private JTextField iterationField;
 	    		String calcResult = "";
 	    		if(sigma.getText().isEmpty()) {
 		    		if (allSigmaIteration.isSelected()) {	
-		    			allSigmaCalculator.fillAllSigma(usedVars.getText());
+		    			mainCalculator.fillAllSigma(usedVars.getText());
 		    			
-		    	    	calcResult = allSigmaCalculator.calculation(allSigmaCalculator.wp(sigma.getText()+cInput.getText(),fInput.getText(),null)); 
+		    	    	calcResult = mainCalculator.calculation(mainCalculator.wp(sigma.getText()+cInput.getText(),fInput.getText())); 
 		    	    }else {
 				    	calcResult = mainCalculator.calculation(mainCalculator.wp(sigma.getText()+cInput.getText(),fInput.getText())); 
 		    	    }
 	    		}else {
-	    			if (allSigmaIteration.isSelected()) {	    	 
-		    	    	calcResult = allSigmaCalculator.calculation(allSigmaCalculator.wp(sigma.getText()+";"+cInput.getText(),fInput.getText(),null)); 
+	    			if (allSigmaIteration.isSelected()) {
+		    			mainCalculator.fillAllSigma(usedVars.getText());
+
+		    	    	calcResult = mainCalculator.calculation(mainCalculator.wp(sigma.getText()+";"+cInput.getText(),fInput.getText())); 
 		    	    }else {
 		    	    	calcResult = mainCalculator.calculation(mainCalculator.wp(sigma.getText()+";"+cInput.getText(),fInput.getText())); 
 		    	    }
@@ -223,10 +225,6 @@ private JTextField iterationField;
 
 	public void linkCalculator(WPCalculator mainCalculator) {
 		this.mainCalculator = mainCalculator;
-	}
-	
-	public void linkAllSigmaCalculator(WPCalculatorAllSigma allSigmaCalculator) {
-		this.allSigmaCalculator = allSigmaCalculator;
 	}
 	
 }
