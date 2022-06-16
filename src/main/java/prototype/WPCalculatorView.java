@@ -45,6 +45,8 @@ private JTextField usedVars;
 private JLabel usedVarsDesc;
 private JTextField restrictionField;
 private JTextField iterationField;
+private JLabel deltaDesc;
+private JTextField deltaInput;
 
 //TODO implement tips from https://stackoverflow.com/questions/62875613/cannot-refer-to-the-non-final-local-variable-display-defined-in-an-enclosing-sco
 
@@ -104,13 +106,21 @@ private JTextField iterationField;
 	    
 	    usedVarsDesc = new JLabel("Enter all used variables (e.g. xyz) ");
 	    usedVarsDesc.setVisible(false);
-	    usedVarsDesc.setBounds(500,90,400, 20);
+	    usedVarsDesc.setBounds(500,80,400, 20);
 	    usedVars = new JTextField("xc");
 	    usedVars.setVisible(false);
-	    usedVars.setBounds(500,110,400, 20);
+	    usedVars.setBounds(500,100,400, 20);
+	    
+	    deltaDesc = new JLabel("Input delta (fixpoint iteration stop) here:");
+	    deltaDesc.setBounds(500,120,400, 20);
+	    deltaDesc.setVisible(false);
+		deltaInput = new JTextField("0.01");
+	    deltaInput.setVisible(false);
+		deltaInput.setBounds(500,140,400, 20);
 
 	    JButton calcButton = new JButton("Calculate!");
 	    calcButton.setBounds(5,100,150, 40); 
+	    
 	       
 	    
 	    allSigmaIteration.setBounds(200,100,300, 50);
@@ -127,10 +137,13 @@ private JTextField iterationField;
 	    frame.add(sigma);
 	    frame.add(usedVars);
 	    frame.add(usedVarsDesc);
+	    frame.add(deltaDesc);
+	    frame.add(deltaInput);
+	    
 	    frame.add(calcButton);
 	    
 	    JScrollPane scroll = new JScrollPane(result);
-	    scroll.setBounds(10,200 ,800, 400); 
+	    scroll.setBounds(10,200 ,1000, 600); 
 	    result.setEditable(false);
 	    
 	    frame.getContentPane().add(scroll);
@@ -147,9 +160,13 @@ private JTextField iterationField;
 	    		if (allSigmaIteration.isSelected()) {
 	    	    	usedVars.setVisible(true);
 	    	    	usedVarsDesc.setVisible(true);
+	    	    	deltaInput.setVisible(true);
+	    	    	deltaDesc.setVisible(true);
 	    	    }else {
 	    	    	usedVars.setVisible(false);
 	    	    	usedVarsDesc.setVisible(false);
+	    	    	deltaInput.setVisible(false);
+	    	    	deltaDesc.setVisible(false);
 	    	    }
     	   }  
 	    });
@@ -221,6 +238,14 @@ private JTextField iterationField;
 
 	public void setAllSigmaIteration(JCheckBox allSigmaIteration) {
 		this.allSigmaIteration = allSigmaIteration;
+	}
+	
+	public JTextField getDeltaInput() {
+		return deltaInput;
+	}
+
+	public void setDeltaInput(JTextField deltaInput) {
+		this.deltaInput = deltaInput;
 	}
 
 	public void linkCalculator(WPCalculator mainCalculator) {

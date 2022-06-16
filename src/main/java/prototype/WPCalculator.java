@@ -225,65 +225,49 @@ private ArrayList<LinkedHashMap<String, String>> allSigma = new ArrayList<Linked
 			String X = wp(C, caseF);
 			caseF = "if("+condition+","+X+","+f+")";	
 		}
-		//TODO round calculation result here if it is a number = how much should we round?
-		return calculation(caseF);
+		return caseF;
 	}
 	
-	//TODO WIP
+	//TODO write tests
 	public String fixpointIterationAllSigma(String condition, String C, String f, int count) {
 		LinkedHashMap<String,Double> fixpoint = new LinkedHashMap<String, Double>();
 		
 		for(LinkedHashMap<String,String> sigma : allSigma) {
 			double sigmaResult = 0.0;
-			double previousIterationResult = 0.0;
-			String caseF = "0"; //X^0 initialization
+			double previousResult = 0.0;
+			String caseF = "0"; //X_0 initialization
 			String identifier = "";
+			String sigmaCondition = condition;
 			for(Map.Entry<String, String> entry : sigma.entrySet()) {
 				identifier += "&("+entry.getKey()+"="+entry.getValue()+")"; //creates identifier based on variables and values
+				sigmaCondition = sigmaCondition.replace(entry.getKey(), entry.getValue());
 			}	
 			identifier = identifier.replaceFirst("&","");
-			for(int i=0; i<count; i++) {
-				//TODO improvement: if condition with sigma inserted == false => skip iteration entirely and take f
-				String X = wp(C, caseF); //TODO need to implement new WP that handles concrete sigma assignments; dont need sigma in wp?
-				caseF = "if("+condition+","+X+","+f+")";
-				System.out.println(caseF);
-				sigmaResult = calculateConcreteSigma(caseF,sigma);
-				
-				//TODO after second iteration we can start checking for delta?
-				if(i > 2) {
-					//TODO variable delta restriction
-					if(sigmaResult-previousIterationResult < 0.01) {
-						//result = sigmaResult
-						//break;
+			Expression e = new Expression(sigmaCondition);
+			if(e.calculate() == 0.0) {
+				sigmaResult = calculateConcreteSigma(f,sigma);
+			}else {
+				for(int i=0; i<count; i++) {
+					String X = wp(C, caseF);
+					caseF = "if("+condition+","+X+","+f+")";
+					//TODO future improvement directly input sigma through assignment = f.replace x with sigma x and keep dependency somehow
+					sigmaResult = calculateConcreteSigma(caseF,sigma);
+					
+					//TODO after second iteration we can start checking for delta?
+					if(i > 2) {
+						if(sigmaResult-previousResult < Double.parseDouble(mainView.getDeltaInput().getText())) {
+							break;
+						}else {
+							previousResult = sigmaResult;
+						}
 					}
 				}
-				
-				
-				//TODO output HashMap here?
-				/*
-				 * Output needs to be a List of results for each sigma
-				 * List<HashMap<HashMap<String,String>,double>> ? What do we do want to do with the result is the important question?
-				 * make a big function of hashmaps and convert them into a calculatable if clause that represents the entire fixpoint?
-				 */
-				//TODO future improvement directly input sigma through assignment = f.replace x with sigma x and keep dependency somehow
-				
-				//TODO either iterationCount, or delta calculation between Xi and Xi+1 or check if Xi = Xi+1 => just equals test is not sufficient
-			}
-			
-		fixpoint.put(identifier, sigmaResult);	
-		
+			}			
+			fixpoint.put(identifier, sigmaResult);	
 		}
-		
 		return fixpointIfConversion(fixpoint);
-		
-		
-		//iterate through array of all sigmas and get X for each sigma => save that and compare to next loop => Result Hashmap
-		//check condition first, if wrong with sigma then skip
-		
-		//TODO how do we do the while fixpoint iteration on a concrete sigma for only one step??? calculate only one step at a time and insert?
 	}
 	
-	//TODO write tests
 	public String fixpointIfConversion(LinkedHashMap<String,Double> fixpoint) {
 		String result = "iff(";
 		for(Map.Entry<String, Double> entry : fixpoint.entrySet()) {
