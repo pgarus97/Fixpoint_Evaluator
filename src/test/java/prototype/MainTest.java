@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 
-import org.apache.commons.lang3.math.NumberUtils;
 import org.junit.jupiter.api.Test;
 
 class MainTest {
@@ -96,8 +95,24 @@ class MainTest {
 		mainView.setRestriction(10);
 		mainView.setIterationCount(10);
 
-		assert mainCalculator.calculation(mainCalculator.wp("c=0;x=1; while(c=1){{x=x+1}[1/2]{c=0}}", "x")).equals("1.0");
-		assert mainCalculator.calculation(mainCalculator.wp("c=1;x=1; while(c=1){{x=x+1}[1/2]{c=0}}", "x")).equals("1.978515625");
+		assertEquals("1.0", mainCalculator.calculation(mainCalculator.wp("c=0;x=1; while(c=1){{x=x+1}[1/2]{c=0}}", "x")));
+		assertEquals("1.978515625", mainCalculator.calculation(mainCalculator.wp("c=1;x=1; while(c=1){{x=x+1}[1/2]{c=0}}", "x"))); 
+	}
+	
+	@Test
+	void testAllSigmaWhile() {	
+
+		mainView.setRestriction(2);
+		mainView.setIterationCount(10);
+		mainView.getAllSigmaIteration().setSelected(true);
+		mainCalculator.fillAllSigma("xc");
+
+		assertEquals("1.0", mainCalculator.calculation(mainCalculator.wp("c=0;x=1; while(c=1){{x=x+1}[1/2]{c=0}}", "x")));
+		assertEquals("1.4921875", mainCalculator.calculation(mainCalculator.wp("c=1;x=1; while(c=1){{x=x+1}[1/2]{c=0}}", "x"))); 
+		
+		mainView.getDeltaInput().setText("0.001");
+		mainView.setIterationCount(100);
+		assertEquals("1.4990234375", mainCalculator.calculation(mainCalculator.wp("c=1;x=1; while(c=1){{x=x+1}[1/2]{c=0}}", "x"))); 
 	}
 	
 	@Test

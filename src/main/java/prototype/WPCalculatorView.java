@@ -18,6 +18,7 @@ public class WPCalculatorView {
 public JTextArea result = new JTextArea();
 JCheckBox allSigmaIteration = new JCheckBox("Enable all-sigma fixpoint-iteration.");
 
+//TODO read those values directly from the fields instead of variables to be uniform
 private double restriction = 2;
 private int iterationCount = 10;
 private WPCalculator mainCalculator;
