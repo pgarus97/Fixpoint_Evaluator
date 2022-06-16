@@ -19,9 +19,7 @@ private WPCalculatorView mainView;
 private ArrayList<LinkedHashMap<String, String>> allSigma = new ArrayList<LinkedHashMap<String, String>>();
 
 	
-	public String wp(String C, String f) {
-		//TODO check which calculations can be skipped for runtime improvement
-		
+	public String wp(String C, String f) {		
 		C = C.replace(" ", "");
 		mainView.getResult().setText(mainView.getResult().getText() + "\n" + "wp["+C+"]("+f+")");
 		System.out.println("C "+ C);
@@ -68,13 +66,14 @@ private ArrayList<LinkedHashMap<String, String>> allSigma = new ArrayList<Linked
 				String resultC1 = wp(ifC1,f);
 				String resultC2 = wp(ifC2,f);
 				mainView.getResult().setText(mainView.getResult().getText() + "\n" + "Conditional process. Breaking down into: if("+condition+") then "+ resultC1 +" else "+ resultC2); 
-				if(calculation(condition).equals("1.0")) {
+				String condResult = calculation(condition);
+				if(condResult.equals("1.0")) {
 					return calculation(resultC1);
 				}
-				if(calculation(condition).equals("0.0")) {
+				if(condResult.equals("0.0")) {
 					return calculation(resultC2);
 				}
-				return calculation("if(" + condition + "," + resultC1 + "," + resultC2 + ")"); //TODO can skip calculation?
+				return calculation("if(" + condition + "," + resultC1 + "," + resultC2 + ")");
 
 			}
 			
@@ -94,9 +93,8 @@ private ArrayList<LinkedHashMap<String, String>> allSigma = new ArrayList<Linked
 				String resultC1 = wp(probC1,f);
 				String resultC2 = wp(probC2,f);
 				mainView.getResult().setText(mainView.getResult().getText() + "\n" + "Probability process. Breaking down into: " + probability + " * " + resultC1 +" + "+ negProbability.calculate() + " * " + resultC2); 
-				String result = calculation("(" + probability + " * "+ resultC1 +" + "+ negProbability.calculate() + " * " + resultC2+")");
+				return calculation("(" + probability + " * "+ resultC1 +" + "+ negProbability.calculate() + " * " + resultC2+")");
 
-				return result;
 			}
 			else if(C.startsWith("while")){
 				//while process

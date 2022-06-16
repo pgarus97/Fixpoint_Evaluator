@@ -2,6 +2,7 @@ package prototype;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.concurrent.TimeUnit;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -187,24 +188,17 @@ private JTextField deltaInput;
 		    		setIterationCount(Integer.parseInt(iterationField.getText()));
 	    	    }
 	    		String calcResult = "";
+	    		double start = System.currentTimeMillis();
 	    		if(sigma.getText().isEmpty()) {
-		    		if (allSigmaIteration.isSelected()) {	
-		    			mainCalculator.fillAllSigma(usedVars.getText());
-		    			
-		    	    	calcResult = mainCalculator.calculation(mainCalculator.wp(sigma.getText()+cInput.getText(),fInput.getText())); 
-		    	    }else {
-				    	calcResult = mainCalculator.calculation(mainCalculator.wp(sigma.getText()+cInput.getText(),fInput.getText())); 
-		    	    }
+	    			mainCalculator.fillAllSigma(usedVars.getText());
+	    	    	calcResult = mainCalculator.calculation(mainCalculator.wp(sigma.getText()+cInput.getText(),fInput.getText())); 
 	    		}else {
-	    			if (allSigmaIteration.isSelected()) {
-		    			mainCalculator.fillAllSigma(usedVars.getText());
-
-		    	    	calcResult = mainCalculator.calculation(mainCalculator.wp(sigma.getText()+";"+cInput.getText(),fInput.getText())); 
-		    	    }else {
-		    	    	calcResult = mainCalculator.calculation(mainCalculator.wp(sigma.getText()+";"+cInput.getText(),fInput.getText())); 
-		    	    }
+	    			mainCalculator.fillAllSigma(usedVars.getText());
+	    	    	calcResult = mainCalculator.calculation(mainCalculator.wp(sigma.getText()+";"+cInput.getText(),fInput.getText())); 
 	    		}
-	    	    result.setText(result.getText() + "\n\n" + "Result: " + calcResult);
+	    		double end = System.currentTimeMillis();
+	    		result.setText(result.getText() + "\n\n" + "Calculation Time: " + (end - start)/1000 + "s");
+	    	    result.setText(result.getText() + "\n" + "Result: " + calcResult);
     	   }  
 	    }); 
 	}

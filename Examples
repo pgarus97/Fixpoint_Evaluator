@@ -17,3 +17,5 @@ if(c=1,1/2 * if(c=1,1/2 * if(c=1,0,((x+1)+1)) + 0.5 * if((0)=1,0,(x+1)),(x+1)) +
  
  
 while(x<5){while(c<5){c=c+1;x=x+1}}
+while(c=1){while(x>0){x=x-1;c=c+1}} => result should be x=0 and c= x+1 with f=x
+restriction 3 x=3;c=1 wrong result? TODO
