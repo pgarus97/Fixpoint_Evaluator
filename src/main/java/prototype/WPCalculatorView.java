@@ -151,7 +151,7 @@ private JTextField deltaInput;
 	    frame.add(panel);
 	    frame.pack();
 	    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-	    frame.setSize(1000,700);
+	    frame.setSize(1300,900);
 	    frame.setLayout(null); 
 	    frame.setVisible(true);
 	    
@@ -203,7 +203,7 @@ private JTextField deltaInput;
 		    	    	calcResult = mainCalculator.calculation(mainCalculator.wp(sigma.getText()+";"+cInput.getText(),fInput.getText())); 
 		    	    }
 	    		}
-	    	    result.setText(result.getText() + "\n" + "Result: " + calcResult);
+	    	    result.setText(result.getText() + "\n\n" + "Result: " + calcResult);
     	   }  
 	    }); 
 	}

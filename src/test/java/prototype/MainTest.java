@@ -28,16 +28,18 @@ class MainTest {
 	}
 	
 	@Test
-	void calcTest() {
-		System.out.println(NumberUtils.isCreatable("-1"));
-		System.out.println(mainCalculator.calculation("(5-6)"));
-		System.out.println(mainCalculator.calculation("min(2,4)"));
-		System.out.println(mainCalculator.calculation("if(1=1,x+1,x)"));
+	void testCalculation() {
+		assertEquals("-1.0", mainCalculator.calculation("(5-6)"));
+		assertEquals("2.0", mainCalculator.calculation("min(2,4)"));
+		assertEquals("if(1=1,x+1,x)", mainCalculator.calculation("if(1=1,x+1,x)"));
+		assertEquals("20.0", mainCalculator.calculation("if(r(11)=10,20,30)"));
+		assertEquals("20.0", mainCalculator.calculation("if(r(-1)=0,20,30)"));
+		assertEquals("30.0", mainCalculator.calculation("if(r(4)=10,20,30)"));
 	}
 
 	
 	@Test
-	void truncateTest() {
+	void testTruncate() {
 		
 		assert mainCalculator.truncate("#{1}").equals("1.0");
 		assert mainCalculator.truncate("#{-1}").equals("0");

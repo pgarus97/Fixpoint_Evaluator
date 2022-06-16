@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.apache.commons.lang3.math.NumberUtils;
 import org.mariuszgromada.math.mxparser.Expression;
+import org.mariuszgromada.math.mxparser.Function;
 
 import com.google.common.collect.Lists;
 //Parser Documentation: https://github.com/mariuszgromada/MathParser.org-mXparser
@@ -130,8 +131,7 @@ private ArrayList<LinkedHashMap<String, String>> allSigma = new ArrayList<Linked
 					System.out.println("Enter assignment process"); 
 					String indexC = C.substring(0,1);
 					String cutC = C.substring(C.indexOf("=")+1);
-					//TODO need to define minmax function
-					String assignResult = f.replace(indexC, "min(" + cutC + "," + mainView.getRestriction() + ")");
+					String assignResult = f.replace(indexC, "r(" + cutC + ")");
 
 					
 					//if mid calculation optimization
@@ -166,9 +166,9 @@ private ArrayList<LinkedHashMap<String, String>> allSigma = new ArrayList<Linked
 	
 	}
 	
-	//TODO probably obsolete if we require initial variable assignments
 	public String calculation(String exp) {
-		Expression e = new Expression(exp);
+		Function restrictValue = new Function("r", "min(max(0,x),"+mainView.getRestriction()+")", "x");
+		Expression e = new Expression(exp,restrictValue);
 		System.out.println("Expression:" + exp);
 		Double result = e.calculate();
 		if(!result.isNaN()) {
@@ -178,45 +178,6 @@ private ArrayList<LinkedHashMap<String, String>> allSigma = new ArrayList<Linked
 			System.out.println("Calculation Result: " + exp);
 			return exp;
 		}
-	}
-		
-	 // Deprecated method to calculate restrictions on variables //need to define minmax function 
-	  public String truncate(String input) {
-		String result ="";
-		for(int i = 0; i < input.length(); i++) {
-			char character = input.charAt(i);
-			if(character == '#') {
-				String inside = getInsideBracket(input.substring(i+2));
-				String insideCalc = calculation(inside);
-				if(NumberUtils.isCreatable(insideCalc)) {
-					double insideValue = Double.parseDouble(insideCalc);
-					if(insideValue <= 0) {
-						input = input.replace("#{"+inside+"}", "0");
-						i--;
-					}else {
-						String truncatedValue = Double.toString(NumberUtils.min(insideValue,mainView.getRestriction()));							
-						input = input.replace("#{"+inside+"}", truncatedValue);
-						i--;
-					}
-				}else {
-					if(inside.contains("#")) {
-						String subterm = truncate(inside);
-						String replacedInput = input.replace("#{"+inside+"}", "#{"+subterm+"}");
-						if(!replacedInput.equals(input)) {
-							input = replacedInput;
-							i--;
-						}else {
-							result = result + "#";
-						}
-					}else {
-						result = result + "#";
-					}
-				}				
-			}else {
-				result = result + character;
-			}
-		}
-		return result;
 	}
 	
 	public String fixpointIterationIterativ(String condition, String C, String f, int count) {
@@ -282,8 +243,9 @@ private ArrayList<LinkedHashMap<String, String>> allSigma = new ArrayList<Linked
 	public Double calculateConcreteSigma(String f, LinkedHashMap<String,String> sigma) {
 		for(Map.Entry<String, String> entry : sigma.entrySet()) {
 			f = f.replace(entry.getKey(), entry.getValue());
-		}	
-		Expression e = new Expression(f);
+		}
+		Function restrictValue = new Function("r", "min(max(0,x),"+mainView.getRestriction()+")", "x");
+		Expression e = new Expression(f,restrictValue);
 		Double result = e.calculate();
 		if(result.isNaN()) {
 			//throw exception and break
@@ -293,6 +255,36 @@ private ArrayList<LinkedHashMap<String, String>> allSigma = new ArrayList<Linked
 			return result;
 		}
 	}
+	
+	//fills allSigma with all possibilities of variable and value combinations
+		public ArrayList<LinkedHashMap<String,String>> fillAllSigma(String varInput) {
+			allSigma.clear();
+			int varCount = varInput.length();
+			
+			List<List<Character>> preCartesianValues = new ArrayList<List<Character>>(); 
+			
+			String restrictedSet = "";
+			for (int i = 0 ; i < mainView.getRestriction()+1; i++) {
+				restrictedSet += i;
+			}
+			
+			List<Character> restrictedList = new ArrayList<Character>(Lists.charactersOf(restrictedSet));
+			
+			for(int i = 0 ; i < varCount ; i++) {	
+				preCartesianValues.add(restrictedList);
+			}
+
+			List<List<Character>> postCartesianValues = Lists.cartesianProduct(preCartesianValues);
+			
+			for(int i = 0 ; i < postCartesianValues.size(); i++){
+				LinkedHashMap<String, String> tempMap = new LinkedHashMap<String,String>();
+				for(int j = 0 ; j < postCartesianValues.get(i).size(); j++){
+				tempMap.put(String.valueOf(varInput.charAt(j)), postCartesianValues.get(i).get(j).toString());
+				}
+				allSigma.add(tempMap);
+			}
+			return allSigma;
+		}	
 	
 	//start with C in one index after first appearance of start char
 	public String getInsideBracket(String C) {
@@ -360,36 +352,45 @@ private ArrayList<LinkedHashMap<String, String>> allSigma = new ArrayList<Linked
 		return result;
 	}
 	
-	public ArrayList<LinkedHashMap<String,String>> fillAllSigma(String varInput) {
-		allSigma.clear();
-		int varCount = varInput.length();
-		
-		List<List<Character>> preCartesianValues = new ArrayList<List<Character>>(); 
-		
-		String restrictedSet = "";
-		for (int i = 0 ; i < mainView.getRestriction()+1; i++) {
-			restrictedSet += i;
+ //Deprecated method to calculate restrictions on variables without MathParser
+  public String truncate(String input) {
+	String result ="";
+	for(int i = 0; i < input.length(); i++) {
+		char character = input.charAt(i);
+		if(character == '#') {
+			String inside = getInsideBracket(input.substring(i+2));
+			String insideCalc = calculation(inside);
+			if(NumberUtils.isCreatable(insideCalc)) {
+				double insideValue = Double.parseDouble(insideCalc);
+				if(insideValue <= 0) {
+					input = input.replace("#{"+inside+"}", "0");
+					i--;
+				}else {
+					String truncatedValue = Double.toString(NumberUtils.min(insideValue,mainView.getRestriction()));							
+					input = input.replace("#{"+inside+"}", truncatedValue);
+					i--;
+				}
+			}else {
+				if(inside.contains("#")) {
+					String subterm = truncate(inside);
+					String replacedInput = input.replace("#{"+inside+"}", "#{"+subterm+"}");
+					if(!replacedInput.equals(input)) {
+						input = replacedInput;
+						i--;
+					}else {
+						result = result + "#";
+					}
+				}else {
+					result = result + "#";
+				}
+			}				
+		}else {
+			result = result + character;
 		}
-		
-		List<Character> restrictedList = new ArrayList<Character>(Lists.charactersOf(restrictedSet));
-		
-		for(int i = 0 ; i < varCount ; i++) {	
-			preCartesianValues.add(restrictedList);
-		}
-
-		List<List<Character>> postCartesianValues = Lists.cartesianProduct(preCartesianValues);
-		
-		for(int i = 0 ; i < postCartesianValues.size(); i++){
-			LinkedHashMap<String, String> tempMap = new LinkedHashMap<String,String>();
-			for(int j = 0 ; j < postCartesianValues.get(i).size(); j++){
-			tempMap.put(String.valueOf(varInput.charAt(j)), postCartesianValues.get(i).get(j).toString());
-			}
-			allSigma.add(tempMap);
-		}
-		return allSigma;
 	}
-	
-	
+		return result;
+  	}
+  
 	public LinkedHashMap<String, String> getVariables() {
 		return variables;
 	}
