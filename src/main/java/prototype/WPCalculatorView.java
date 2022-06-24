@@ -1,9 +1,12 @@
 package prototype;
 
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 
+import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -47,12 +50,18 @@ private JButton calcButton;
 private JScrollPane scroll;
 private JTextArea result;
 private JButton examineFixpointButton;
+
 private ArrayList<JButton> whileLoops; 
-private ArrayList<JButton> whileFixpoints;
+private JScrollPane whileLoopScroll;
+private JPanel whileLoopPanel;
+
+private JPanel evaluationPanel;
+private JButton lfpButton;
+private JTextField witnessInput;
 private JButton witnessButton;
-private JButton evaluateFixpointButton;
 private JLabel fixpointDeltaDesc;
 private JTextField fixpointDeltaInput;
+
 private JScrollPane fixpointResultScroll;
 private JTextArea fixpointResult;
 
@@ -134,7 +143,46 @@ private JTextArea fixpointResult;
 	    examineFixpointButton.setBounds(650,20,200, 40);
 	    examineFixpointButton.setVisible(false);
 	    
+	    whileLoopPanel = new JPanel();
+	    whileLoopPanel.setLayout(new BoxLayout(whileLoopPanel, BoxLayout.PAGE_AXIS));
+	    whileLoopPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 	    whileLoops = new ArrayList<JButton>();
+	    whileLoopScroll = new JScrollPane(whileLoopPanel);
+	    whileLoopScroll.setBounds(900,50,250, 250);
+	    whileLoopScroll.setVisible(false);
+	    
+	    
+	    fixpointDeltaDesc = new JLabel("Input delta here:");
+	    fixpointDeltaInput = new JTextField("0.1");
+	    //TODO can change the preferred size if we put it in another panel as the boxlayout makes all components same size.
+	    fixpointDeltaInput.setPreferredSize(new Dimension (500,20));
+	    fixpointDeltaInput.setMaximumSize(fixpointDeltaInput.getPreferredSize());
+
+	    lfpButton = new JButton("LFP");
+	    witnessInput = new JTextField("Witness XY");
+	    witnessInput.setPreferredSize(new Dimension (500,20));
+	    witnessInput.setMaximumSize(witnessInput.getPreferredSize());
+	    witnessButton = new JButton("Witness");
+	    evaluationPanel = new JPanel();
+	    evaluationPanel.setBounds(900,300,250, 250);
+	    evaluationPanel.setLayout(new BoxLayout(evaluationPanel, BoxLayout.PAGE_AXIS));
+	    evaluationPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+	    evaluationPanel.add(fixpointDeltaDesc);
+	    evaluationPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+	    evaluationPanel.add(fixpointDeltaInput);
+	    evaluationPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+	    evaluationPanel.add(lfpButton);
+	    evaluationPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+	    evaluationPanel.add(witnessInput);
+	    evaluationPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+	    evaluationPanel.add(witnessButton);
+	    evaluationPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+	    evaluationPanel.setVisible(false);
+	    
+	    frame.add(evaluationPanel);
+
+
+
 	    
 	    frame.add(examineFixpointButton);
 	    frame.add(allSigmaIteration); 
@@ -150,7 +198,8 @@ private JTextArea fixpointResult;
 	    frame.add(usedVarsDesc);
 	    frame.add(deltaDesc);
 	    frame.add(deltaInput);
-	    
+	    //get contentpane
+		frame.add(whileLoopScroll);
 	    frame.add(calcButton);
 	    
 	    result = new JTextArea();
@@ -183,19 +232,35 @@ private JTextArea fixpointResult;
     	   }  
 	    });
 	    
+	    /* For button hover
+	     * button.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                System.out.println("entered");
+                label.setVisible(true);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                System.out.println("exited");
+                label.setVisible(false);
+            }
+        });
+	     */
+	    
 	    examineFixpointButton.addActionListener(new ActionListener(){  
 	    	public void actionPerformed(ActionEvent e){
 	    		whileLoops.clear();
+	    		whileLoopPanel.removeAll();
+	    		whileLoopScroll.setVisible(true);
 	    		int counter = 0;
 	    		for (String loop: mainCalculator.getWhileLoops()) {	
 	    			whileLoops.add(new JButton(loop));
-	    			//TODO definitely need to implement layout managers
-	    			whileLoops.get(counter).setBounds(900,(counter+1)*50,250, 40);
-	    			frame.add(whileLoops.get(counter));
+	    			whileLoops.get(counter).addActionListener(whileLoopAction);
+	    			whileLoopPanel.add(whileLoops.get(counter));
+	    			whileLoopPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 	    			counter++;
 	    		}
-	    		frame.revalidate();
-	    		frame.repaint();
     	   }  
 	    });
 	    
@@ -222,8 +287,19 @@ private JTextArea fixpointResult;
 	    }); 
 	}
 	
+	public ActionListener whileLoopAction = new ActionListener() {
+
+		public void actionPerformed(ActionEvent e) {
+		    evaluationPanel.setVisible(true);
+			//TODO write lfp of while into lfp button
+		}
+		
+	};
+	
 	public void prepareCalculation() {
+	    evaluationPanel.setVisible(false);
 		examineFixpointButton.setVisible(false);
+		whileLoopScroll.setVisible(false);
 		mainCalculator.fillAllSigma(usedVars.getText());
 		mainCalculator.flushWhileLoops();
 		for(JButton whileButton : whileLoops) {

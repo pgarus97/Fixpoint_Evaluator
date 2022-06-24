@@ -103,15 +103,11 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 				whileC = getInsideBracket(whileC.substring(whileC.indexOf("{")+1));
 				System.out.println("whileC: "+whileC);
 				
+				if(!whileLoops.contains(C)) {
+					whileLoops.add(C+"("+f+")");
+				}
 				//TODO while in while cache 
-				if(!fixpointCache.containsKey(C+"("+f+")")) {
-					
-					if(!whileLoops.contains(C)) {
-						whileLoops.add(C+"("+f+")");
-					}
-					
-					//TODO while in while optimization, save result of inner loop for only one calculation? 
-					
+				if(!fixpointCache.containsKey(C+"("+f+")")) {					
 					String fixpoint="";
 					if (mainView.getAllSigmaIteration().isSelected()) {		 
 						fixpoint = fixpointIterationAllSigma(condition, whileC, f);
@@ -123,7 +119,6 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 	
 					return fixpoint;
 						
-					//TODO while in while cache 
 				}else {
 					System.out.println("Skipped because of fixpointCache.");
 					System.out.println("Cache:"+ fixpointCache.get(C+"("+f+")"));

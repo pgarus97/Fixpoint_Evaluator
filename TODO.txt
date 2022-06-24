@@ -8,6 +8,7 @@ persistent file caching of fixpoints to load / save for faster results
 fix while in while non expansiveness proof
 hover over buttons for full text in whileLoops
 make log appear in runtime => threads? concurrency in swing
+write readme with usage and documentation
 
 DONE:
 while after while all sigma fix
