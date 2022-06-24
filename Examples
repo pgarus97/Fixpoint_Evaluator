@@ -22,3 +22,5 @@ restriction 3 x=3;c=1 wrong result? TODO
 
 iff((x=0)&(c=0),0.0;(x=0)&(c=1),0.498046875;(x=1)&(c=0),1.0;(x=1)&(c=1),0.998046875)
 => need to adjust the value of outcome here of course too - delta
+
+iff((x=0)&(c=0),2.0;(x=0)&(c=1),0.0;(x=0)&(c=2),0.0;(x=1)&(c=0),2.0;(x=1)&(c=1),1.0;(x=1)&(c=2),1.0;(x=2)&(c=0),2.0;(x=2)&(c=1),2.0;(x=2)&(c=2),2.0)

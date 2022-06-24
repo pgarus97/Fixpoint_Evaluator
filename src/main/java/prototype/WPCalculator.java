@@ -14,7 +14,6 @@ import com.google.common.collect.Lists;
 
 public class WPCalculator {
 
-private LinkedHashMap<String, String> variables = new LinkedHashMap<String,String>();
 private WPCalculatorView mainView;
 private ArrayList<LinkedHashMap<String, String>> allSigma = new ArrayList<LinkedHashMap<String, String>>();
 private ArrayList<String> whileLoops = new ArrayList<String>();
@@ -209,10 +208,9 @@ private ArrayList<String> whileLoops = new ArrayList<String>();
 				for(int i=0; i<mainView.getIterationCount(); i++) {
 					String X = wp(C, caseF);
 					caseF = "if("+condition+","+X+","+f+")";
-					//TODO future improvement directly input sigma through assignment = f.replace x with sigma x and keep dependency somehow
+					//TODO future improvement: directly input sigma through assignment = f.replace x with sigma x and keep dependency somehow
 					sigmaResult = calculateConcreteSigma(caseF,sigma);
 					
-					//TODO after second iteration we can start checking for delta?
 					if(i > 2) {
 						if(sigmaResult-previousResult < Double.parseDouble(mainView.getDeltaInput().getText())) {
 							break;
@@ -245,6 +243,7 @@ private ArrayList<String> whileLoops = new ArrayList<String>();
 		Function restrictValue = new Function("r", "min(max(0,x),"+mainView.getRestriction()+")", "x");
 		Expression e = new Expression(f,restrictValue);
 		Double result = e.calculate();
+		//breaks is result too complicated to calculate ?
 		if(result.isNaN()) {
 			//throw exception and break + log
 			System.out.println("There are unknown variables in the formula!");
@@ -258,20 +257,19 @@ private ArrayList<String> whileLoops = new ArrayList<String>();
 		public ArrayList<LinkedHashMap<String,String>> fillAllSigma(String varInput) {
 			allSigma.clear();
 			
-			List<List<Character>> preCartesianValues = new ArrayList<List<Character>>(); 
+			List<List<Integer>> preCartesianValues = new ArrayList<List<Integer>>(); 
 			
-			String restrictedSet = "";
+			//TODO only goes from 1-9 since character
+			List<Integer> restrictedList = new ArrayList<Integer>();
 			for (int i = 0 ; i < mainView.getRestriction()+1; i++) {
-				restrictedSet += i;
+				restrictedList.add(i);
 			}
-			
-			List<Character> restrictedList = new ArrayList<Character>(Lists.charactersOf(restrictedSet));
 			
 			for(int i = 0 ; i < varInput.length() ; i++) {	
 				preCartesianValues.add(restrictedList);
 			}
 
-			List<List<Character>> postCartesianValues = Lists.cartesianProduct(preCartesianValues);
+			List<List<Integer>> postCartesianValues = Lists.cartesianProduct(preCartesianValues);
 			
 			for(int i = 0 ; i < postCartesianValues.size(); i++){
 				LinkedHashMap<String, String> tempMap = new LinkedHashMap<String,String>();
@@ -387,14 +385,6 @@ private ArrayList<String> whileLoops = new ArrayList<String>();
 	}
 		return result;
   	}
-  
-	public LinkedHashMap<String, String> getVariables() {
-		return variables;
-	}
-
-	public void setVariables(LinkedHashMap<String, String> variables) {
-		this.variables = variables;
-	}	
 
 	public ArrayList<String> getWhileLoops() {
 		return whileLoops;

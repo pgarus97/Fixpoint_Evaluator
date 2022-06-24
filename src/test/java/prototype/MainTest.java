@@ -12,14 +12,10 @@ class MainTest {
 	
 	//TODO make systematic border tests etc.
 	
-    LinkedHashMap<String, String> variables = new LinkedHashMap<String,String>();
 	WPCalculator mainCalculator = new WPCalculator();
 	WPCalculatorView mainView = new WPCalculatorView();
 	
 	MainTest(){
-		variables.put("x", "0");
-		variables.put("y", "0");
-		mainCalculator.setVariables(variables);
 		mainCalculator.linkView(mainView);
 		mainView.linkCalculator(mainCalculator);
 		mainView.setRestriction(10); //default case
@@ -54,12 +50,12 @@ class MainTest {
 	@Test
 	void testAssignments() {
 		
-		assert mainCalculator.calculation(mainCalculator.wp("x=5", "x^2")).equals("25.0");
-		assert mainCalculator.calculation(mainCalculator.wp("x=5 ; x=10", "x^2")).equals("100.0");	
-		assert mainCalculator.calculation(mainCalculator.wp("x=5 ; x=10 ; y=2", "x^2")).equals("100.0");	
-		assert mainCalculator.calculation(mainCalculator.wp("x=5 ; y=10", "x^2")).equals("25.0");
-		assert mainCalculator.calculation(mainCalculator.wp("x=5 ; y=10", "y^2")).equals("100.0");
-		assert mainCalculator.calculation(mainCalculator.wp("x=5 ; y=10", "x+y")).equals("15.0");
+		assertEquals("25.0",mainCalculator.calculation(mainCalculator.wp("x=5", "x^2")));
+		assertEquals("100.0",mainCalculator.calculation(mainCalculator.wp("x=5;x=10", "x^2")));	
+		assertEquals("100.0",mainCalculator.calculation(mainCalculator.wp("x=5;x=10;y=2", "x^2")));	
+		assertEquals("25.0",mainCalculator.calculation(mainCalculator.wp("x=5;y=10", "x^2")));
+		assertEquals("100.0", mainCalculator.calculation(mainCalculator.wp("x=5;y=10", "y^2")));
+		assertEquals("15.0", mainCalculator.calculation(mainCalculator.wp("x=5;y=10", "x+y")));
 	}
 	
 	@Test
@@ -75,11 +71,11 @@ class MainTest {
 	@Test
 	void testConditional() {
 
-		assert mainCalculator.calculation(mainCalculator.wp("x=5;if {x<5} {x=x+1} else {x=x-1}", "x^2")).equals("16.0");
-		assert mainCalculator.calculation(mainCalculator.wp("x=5;if {x<5} {x=x+1} else {x=x-1};x=8", "x^2")).equals("64.0");
-		assert mainCalculator.calculation(mainCalculator.wp("x=5;{x=3}[1/2]{x=10};if {x<5} {x=x+1} else {x=x-1}", "x")).equals("6.5");
-		assert mainCalculator.calculation(mainCalculator.wp("x=5;if {x<5} {x=x+1} else {if{x=5}{x=3}else{x=8}}", "x")).equals("3.0");
-		assert mainCalculator.calculation(mainCalculator.wp("x=5;if {x<5} {x=x+1} else {min{x=x+1}{x=3}", "x")).equals("3.0");
+		assert mainCalculator.calculation(mainCalculator.wp("x=5;if{x<5}{x=x+1}else{x=x-1}", "x^2")).equals("16.0");
+		assert mainCalculator.calculation(mainCalculator.wp("x=5;if{x<5}{x=x+1}else{x=x-1};x=8", "x^2")).equals("64.0");
+		assert mainCalculator.calculation(mainCalculator.wp("x=5;{x=3}[1/2]{x=10};if{x<5}{x=x+1}else{x=x-1}", "x")).equals("6.5");
+		assert mainCalculator.calculation(mainCalculator.wp("x=5;if{x<5}{x=x+1}else{if{x=5}{x=3}else{x=8}}", "x")).equals("3.0");
+		assert mainCalculator.calculation(mainCalculator.wp("x=5;if{x<5}{x=x+1}else{min{x=x+1}{x=3}", "x")).equals("3.0");
 	}
 	
 	@Test
@@ -95,8 +91,10 @@ class MainTest {
 		mainView.setRestriction(10);
 		mainView.setIterationCount(10);
 
-		assertEquals("1.0", mainCalculator.calculation(mainCalculator.wp("c=0;x=1; while(c=1){{x=x+1}[1/2]{c=0}}", "x")));
-		assertEquals("1.978515625", mainCalculator.calculation(mainCalculator.wp("c=1;x=1; while(c=1){{x=x+1}[1/2]{c=0}}", "x"))); 
+		assertEquals("1.0", mainCalculator.calculation(mainCalculator.wp("c=0;x=1;while(c=1){{x=x+1}[1/2]{c=0}}", "x")));
+		assertEquals("1.978515625", mainCalculator.calculation(mainCalculator.wp("c=1;x=1;while(c=1){{x=x+1}[1/2]{c=0}}", "x"))); 
+		assertEquals("4.0",mainCalculator.calculation(mainCalculator.wp("x=1;c=0;while(c=1){{x=x+1}[1/2]{c=0}};while(c=0){x=4;c=1}","x")));
+		
 	}
 	
 	@Test
@@ -107,12 +105,12 @@ class MainTest {
 		mainView.getAllSigmaIteration().setSelected(true);
 		mainCalculator.fillAllSigma("xc");
 
-		assertEquals("1.0", mainCalculator.calculation(mainCalculator.wp("c=0;x=1; while(c=1){{x=x+1}[1/2]{c=0}}", "x")));
-		assertEquals("1.4921875", mainCalculator.calculation(mainCalculator.wp("c=1;x=1; while(c=1){{x=x+1}[1/2]{c=0}}", "x"))); 
+		assertEquals("1.0", mainCalculator.calculation(mainCalculator.wp("c=0;x=1;while(c=1){{x=x+1}[1/2]{c=0}}", "x")));
+		assertEquals("1.4921875", mainCalculator.calculation(mainCalculator.wp("c=1;x=1;while(c=1){{x=x+1}[1/2]{c=0}}", "x"))); 
 		
 		mainView.getDeltaInput().setText("0.001");
 		mainView.setIterationCount(100);
-		assertEquals("1.4990234375", mainCalculator.calculation(mainCalculator.wp("c=1;x=1; while(c=1){{x=x+1}[1/2]{c=0}}", "x"))); 
+		assertEquals("1.4990234375", mainCalculator.calculation(mainCalculator.wp("c=1;x=1;while(c=1){{x=x+1}[1/2]{c=0}}", "x"))); 
 	}
 	
 	@Test
