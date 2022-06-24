@@ -1,5 +1,33 @@
-First prototype tool that can calculate wp formulas
+New TODO list system:
 
+TODO:
+Implement hash function + iteration
+adjust GUI according to hash function calculation
+allow witness input and calculation
+persistent file caching of fixpoints to load / save for faster results
+fix while in while non expansiveness proof
+hover over buttons for full text in whileLoops
+make log appear in runtime => threads? concurrency in swing
+
+DONE:
+while after while all sigma fix
+while in while caching
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Obsolete:
+First prototype tool that can calculate wp formulas
 Results: wp(C)(f)
 
 Inputs:

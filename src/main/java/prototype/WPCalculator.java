@@ -321,14 +321,42 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 		return result;
 	}
 	
+	
+	public int getIffCount(String term) {
+		int bracketCount = 1;
+		int commaCount = 0;
+		for(int i = 0; i < term.length(); i++) {
+			char character = term.charAt(i);
+			if(character == '(') {
+				bracketCount++;
+			}
+			if(character == ')') {
+				bracketCount--;
+			}
+			if(character == ',') {
+				commaCount++;
+			}
+			if(bracketCount == 0) {
+				break;
+			}
+			
+		}
+		return commaCount;	
+	}
+	
 	public String getInsideIf(String C) {
 		int commaCount = 1;
 		String result = "";
 		for(int i = 0; i < C.length(); i++) {
 			char character = C.charAt(i);
-			//if inside if case
-			if(character == 'f') {
-				commaCount += 2;
+			if(character == 'i') {
+				if (C.charAt(i+2) != 'f') {
+					//if inside if case
+					commaCount += 2;	
+				}else {
+					//iff inside if case
+					commaCount += getIffCount(C.substring(i+4));
+				}
 			}
 			//min inside if case
 			if(character == 'm') {
