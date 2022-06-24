@@ -17,8 +17,8 @@ public class WPCalculator {
 private LinkedHashMap<String, String> variables = new LinkedHashMap<String,String>();
 private WPCalculatorView mainView;
 private ArrayList<LinkedHashMap<String, String>> allSigma = new ArrayList<LinkedHashMap<String, String>>();
+private ArrayList<String> whileLoops = new ArrayList<String>();
 
-	
 	public String wp(String C, String f) {
 		//sequential process
 		//TODO detailed log: mainView.getResult().setText(mainView.getResult().getText() + "\n" + "wp["+C+"]("+f+")"); 
@@ -102,6 +102,12 @@ private ArrayList<LinkedHashMap<String, String>> allSigma = new ArrayList<Linked
 				whileC = getInsideBracket(whileC.substring(whileC.indexOf("{")+1));
 				System.out.println("whileC: "+whileC);
 				
+				if(!whileLoops.contains(C)) {
+					whileLoops.add(C);
+				}
+				
+				//TODO while in while optimization, save result of inner loop for only one calculation? 
+				
 				if (mainView.getAllSigmaIteration().isSelected()) {
 					 
 					return fixpointIterationAllSigma(condition, whileC, f);				 
@@ -182,7 +188,6 @@ private ArrayList<LinkedHashMap<String, String>> allSigma = new ArrayList<Linked
 		return caseF;
 	}
 	
-	//TODO write tests
 	public String fixpointIterationAllSigma(String condition, String C, String f) {
 		LinkedHashMap<String,Double> fixpoint = new LinkedHashMap<String, Double>();
 		
@@ -391,8 +396,21 @@ private ArrayList<LinkedHashMap<String, String>> allSigma = new ArrayList<Linked
 		this.variables = variables;
 	}	
 
+	public ArrayList<String> getWhileLoops() {
+		return whileLoops;
+	}
+
+	public void setWhileLoops(ArrayList<String> whileLoops) {
+		this.whileLoops = whileLoops;
+	}
+	
+	public void flushWhileLoops() {
+		whileLoops.clear();
+	}
+	
 	public void linkView(WPCalculatorView mainView) {
 		this.mainView = mainView;
 	}
+	
 	
 }

@@ -2,6 +2,7 @@ package prototype;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -47,7 +48,8 @@ private JButton calcButton;
 private JScrollPane scroll;
 private JTextArea result;
 private JButton examineFixpointButton;
-private JButton[] whileFixpoints;
+private ArrayList<JButton> whileLoops; 
+private ArrayList<JButton> whileFixpoints;
 private JButton witnessButton;
 private JButton evaluateFixpointButton;
 private JLabel fixpointDeltaDesc;
@@ -133,6 +135,8 @@ private JTextArea fixpointResult;
 	    examineFixpointButton.setBounds(650,20,200, 40);
 	    examineFixpointButton.setVisible(false);
 	    
+	    whileLoops = new ArrayList<JButton>();
+	    
 	    frame.add(examineFixpointButton);
 	    frame.add(allSigmaIteration); 
 	    frame.add(cDesc);
@@ -180,58 +184,95 @@ private JTextArea fixpointResult;
     	   }  
 	    });
 	    
+	    examineFixpointButton.addActionListener(new ActionListener(){  
+	    	public void actionPerformed(ActionEvent e){
+	    		whileLoops.clear();
+	    		int counter = 0;
+	    		for (String loop: mainCalculator.getWhileLoops()) {	
+	    			whileLoops.add(new JButton(loop));
+	    			//TODO definitely need to implement layout managers
+	    			whileLoops.get(counter).setBounds(900,(counter+1)*50,250, 40);
+	    			frame.add(whileLoops.get(counter));
+	    			counter++;
+	    		}
+	    		frame.revalidate();
+	    		frame.repaint();
+    	   }  
+	    });
+	    
 	    calcButton.addActionListener(new ActionListener(){  
 	    	//TODO log in real time somehow => https://docs.oracle.com/javase/tutorial/uiswing/concurrency/index.html#:~:text=Careful%20use%20of%20concurrency%20is%20particularly%20important%20to,must%20learn%20how%20the%20Swing%20framework%20employs%20threads.
 	    	public void actionPerformed(ActionEvent e){  
-
-	    		result.setText("Information:");
+	    		if(calculationLog() == false) {
+	    			return;
+	    		}
+	    		prepareCalculation();
 	    		
-    			if(!restrictionField.getText().isEmpty()) {
-    				result.append("\n" + "Variable restriction set to {0,...," + restrictionField.getText() + "}.");
-    	    		setRestriction(Double.parseDouble(restrictionField.getText()));
-    			}else {
-    				//default case
-    				result.append("\n" + "No restriction inputted. Set to default {0,...,1}.");
-    	    		setRestriction(1);
-    			}
-    			if(!iterationField.getText().isEmpty()) {
-	    			result.append("\n" + "Iteration count set to " + iterationField.getText() + ".");
-		    		setIterationCount(Integer.parseInt(iterationField.getText()));
-	    	    }else {
-	    	    	if (allSigmaIteration.isSelected()) {
-		    			result.append("\n" + "No iteration count inputted. Taking all sigma default: infinite iteration.");
-		    	    	setIterationCount(Double.POSITIVE_INFINITY);
-	    	    	}else {
-	    	    		//default case 
-		    			result.append("\n" + "No iteration count inputted. Taking default count = 10.");
-	    	    		setIterationCount(10);
-	    	    	}
-	    	    }
-    			if (allSigmaIteration.isSelected()) {
-    				if(usedVars.getText().isEmpty()) {
-		    			result.append("\n\n" + "No used variables inputted! You need to input all variables in C.");
-		    			return;
-    				}
-    				if(deltaInput.getText().isEmpty()) {
-		    			result.append("\n" + "No delta for the iteration inputted. Taking default delta = 0.001.");
-		    			deltaInput.setText("0.001");
-    				}
-    			}
 	    		String calcResult = "";
 	    		double start = System.currentTimeMillis();
-    			mainCalculator.fillAllSigma(usedVars.getText());
-    			result.append( "\n\n" + "Calculating: wp["+cInput.getText()+"]("+fInput.getText()+")");
-    			
-    	    	calcResult = mainCalculator.calculation(mainCalculator.wp(cInput.getText().replace(" ", ""),fInput.getText())); 
-
+	    		calcResult = mainCalculator.calculation(mainCalculator.wp(cInput.getText().replace(" ", ""),fInput.getText())); 
 	    		double end = System.currentTimeMillis();
+	    		
 	    		result.append("\n\n" + "Calculation Time: " + (end - start)/1000 + "s");
 	    	    result.append("\n" + "Result: " + calcResult);
 	    	    if(cInput.getText().contains("while(")) {
 		    	    examineFixpointButton.setVisible(true);
 	    	    }
+	    	    
     	   }  
 	    }); 
+	}
+	
+	public void prepareCalculation() {
+		examineFixpointButton.setVisible(false);
+		mainCalculator.fillAllSigma(usedVars.getText());
+		mainCalculator.flushWhileLoops();
+		for(JButton whileButton : whileLoops) {
+			frame.remove(whileButton);
+		
+		}
+		whileLoops.clear();
+		frame.validate();
+		frame.repaint();
+		
+	}
+	
+	public boolean calculationLog() {
+		result.setText("Information:");
+		
+		if(!restrictionField.getText().isEmpty()) {
+			result.append("\n" + "Variable restriction set to {0,...," + restrictionField.getText() + "}.");
+    		setRestriction(Double.parseDouble(restrictionField.getText()));
+		}else {
+			//default case
+			result.append("\n" + "No restriction inputted. Set to default {0,...,1}.");
+    		setRestriction(1);
+		}
+		if(!iterationField.getText().isEmpty()) {
+			result.append("\n" + "Iteration count set to " + iterationField.getText() + ".");
+    		setIterationCount(Integer.parseInt(iterationField.getText()));
+	    }else {
+	    	if (allSigmaIteration.isSelected()) {
+    			result.append("\n" + "No iteration count inputted. Taking all sigma default: infinite iteration.");
+    	    	setIterationCount(Double.POSITIVE_INFINITY);
+	    	}else {
+	    		//default case 
+    			result.append("\n" + "No iteration count inputted. Taking default count = 10.");
+	    		setIterationCount(10);
+	    	}
+	    }
+		if (allSigmaIteration.isSelected()) {
+			if(usedVars.getText().isEmpty()) {
+    			result.append("\n\n" + "No used variables inputted! You need to input all variables in C.");
+    			return false;
+			}
+			if(deltaInput.getText().isEmpty()) {
+    			result.append("\n" + "No delta for the iteration inputted. Taking default delta = 0.001.");
+    			deltaInput.setText("0.001");
+			}
+		}
+		result.append( "\n\n" + "Calculating: wp["+cInput.getText()+"]("+fInput.getText()+")");
+		return true;
 	}
 	
 	public JTextArea getResult() {
