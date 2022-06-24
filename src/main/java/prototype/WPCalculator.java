@@ -108,11 +108,11 @@ private ArrayList<LinkedHashMap<String, String>> allSigma = new ArrayList<Linked
 				
 				if (mainView.getAllSigmaIteration().isSelected()) {
 					 
-					return fixpointIterationAllSigma(condition, whileC, f, mainView.getIterationCount());				 
+					return fixpointIterationAllSigma(condition, whileC, f);				 
 
 				} else {
 				 
-					return fixpointIterationIterativ(condition, whileC, f, mainView.getIterationCount());
+					return fixpointIterationIterativ(condition, whileC, f);
 				 
 				}
 				
@@ -178,9 +178,9 @@ private ArrayList<LinkedHashMap<String, String>> allSigma = new ArrayList<Linked
 		}
 	}
 	
-	public String fixpointIterationIterativ(String condition, String C, String f, int count) {
+	public String fixpointIterationIterativ(String condition, String C, String f) {
 		String caseF = "0"; //X^0 initialization
-		for(int i=0; i<count; i++) {
+		for(int i=0; i<mainView.getIterationCount(); i++) {
 			String X = wp(C, caseF);
 			caseF = "if("+condition+","+X+","+f+")";	
 		}
@@ -188,7 +188,7 @@ private ArrayList<LinkedHashMap<String, String>> allSigma = new ArrayList<Linked
 	}
 	
 	//TODO write tests
-	public String fixpointIterationAllSigma(String condition, String C, String f, int count) {
+	public String fixpointIterationAllSigma(String condition, String C, String f) {
 		LinkedHashMap<String,Double> fixpoint = new LinkedHashMap<String, Double>();
 		
 		for(LinkedHashMap<String,String> sigma : allSigma) {
@@ -206,7 +206,7 @@ private ArrayList<LinkedHashMap<String, String>> allSigma = new ArrayList<Linked
 			if(e.calculate() == 0.0) {
 				sigmaResult = calculateConcreteSigma(f,sigma);
 			}else {
-				for(int i=0; i<count; i++) {
+				for(int i=0; i<mainView.getIterationCount(); i++) {
 					String X = wp(C, caseF);
 					caseF = "if("+condition+","+X+","+f+")";
 					//TODO future improvement directly input sigma through assignment = f.replace x with sigma x and keep dependency somehow
@@ -257,7 +257,7 @@ private ArrayList<LinkedHashMap<String, String>> allSigma = new ArrayList<Linked
 	//fills allSigma with all possibilities of variable and value combinations
 		public ArrayList<LinkedHashMap<String,String>> fillAllSigma(String varInput) {
 			allSigma.clear();
-			int varCount = varInput.length();
+			
 			
 			List<List<Character>> preCartesianValues = new ArrayList<List<Character>>(); 
 			
@@ -268,7 +268,7 @@ private ArrayList<LinkedHashMap<String, String>> allSigma = new ArrayList<Linked
 			
 			List<Character> restrictedList = new ArrayList<Character>(Lists.charactersOf(restrictedSet));
 			
-			for(int i = 0 ; i < varCount ; i++) {	
+			for(int i = 0 ; i < varInput.length() ; i++) {	
 				preCartesianValues.add(restrictedList);
 			}
 
