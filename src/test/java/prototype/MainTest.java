@@ -30,6 +30,10 @@ class MainTest {
 		assertEquals("20.0", mainCalculator.calculation("if(r(11)=10,20,30)"));
 		assertEquals("20.0", mainCalculator.calculation("if(r(-1)=0,20,30)"));
 		assertEquals("30.0", mainCalculator.calculation("if(r(4)=10,20,30)"));
+		
+		assertEquals("x=3;x=4",mainCalculator.getInsideIf("x=3;x=4,x=2)"));
+		assertEquals("x=3;iff(x=3,3;x=2,4)",mainCalculator.getInsideIf("x=3;iff(x=3,3;x=2,4),x=2)"));
+
 	}
 
 	
@@ -108,6 +112,7 @@ class MainTest {
 		assertEquals("1.0", mainCalculator.calculation(mainCalculator.wp("c=0;x=1;while(c=1){{x=x+1}[1/2]{c=0}}", "x")));
 		assertEquals("1.4921875", mainCalculator.calculation(mainCalculator.wp("c=1;x=1;while(c=1){{x=x+1}[1/2]{c=0}}", "x"))); 
 		
+		mainCalculator.clearFixpointCache();
 		mainView.getDeltaInput().setText("0.001");
 		mainView.setIterationCount(100);
 		assertEquals("1.4990234375", mainCalculator.calculation(mainCalculator.wp("c=1;x=1;while(c=1){{x=x+1}[1/2]{c=0}}", "x"))); 

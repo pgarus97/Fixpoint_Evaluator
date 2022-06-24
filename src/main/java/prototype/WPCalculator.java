@@ -17,6 +17,8 @@ public class WPCalculator {
 private WPCalculatorView mainView;
 private ArrayList<LinkedHashMap<String, String>> allSigma = new ArrayList<LinkedHashMap<String, String>>();
 private ArrayList<String> whileLoops = new ArrayList<String>();
+private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,String>();
+
 
 	public String wp(String C, String f) {
 		//sequential process
@@ -101,20 +103,31 @@ private ArrayList<String> whileLoops = new ArrayList<String>();
 				whileC = getInsideBracket(whileC.substring(whileC.indexOf("{")+1));
 				System.out.println("whileC: "+whileC);
 				
-				if(!whileLoops.contains(C)) {
-					whileLoops.add(C);
-				}
-				
-				//TODO while in while optimization, save result of inner loop for only one calculation? 
-				
-				if (mainView.getAllSigmaIteration().isSelected()) {
-					 
-					return fixpointIterationAllSigma(condition, whileC, f);				 
-
-				} else {
-				 
-					return fixpointIterationIterativ(condition, whileC, f);
-				 
+				//TODO while in while cache 
+				if(!fixpointCache.containsKey(C+"("+f+")")) {
+					
+					if(!whileLoops.contains(C)) {
+						whileLoops.add(C+"("+f+")");
+					}
+					
+					//TODO while in while optimization, save result of inner loop for only one calculation? 
+					
+					String fixpoint="";
+					if (mainView.getAllSigmaIteration().isSelected()) {		 
+						fixpoint = fixpointIterationAllSigma(condition, whileC, f);
+					} else {
+						fixpoint = fixpointIterationIterativ(condition, whileC, f); 
+					}
+					fixpointCache.put(C+"("+f+")", fixpoint);
+					System.out.println("Put into Cache: "+ C+"("+f+")" + " " + fixpoint);
+	
+					return fixpoint;
+						
+					//TODO while in while cache 
+				}else {
+					System.out.println("Skipped because of fixpointCache.");
+					System.out.println("Cache:"+ fixpointCache.get(C+"("+f+")"));
+					return fixpointCache.get(C+"("+f+")");
 				}
 				
 				
@@ -133,7 +146,7 @@ private ArrayList<String> whileLoops = new ArrayList<String>();
 
 					
 					//if mid calculation optimization
-					if(assignResult.startsWith("if")) {
+					if(assignResult.startsWith("if") && !assignResult.startsWith("iff")) {
 						System.out.println("Enter conditional process"); 
 						String condition = getInsideIf(assignResult.substring(3));
 						System.out.println("Conditional: "+condition); 
@@ -182,7 +195,7 @@ private ArrayList<String> whileLoops = new ArrayList<String>();
 		String caseF = "0"; //X^0 initialization
 		for(int i=0; i<mainView.getIterationCount(); i++) {
 			String X = wp(C, caseF);
-			caseF = "if("+condition+","+X+","+f+")";	
+			caseF = "if("+condition+","+X+","+f+")";
 		}
 		return caseF;
 	}
@@ -237,12 +250,18 @@ private ArrayList<String> whileLoops = new ArrayList<String>();
 	
 	//TODO add other possibility of calculating concrete sigma: wp("sigma=x=1;c=1";caseF,null); = Xi
 	public Double calculateConcreteSigma(String f, LinkedHashMap<String,String> sigma) {
+		System.out.println("Concrete Sigma f : " + f);
 		for(Map.Entry<String, String> entry : sigma.entrySet()) {
 			f = f.replace(entry.getKey(), entry.getValue());
 		}
+		System.out.println("Concrete Sigma f after replace : " + f);
+
 		Function restrictValue = new Function("r", "min(max(0,x),"+mainView.getRestriction()+")", "x");
 		Expression e = new Expression(f,restrictValue);
+
 		Double result = e.calculate();
+		System.out.println("Result: " + result);
+
 		//breaks is result too complicated to calculate ?
 		if(result.isNaN()) {
 			//throw exception and break + log
@@ -396,6 +415,10 @@ private ArrayList<String> whileLoops = new ArrayList<String>();
 	
 	public void flushWhileLoops() {
 		whileLoops.clear();
+	}
+	
+	public void clearFixpointCache() {
+		fixpointCache.clear();
 	}
 	
 	public void linkView(WPCalculatorView mainView) {
