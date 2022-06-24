@@ -19,22 +19,18 @@ private WPCalculatorView mainView;
 private ArrayList<LinkedHashMap<String, String>> allSigma = new ArrayList<LinkedHashMap<String, String>>();
 
 	
-	public String wp(String C, String f) {		
-		C = C.replace(" ", "");
-		mainView.getResult().setText(mainView.getResult().getText() + "\n" + "wp["+C+"]("+f+")");
-		System.out.println("C "+ C);
+	public String wp(String C, String f) {
+		//sequential process
+		//TODO detailed log: mainView.getResult().setText(mainView.getResult().getText() + "\n" + "wp["+C+"]("+f+")"); 
 		String C1 = getSequentialCut(C);
 		System.out.println("C1: " + C1);
 		if(!C1.equals(C)) {
-			System.out.println("Enter sequential process"); 
 			String C2 = C.substring(C1.length()+1);
-			System.out.println("C2: " + C2);
-			mainView.getResult().setText(mainView.getResult().getText() + "\n" + "Sequential process. Breaking down into: wp["+C1+"](wp["+C2+"]("+f+"))"); 
+			//TODO detailed log: mainView.getResult().setText(mainView.getResult().getText() + "\n" + "Sequential process. Breaking down into: wp["+C1+"](wp["+C2+"]("+f+"))"); 
 			return wp(C1,(wp(C2,f)));
 		}else {
 			if(C.startsWith("min{")) {
 				//demonic choice process
-				System.out.println("Enter demonic choice process"); 
 				String demC1 = getInsideBracket(C.substring(C.indexOf("{")+1));	
 				String demC2 = C.substring(C.indexOf(demC1));
 				demC2 = getInsideBracket(demC2.substring(demC2.indexOf("{")+1));
@@ -44,7 +40,7 @@ private ArrayList<LinkedHashMap<String, String>> allSigma = new ArrayList<Linked
 				String resultC1 = wp(demC1,f);
 				String resultC2 = wp(demC2,f);
 
-				mainView.getResult().setText(mainView.getResult().getText() + "\n" + "Demonic Choice process. Breaking down into: min(" + resultC1 + "," + resultC2 + ")"); 
+				//TODO detailed log: mainView.getResult().setText(mainView.getResult().getText() + "\n" + "Demonic Choice process. Breaking down into: min(" + resultC1 + "," + resultC2 + ")"); 
 
 				//TODO change back to truncation method
 				return calculation("min(" + resultC1 + "," + resultC2 + ")");
@@ -65,7 +61,7 @@ private ArrayList<LinkedHashMap<String, String>> allSigma = new ArrayList<Linked
 				System.out.println("C2= "+ifC2);
 				String resultC1 = wp(ifC1,f);
 				String resultC2 = wp(ifC2,f);
-				mainView.getResult().setText(mainView.getResult().getText() + "\n" + "Conditional process. Breaking down into: if("+condition+") then "+ resultC1 +" else "+ resultC2); 
+				//TODO detailed log: mainView.getResult().setText(mainView.getResult().getText() + "\n" + "Conditional process. Breaking down into: if("+condition+") then "+ resultC1 +" else "+ resultC2); 
 				String condResult = calculation(condition);
 				if(condResult.equals("1.0")) {
 					return calculation(resultC1);
@@ -92,7 +88,7 @@ private ArrayList<LinkedHashMap<String, String>> allSigma = new ArrayList<Linked
 				Expression negProbability = new Expression ("1-"+probability);
 				String resultC1 = wp(probC1,f);
 				String resultC2 = wp(probC2,f);
-				mainView.getResult().setText(mainView.getResult().getText() + "\n" + "Probability process. Breaking down into: " + probability + " * " + resultC1 +" + "+ negProbability.calculate() + " * " + resultC2); 
+				//TODO detailed log: mainView.getResult().setText(mainView.getResult().getText() + "\n" + "Probability process. Breaking down into: " + probability + " * " + resultC1 +" + "+ negProbability.calculate() + " * " + resultC2); 
 				return calculation("(" + probability + " * "+ resultC1 +" + "+ negProbability.calculate() + " * " + resultC2+")");
 
 			}
@@ -119,11 +115,10 @@ private ArrayList<LinkedHashMap<String, String>> allSigma = new ArrayList<Linked
 				
 			}else {
 				//variable assignments
-				//TODO need to implement new WP that handles concrete sigma assignments
 				if(C.contains("skip")){
 					System.out.println("Enter skip process"); 
 					String skipResult = C.replace("skip", f);
-					mainView.getResult().setText(mainView.getResult().getText() + "\n" + "Assignment skip process." + skipResult);
+					//TODO detailed log: mainView.getResult().setText(mainView.getResult().getText() + "\n" + "Assignment skip process." + skipResult);
 					return calculation(skipResult);
 				}else {
 					System.out.println("Enter assignment process"); 
@@ -153,7 +148,7 @@ private ArrayList<LinkedHashMap<String, String>> allSigma = new ArrayList<Linked
 						}
 					}
 					
-					mainView.getResult().setText(mainView.getResult().getText() + "\n" + "Assignment process." + assignResult);
+					//TODO detailed log: mainView.getResult().setText(mainView.getResult().getText() + "\n" + "Assignment process." + assignResult);
 					return calculation(assignResult);
 				}
 					
@@ -246,7 +241,7 @@ private ArrayList<LinkedHashMap<String, String>> allSigma = new ArrayList<Linked
 		Expression e = new Expression(f,restrictValue);
 		Double result = e.calculate();
 		if(result.isNaN()) {
-			//throw exception and break
+			//throw exception and break + log
 			System.out.println("There are unknown variables in the formula!");
 			return null;
 		}else {
@@ -257,7 +252,6 @@ private ArrayList<LinkedHashMap<String, String>> allSigma = new ArrayList<Linked
 	//fills allSigma with all possibilities of variable and value combinations
 		public ArrayList<LinkedHashMap<String,String>> fillAllSigma(String varInput) {
 			allSigma.clear();
-			
 			
 			List<List<Character>> preCartesianValues = new ArrayList<List<Character>>(); 
 			

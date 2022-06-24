@@ -12,6 +12,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 public class WPCalculatorView {
 	
@@ -128,7 +130,7 @@ private JTextArea fixpointResult;
 	    allSigmaIteration.setBounds(200,100,300, 50);
 	    
 	    examineFixpointButton = new JButton("Examine Fixpoints");
-	    examineFixpointButton.setBounds(650,20,200, 20);
+	    examineFixpointButton.setBounds(650,20,200, 40);
 	    examineFixpointButton.setVisible(false);
 	    
 	    frame.add(examineFixpointButton);
@@ -179,38 +181,52 @@ private JTextArea fixpointResult;
 	    });
 	    
 	    calcButton.addActionListener(new ActionListener(){  
-	    	//TODO important: catch empty allsigma textboxes and set defaults; currently breaks
+	    	//TODO log in real time somehow => https://docs.oracle.com/javase/tutorial/uiswing/concurrency/index.html#:~:text=Careful%20use%20of%20concurrency%20is%20particularly%20important%20to,must%20learn%20how%20the%20Swing%20framework%20employs%20threads.
 	    	public void actionPerformed(ActionEvent e){  
+
+	    		result.setText("Information:");
 	    		
-	    		result.setText(""); 	
-	    		
-	    		if(restrictionField.getText().isEmpty()) {
-	    	    	//throw exception;
-	    			//TODO output warning and set default case
-	    			result.setText("You have to set a restriction for the variables!");
-	    	    	return;
-	    	    } 
-	    		setRestriction(Double.parseDouble(restrictionField.getText()));
-	    		String calcResult = "";
-	    		double start = System.currentTimeMillis();
+    			if(!restrictionField.getText().isEmpty()) {
+    				result.append("\n" + "Variable restriction set to {0,...," + restrictionField.getText() + "}.");
+    	    		setRestriction(Double.parseDouble(restrictionField.getText()));
+    			}else {
+    				//default case
+    				result.append("\n" + "No restriction inputted. Set to default {0,...,1}.");
+    	    		setRestriction(1);
+    			}
     			if(!iterationField.getText().isEmpty()) {
+	    			result.append("\n" + "Iteration count set to " + iterationField.getText() + ".");
 		    		setIterationCount(Integer.parseInt(iterationField.getText()));
 	    	    }else {
 	    	    	if (allSigmaIteration.isSelected()) {
-	    	    		//TODO log everything
+		    			result.append("\n" + "No iteration count inputted. Taking all sigma default: infinite iteration.");
 		    	    	setIterationCount(Double.POSITIVE_INFINITY);
 	    	    	}else {
 	    	    		//default case 
-	    	    		//TODO log everything
+		    			result.append("\n" + "No iteration count inputted. Taking default count = 10.");
 	    	    		setIterationCount(10);
 	    	    	}
 	    	    }
+    			if (allSigmaIteration.isSelected()) {
+    				if(usedVars.getText().isEmpty()) {
+		    			result.append("\n\n" + "No used variables inputted! You need to input all variables in C.");
+		    			return;
+    				}
+    				if(deltaInput.getText().isEmpty()) {
+		    			result.append("\n" + "No delta for the iteration inputted. Taking default delta = 0.001.");
+		    			deltaInput.setText("0.001");
+    				}
+    			}
+	    		String calcResult = "";
+	    		double start = System.currentTimeMillis();
     			mainCalculator.fillAllSigma(usedVars.getText());
-    	    	calcResult = mainCalculator.calculation(mainCalculator.wp(cInput.getText(),fInput.getText())); 
+    			result.append( "\n\n" + "Calculating: wp["+cInput.getText()+"]("+fInput.getText()+")");
+    			
+    	    	calcResult = mainCalculator.calculation(mainCalculator.wp(cInput.getText().replace(" ", ""),fInput.getText())); 
 
 	    		double end = System.currentTimeMillis();
-	    		result.setText(result.getText() + "\n\n" + "Calculation Time: " + (end - start)/1000 + "s");
-	    	    result.setText(result.getText() + "\n" + "Result: " + calcResult);
+	    		result.append("\n\n" + "Calculation Time: " + (end - start)/1000 + "s");
+	    	    result.append("\n" + "Result: " + calcResult);
 	    	    if(cInput.getText().contains("while(")) {
 		    	    examineFixpointButton.setVisible(true);
 	    	    }
