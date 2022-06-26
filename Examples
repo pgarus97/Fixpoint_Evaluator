@@ -31,6 +31,9 @@ x=0;c=0;while(x<2){while(c<2){c=c+1;x=x+1}} with restriction 6 iteration 4 = 2.0
 while after while test:
 
 x=1;c=0;while(c=1){{x=x+1}[1/2]{c=0}};while(c=0){x=4;c=1}
+x=1;while(c=1){{x=x+1}[1/2]{c=0}};{x=3}[1/2]{x=10};if{x<5}{x=x+1}else{x=x-1}
+x=1;{x=3}[1/2]{x=10};if{x<5}{x=x+1}else{x=x-1};while(c=1){{x=x+1}[1/2]{c=0}}
+
 
 Problem is here: + 0.5 * 1.0;(r(0+1)=1)&(r(0)=2),1.0;(r(0+1)=2)&(r(0)=0),2.0;(r(0+1)=2)&(r(0)=1),2.0;(r(0+1)=2)&(r(0)=2),2.0)) + 0.5 * iff(
 the 0.5 *1.0 should be another iff? there is something wrong.

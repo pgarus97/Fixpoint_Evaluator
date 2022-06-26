@@ -154,11 +154,11 @@ class MainTest {
 	
 	@Test
 	void testFixpointIfConversion() {
-		LinkedHashMap<String,Double> sigma = new LinkedHashMap<String,Double>();
-		sigma.put("(x=0)&(c=0)", 0.0);
-		sigma.put("(x=0)&(c=1)", 1.0);
-		sigma.put("(x=1)&(c=0)", 1.0);
-		sigma.put("(x=1)&(c=1)", 2.0);
+		LinkedHashMap<String,String> sigma = new LinkedHashMap<String,String>();
+		sigma.put("(x=0)&(c=0)", "0.0");
+		sigma.put("(x=0)&(c=1)", "1.0");
+		sigma.put("(x=1)&(c=0)", "1.0");
+		sigma.put("(x=1)&(c=1)", "2.0");
 
 		assertEquals("iff((x=0)&(c=0),0.0;(x=0)&(c=1),1.0;(x=1)&(c=0),1.0;(x=1)&(c=1),2.0)", mainCalculator.fixpointIfConversion(sigma));
 	}

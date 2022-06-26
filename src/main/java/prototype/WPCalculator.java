@@ -18,7 +18,7 @@ private WPCalculatorView mainView;
 private ArrayList<LinkedHashMap<String, String>> allSigma = new ArrayList<LinkedHashMap<String, String>>();
 private ArrayList<String> whileLoops = new ArrayList<String>();
 private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,String>();
-private LinkedHashMap<String,LinkedHashMap<String,Double>> concreteCache = new LinkedHashMap<String,LinkedHashMap<String,Double>>();
+private LinkedHashMap<String,LinkedHashMap<String,String>> concreteCache = new LinkedHashMap<String,LinkedHashMap<String,String>>();
 
 
 
@@ -105,26 +105,27 @@ private LinkedHashMap<String,LinkedHashMap<String,Double>> concreteCache = new L
 				whileC = getInsideBracket(whileC.substring(whileC.indexOf("{")+1));
 				System.out.println("whileC: "+whileC);
 				
-				if(!whileLoops.contains(C)) {
-					whileLoops.add(C+"("+f+")");
+				//TODO need to somehow give into the view C and f separately 
+				if(!whileLoops.contains(C+" ("+f+")")) {
+					whileLoops.add(C+" ("+f+")");
 				}
 				//TODO while in while cache 
-				if(!fixpointCache.containsKey(C+"("+f+")")) {
+				if(!fixpointCache.containsKey(C+" ("+f+")")) {
 					String fixpoint="";
 					if (mainView.getAllSigmaIteration().isSelected()) {		 
 						fixpoint = fixpointIterationAllSigma(condition, whileC, f,C);
 					} else {
 						fixpoint = fixpointIterationIterativ(condition, whileC, f); 
 					}
-					fixpointCache.put(C+"("+f+")", fixpoint);
+					fixpointCache.put(C+" ("+f+")", fixpoint);
 					System.out.println("Put into Cache: "+ C+"("+f+")" + " " + fixpoint);
 	
 					return fixpoint;
 						
 				}else {
-					System.out.println("Skipped because valuse has been found in fixpoint cache.");
-					System.out.println("Cached LFP: "+ fixpointCache.get(C+"("+f+")"));
-					return fixpointCache.get(C+"("+f+")");
+					System.out.println("Skipped because value has been found in fixpoint cache.");
+					System.out.println("Cached LFP: "+ fixpointCache.get(C+" ("+f+")"));
+					return fixpointCache.get(C+" ("+f+")");
 				}
 				
 				
@@ -198,7 +199,7 @@ private LinkedHashMap<String,LinkedHashMap<String,Double>> concreteCache = new L
 	}
 	
 	public String fixpointIterationAllSigma(String condition, String C, String f, String whileTerm) {
-		LinkedHashMap<String,Double> fixpoint = new LinkedHashMap<String, Double>();
+		LinkedHashMap<String,String> fixpoint = new LinkedHashMap<String, String>();
 		
 		for(LinkedHashMap<String,String> sigma : allSigma) {
 			double sigmaResult = 0.0;
@@ -230,9 +231,9 @@ private LinkedHashMap<String,LinkedHashMap<String,Double>> concreteCache = new L
 					}
 				}
 			}			
-			fixpoint.put(identifier, sigmaResult);	
+			fixpoint.put(identifier, Double.toString(sigmaResult));	
 		}
-		concreteCache.put(whileTerm + "("+f+")", fixpoint);
+		concreteCache.put(whileTerm + " ("+f+")", fixpoint);
 		return fixpointIfConversion(fixpoint);
 	}
 	
@@ -240,20 +241,49 @@ private LinkedHashMap<String,LinkedHashMap<String,Double>> concreteCache = new L
 	public String evaluateFixpoint(String currentWhile, String fixpoint, String delta) {
 		//currentWhile = C(f)
 		//fixpoint = iff(id,value;...)
-		//TODO need to get fixpointCache for specified fixpoint => or not because witness?
 		
-		LinkedHashMap<String,Double> Xslash = new LinkedHashMap<String,Double>();
-		for(Map.Entry<String, Double> entry : concreteCache.get(currentWhile).entrySet()) {
-			Xslash.put(entry.getKey(),Double.parseDouble(calculation("r("+entry.getValue()+"-"+delta+")")));
+		LinkedHashMap<String,String> Xslash = new LinkedHashMap<String,String>();
+		LinkedHashMap<String,String> wpX = new LinkedHashMap<String,String>();
+		LinkedHashMap<String,String> wpXslash = new LinkedHashMap<String,String>();
+		
+		//TODO need to get fixpointCache for specified fixpoint => or not because witness? this only works for LFP
+		//TODO need to create a new LinkedHashMap for X from the string somehow, otherwise witness wont work
+		//TODO then we dont need concreteCache at all
+		String currentC = currentWhile.split(" ")[0];
+		System.out.println("CurrentC: " +currentC);
+		String currentF = currentWhile.split(" ")[1];
+		System.out.println("CurrentF: " +currentF);
+		currentF = currentF.substring(1,currentF.length()-1);
+		System.out.println("CurrentF: " +currentF);
+		//TODO still can use this if we check condition: if currentWhile exists in concrete Cache?
+		//LinkedHashMap<String, String> X = fixpointToMap(fixpoint); //TODO takes a fixpoint iff and transforms into a map; needed for witness
+		LinkedHashMap<String,String> X = concreteCache.get(currentWhile); //only for LFP test cases; can delete concreteCache after fixpointToMap
+		for(Map.Entry<String, String> entry : X.entrySet()) {
+			String XslashValue = calculation("r("+entry.getValue()+"-"+delta+")");
+			Xslash.put(entry.getKey(),XslashValue);
+			//TODO get C from currentWhile and calculate wp with C and X as f
+			//iff((x=0)&(c=0),1.0;(x=0)&(c=1),0.0;(x=1)&(c=0),1.0;(x=1)&(c=1),1.0)
+			//TODO before currentC we need to insert concrete sigma (entry) values? x=1;c=1;currentC ; otherwise it will create double values?
+			//=> need to be considered separately since we then get dependencies and condition check etc.
+			//for each char in entry.getKey(), create string with x=1;C=0 => just replace?
+			String concreteSigma = entry.getKey().replace("&", ";");
+			concreteSigma = concreteSigma.replace("(", "");
+			concreteSigma = concreteSigma.replace(")", "");
+			wpX.put(entry.getKey(),calculation(wp(concreteSigma+";"+currentC,entry.getValue())));
+			//TODO does not take dependencies...
+			wpXslash.put(entry.getKey(),calculation(wp(concreteSigma+";"+currentC,XslashValue)));
+			System.out.println(fixpointIfConversion(wpX));
+			System.out.println("Test: "+ entry.getKey().replace("&", ";")+";"+currentC);
 		}
 		
+
 		
-		return fixpointIfConversion(Xslash);
+		return fixpointIfConversion(wpXslash);
 	}
 	
-	public String fixpointIfConversion(LinkedHashMap<String,Double> fixpoint) {
+	public String fixpointIfConversion(LinkedHashMap<String,String> fixpoint) {
 		String result = "iff(";
-		for(Map.Entry<String, Double> entry : fixpoint.entrySet()) {
+		for(Map.Entry<String, String> entry : fixpoint.entrySet()) {
 			result += ";" + entry.getKey()+","+entry.getValue();
 		}
 		result = result.replaceFirst(";", "");
