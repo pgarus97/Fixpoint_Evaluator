@@ -21,6 +21,8 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 
+import org.apache.commons.lang3.math.NumberUtils;
+
 
 public class WPCalculatorView {
 	
@@ -63,7 +65,7 @@ private JPanel whileLoopPanel;
 private JPanel evaluationPanel;
 private JButton lfpButton;
 private JTextField witnessInput;
-private JButton witnessButton;
+private JButton fixpointEvalButton;
 private JLabel fixpointDeltaDesc;
 private JTextField fixpointDeltaInput;
 
@@ -163,11 +165,11 @@ private JTextArea fixpointResult;
 	    fixpointDeltaInput.setPreferredSize(new Dimension (500,20));
 	    fixpointDeltaInput.setMaximumSize(fixpointDeltaInput.getPreferredSize());
 
-	    lfpButton = new JButton("LFP");
+	    lfpButton = new JButton("Select LFP");
 	    witnessInput = new JTextField("Witness XY");
 	    witnessInput.setPreferredSize(new Dimension (500,20));
 	    witnessInput.setMaximumSize(witnessInput.getPreferredSize());
-	    witnessButton = new JButton("Witness");
+	    fixpointEvalButton = new JButton("Evaluate Fixpoint");
 	    evaluationPanel = new JPanel();
 	    evaluationPanel.setBounds(900,300,250, 250);
 	    evaluationPanel.setLayout(new BoxLayout(evaluationPanel, BoxLayout.PAGE_AXIS));
@@ -180,7 +182,7 @@ private JTextArea fixpointResult;
 	    evaluationPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 	    evaluationPanel.add(witnessInput);
 	    evaluationPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-	    evaluationPanel.add(witnessButton);
+	    evaluationPanel.add(fixpointEvalButton);
 	    evaluationPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 	    evaluationPanel.setVisible(false);
 	    
@@ -297,11 +299,31 @@ private JTextArea fixpointResult;
 	    }); 
 	    
 	    lfpButton.addActionListener(new ActionListener(){
-	    	public void actionPerformed(ActionEvent e){  
-	    	    result.append("\n\n" + "Selected While-Term: " + currentWhileTerm);
-	    	    result.append("\n" + "LFP: " + mainCalculator.getFixpointCache().get(currentWhileTerm));
+	    	public void actionPerformed(ActionEvent e){
+	    		witnessInput.setText(mainCalculator.getFixpointCache().get(currentWhileTerm));
 	    	}  
 		}); 
+	    
+	    fixpointEvalButton.addActionListener(new ActionListener() {
+	    	public void actionPerformed(ActionEvent e) {
+	    		result.append("\n\n" + "Selected While-Term: " + currentWhileTerm);
+	    	    result.append("\n" + "LFP: " + mainCalculator.getFixpointCache().get(currentWhileTerm));
+	    	    String witness = witnessInput.getText();
+	    	    String fixpointDelta = fixpointDeltaInput.getText();
+	    	    if(fixpointDelta != "" && NumberUtils.isCreatable(fixpointDelta)) {
+		    	    result.append("\n" + "Delta: " + fixpointDelta );
+	    	    }else {
+		    	    result.append("\n" + "The inputted delta: '" + fixpointDelta + "' is not a number!");
+		    	    return;
+	    	    }
+	    	    result.append("\n" + "Witness: " + witness );
+
+	    	    String evalResult = mainCalculator.evaluateFixpoint(currentWhileTerm, witness, fixpointDelta);
+	    	    result.append("\n" + "Result: " + evalResult);
+
+
+	    	}
+	    });
 	}
 	
 	public ItemListener whileLoopToggle = new ItemListener() {
@@ -310,7 +332,7 @@ private JTextArea fixpointResult;
     		    JToggleButton selectedWhileButton = (JToggleButton) event.getSource();
             	for(JToggleButton whileButton : whileLoops) {
             		if(!whileButton.equals(selectedWhileButton)) {
-            			whileButton.setSelected(false); //triggers listener again
+            			whileButton.setSelected(false);
             		}
             	}
             	evaluationPanel.setVisible(true);

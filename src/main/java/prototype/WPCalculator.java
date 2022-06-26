@@ -18,6 +18,8 @@ private WPCalculatorView mainView;
 private ArrayList<LinkedHashMap<String, String>> allSigma = new ArrayList<LinkedHashMap<String, String>>();
 private ArrayList<String> whileLoops = new ArrayList<String>();
 private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,String>();
+private LinkedHashMap<String,LinkedHashMap<String,Double>> concreteCache = new LinkedHashMap<String,LinkedHashMap<String,Double>>();
+
 
 
 	public String wp(String C, String f) {
@@ -107,10 +109,10 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 					whileLoops.add(C+"("+f+")");
 				}
 				//TODO while in while cache 
-				if(!fixpointCache.containsKey(C+"("+f+")")) {					
+				if(!fixpointCache.containsKey(C+"("+f+")")) {
 					String fixpoint="";
 					if (mainView.getAllSigmaIteration().isSelected()) {		 
-						fixpoint = fixpointIterationAllSigma(condition, whileC, f);
+						fixpoint = fixpointIterationAllSigma(condition, whileC, f,C);
 					} else {
 						fixpoint = fixpointIterationIterativ(condition, whileC, f); 
 					}
@@ -120,8 +122,8 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 					return fixpoint;
 						
 				}else {
-					System.out.println("Skipped because of fixpointCache.");
-					System.out.println("Cache:"+ fixpointCache.get(C+"("+f+")"));
+					System.out.println("Skipped because valuse has been found in fixpoint cache.");
+					System.out.println("Cached LFP: "+ fixpointCache.get(C+"("+f+")"));
 					return fixpointCache.get(C+"("+f+")");
 				}
 				
@@ -195,7 +197,7 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 		return caseF;
 	}
 	
-	public String fixpointIterationAllSigma(String condition, String C, String f) {
+	public String fixpointIterationAllSigma(String condition, String C, String f, String whileTerm) {
 		LinkedHashMap<String,Double> fixpoint = new LinkedHashMap<String, Double>();
 		
 		for(LinkedHashMap<String,String> sigma : allSigma) {
@@ -230,7 +232,23 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 			}			
 			fixpoint.put(identifier, sigmaResult);	
 		}
+		concreteCache.put(whileTerm + "("+f+")", fixpoint);
 		return fixpointIfConversion(fixpoint);
+	}
+	
+	
+	public String evaluateFixpoint(String currentWhile, String fixpoint, String delta) {
+		//currentWhile = C(f)
+		//fixpoint = iff(id,value;...)
+		//TODO need to get fixpointCache for specified fixpoint => or not because witness?
+		
+		LinkedHashMap<String,Double> Xslash = new LinkedHashMap<String,Double>();
+		for(Map.Entry<String, Double> entry : concreteCache.get(currentWhile).entrySet()) {
+			Xslash.put(entry.getKey(),Double.parseDouble(calculation("r("+entry.getValue()+"-"+delta+")")));
+		}
+		
+		
+		return fixpointIfConversion(Xslash);
 	}
 	
 	public String fixpointIfConversion(LinkedHashMap<String,Double> fixpoint) {
@@ -268,32 +286,32 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 	}
 	
 	//fills allSigma with all possibilities of variable and value combinations
-		public ArrayList<LinkedHashMap<String,String>> fillAllSigma(String varInput) {
-			allSigma.clear();
-			
-			List<List<Integer>> preCartesianValues = new ArrayList<List<Integer>>(); 
-			
-			//TODO only goes from 1-9 since character
-			List<Integer> restrictedList = new ArrayList<Integer>();
-			for (int i = 0 ; i < mainView.getRestriction()+1; i++) {
-				restrictedList.add(i);
-			}
-			
-			for(int i = 0 ; i < varInput.length() ; i++) {	
-				preCartesianValues.add(restrictedList);
-			}
+	public ArrayList<LinkedHashMap<String,String>> fillAllSigma(String varInput) {
+		allSigma.clear();
+		
+		List<List<Integer>> preCartesianValues = new ArrayList<List<Integer>>(); 
+		
+		//TODO only goes from 1-9 since character
+		List<Integer> restrictedList = new ArrayList<Integer>();
+		for (int i = 0 ; i < mainView.getRestriction()+1; i++) {
+			restrictedList.add(i);
+		}
+		
+		for(int i = 0 ; i < varInput.length() ; i++) {	
+			preCartesianValues.add(restrictedList);
+		}
 
-			List<List<Integer>> postCartesianValues = Lists.cartesianProduct(preCartesianValues);
-			
-			for(int i = 0 ; i < postCartesianValues.size(); i++){
-				LinkedHashMap<String, String> tempMap = new LinkedHashMap<String,String>();
-				for(int j = 0 ; j < postCartesianValues.get(i).size(); j++){
-				tempMap.put(String.valueOf(varInput.charAt(j)), postCartesianValues.get(i).get(j).toString());
-				}
-				allSigma.add(tempMap);
+		List<List<Integer>> postCartesianValues = Lists.cartesianProduct(preCartesianValues);
+		
+		for(int i = 0 ; i < postCartesianValues.size(); i++){
+			LinkedHashMap<String, String> tempMap = new LinkedHashMap<String,String>();
+			for(int j = 0 ; j < postCartesianValues.get(i).size(); j++){
+			tempMap.put(String.valueOf(varInput.charAt(j)), postCartesianValues.get(i).get(j).toString());
 			}
-			return allSigma;
-		}	
+			allSigma.add(tempMap);
+		}
+		return allSigma;
+	}		
 	
 	//start with C in one index after first appearance of start char
 	public String getInsideBracket(String C) {
