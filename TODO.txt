@@ -9,6 +9,7 @@ fix while in while non expansiveness proof
 hover over buttons for full text in whileLoops
 make log appear in runtime => threads? concurrency in swing
 write readme with usage and documentation
+while button list on select highlight selected one, as well as examine button
 
 DONE:
 while after while all sigma fix

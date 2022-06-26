@@ -436,6 +436,14 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 		this.whileLoops = whileLoops;
 	}
 	
+	public LinkedHashMap<String, String> getFixpointCache() {
+		return fixpointCache;
+	}
+	
+	public void setFixpointCache(LinkedHashMap<String, String> fixpointCache) {
+		this.fixpointCache = fixpointCache;
+	}
+	
 	public void flushWhileLoops() {
 		whileLoops.clear();
 	}

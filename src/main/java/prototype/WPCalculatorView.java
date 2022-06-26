@@ -1,8 +1,11 @@
 package prototype;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.util.ArrayList;
 
 import javax.swing.BorderFactory;
@@ -16,6 +19,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.JToggleButton;
 
 
 public class WPCalculatorView {
@@ -26,6 +30,7 @@ JCheckBox allSigmaIteration = new JCheckBox("Enable all-sigma fixpoint-iteration
 private double restriction = 2;
 private double iterationCount = 10;
 private WPCalculator mainCalculator;
+private String currentWhileTerm;
 
 //Declaration of components
 private JFrame frame;
@@ -49,9 +54,9 @@ private JTextField deltaInput;
 private JButton calcButton;
 private JScrollPane scroll;
 private JTextArea result;
-private JButton examineFixpointButton;
+private JToggleButton examineFixpointButton;
 
-private ArrayList<JButton> whileLoops; 
+private ArrayList<JToggleButton> whileLoops; 
 private JScrollPane whileLoopScroll;
 private JPanel whileLoopPanel;
 
@@ -90,7 +95,7 @@ private JTextArea fixpointResult;
 		
 	    cDesc = new JLabel("Input the Program (C) here:");
 	    cDesc.setBounds(5,0,170, 20);
-	    cInput = new JTextField("while(c=1){{x=x+1}[1/2]{c=0}}");
+	    cInput = new JTextField("x=1;c=0;while(c=1){{x=x+1}[1/2]{c=0}};while(c=0){x=4;c=1}");
 	    cInput.setBounds(5,20,170, 20);
 	    
 	    
@@ -112,7 +117,7 @@ private JTextArea fixpointResult;
 	    */
 	    restrictionDesc = new JLabel("Input the restriction (k) here:");
 	    restrictionDesc.setBounds(430,0,200, 20);
-	    restrictionField = new JTextField("2");
+	    restrictionField = new JTextField("1");
 	    restrictionField.setBounds(430,20,200, 20);
 	    
 	    iterationDesc = new JLabel("Input the iteration count here:");
@@ -130,7 +135,7 @@ private JTextArea fixpointResult;
 	    deltaDesc = new JLabel("Input delta (fixpoint iteration stop) here:");
 	    deltaDesc.setBounds(500,120,400, 20);
 	    deltaDesc.setVisible(false);
-		deltaInput = new JTextField("0.01");
+		deltaInput = new JTextField("0.001");
 	    deltaInput.setVisible(false);
 		deltaInput.setBounds(500,140,200, 20);
 
@@ -139,14 +144,14 @@ private JTextArea fixpointResult;
 	    
 	    allSigmaIteration.setBounds(200,100,300, 50);
 	    
-	    examineFixpointButton = new JButton("Examine Fixpoints");
+	    examineFixpointButton = new JToggleButton("Examine Fixpoints");
 	    examineFixpointButton.setBounds(650,20,200, 40);
 	    examineFixpointButton.setVisible(false);
 	    
 	    whileLoopPanel = new JPanel();
 	    whileLoopPanel.setLayout(new BoxLayout(whileLoopPanel, BoxLayout.PAGE_AXIS));
 	    whileLoopPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-	    whileLoops = new ArrayList<JButton>();
+	    whileLoops = new ArrayList<JToggleButton>();
 	    whileLoopScroll = new JScrollPane(whileLoopPanel);
 	    whileLoopScroll.setBounds(900,50,250, 250);
 	    whileLoopScroll.setVisible(false);
@@ -198,7 +203,6 @@ private JTextArea fixpointResult;
 	    frame.add(usedVarsDesc);
 	    frame.add(deltaDesc);
 	    frame.add(deltaInput);
-	    //get contentpane
 		frame.add(whileLoopScroll);
 	    frame.add(calcButton);
 	    
@@ -248,21 +252,19 @@ private JTextArea fixpointResult;
         });
 	     */
 	    
-	    examineFixpointButton.addActionListener(new ActionListener(){  
-	    	public void actionPerformed(ActionEvent e){
-	    		whileLoops.clear();
-	    		whileLoopPanel.removeAll();
-	    		whileLoopScroll.setVisible(true);
-	    		int counter = 0;
-	    		for (String loop: mainCalculator.getWhileLoops()) {	
-	    			whileLoops.add(new JButton(loop));
-	    			whileLoops.get(counter).addActionListener(whileLoopAction);
-	    			whileLoopPanel.add(whileLoops.get(counter));
-	    			whileLoopPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-	    			counter++;
-	    		}
-    	   }  
-	    });
+	    examineFixpointButton.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent event) {
+                if (event.getStateChange() == ItemEvent.SELECTED) {
+	    			whileLoopScroll.setVisible(true);	
+                } else {
+	    			whileLoopScroll.setVisible(false);
+	    			evaluationPanel.setVisible(false);
+	    			for(JToggleButton whileButton : whileLoops) {
+	            		whileButton.setSelected(false);
+	            	}
+                }
+            }
+        });
 	    
 	    calcButton.addActionListener(new ActionListener(){  
 	    	//TODO log in real time somehow => https://docs.oracle.com/javase/tutorial/uiswing/concurrency/index.html#:~:text=Careful%20use%20of%20concurrency%20is%20particularly%20important%20to,must%20learn%20how%20the%20Swing%20framework%20employs%20threads.
@@ -281,31 +283,55 @@ private JTextArea fixpointResult;
 	    	    result.append("\n" + "Result: " + calcResult);
 	    	    if(cInput.getText().contains("while(")) {
 		    	    examineFixpointButton.setVisible(true);
+		    	    int counter = 0;
+		    		for (String loop: mainCalculator.getWhileLoops()) {	
+		    			whileLoops.add(new JToggleButton(loop));
+		    			whileLoops.get(counter).addItemListener(whileLoopToggle);
+		    			whileLoopPanel.add(whileLoops.get(counter));
+		    			whileLoopPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+		    			counter++;
+		    		}
 	    	    }
 	    	    
     	   }  
 	    }); 
+	    
+	    lfpButton.addActionListener(new ActionListener(){
+	    	public void actionPerformed(ActionEvent e){  
+	    	    result.append("\n\n" + "Selected While-Term: " + currentWhileTerm);
+	    	    result.append("\n" + "LFP: " + mainCalculator.getFixpointCache().get(currentWhileTerm));
+	    	}  
+		}); 
 	}
 	
-	public ActionListener whileLoopAction = new ActionListener() {
-
-		public void actionPerformed(ActionEvent e) {
-		    evaluationPanel.setVisible(true);
-			//TODO write lfp of while into lfp button
-		}
-		
-	};
+	public ItemListener whileLoopToggle = new ItemListener() {
+        public void itemStateChanged(ItemEvent event) {
+            if (event.getStateChange() == ItemEvent.SELECTED) {
+    		    JToggleButton selectedWhileButton = (JToggleButton) event.getSource();
+            	for(JToggleButton whileButton : whileLoops) {
+            		if(!whileButton.equals(selectedWhileButton)) {
+            			whileButton.setSelected(false); //triggers listener again
+            		}
+            	}
+            	evaluationPanel.setVisible(true);
+    		    currentWhileTerm = selectedWhileButton.getText();
+            } else {
+            	currentWhileTerm = "";
+            	evaluationPanel.setVisible(false);
+            }
+        }
+    };
+	
+	
 	
 	public void prepareCalculation() {
 	    evaluationPanel.setVisible(false);
 		examineFixpointButton.setVisible(false);
 		whileLoopScroll.setVisible(false);
+		examineFixpointButton.setSelected(false);
 		mainCalculator.fillAllSigma(usedVars.getText());
 		mainCalculator.flushWhileLoops();
-		for(JButton whileButton : whileLoops) {
-			frame.remove(whileButton);
-		
-		}
+		whileLoopPanel.removeAll();
 		whileLoops.clear();
 		frame.validate();
 		frame.repaint();
