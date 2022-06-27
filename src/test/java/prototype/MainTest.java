@@ -105,16 +105,11 @@ class MainTest {
 	void testAllSigmaWhile() {	
 
 		mainView.setRestriction(2);
-		mainView.setIterationCount(10);
+		mainView.setIterationCount(100);
 		mainView.getAllSigmaIteration().setSelected(true);
 		mainCalculator.fillAllSigma("xc");
 
 		assertEquals("1.0", mainCalculator.calculation(mainCalculator.wp("c=0;x=1;while(c=1){{x=x+1}[1/2]{c=0}}", "x")));
-		assertEquals("1.4921875", mainCalculator.calculation(mainCalculator.wp("c=1;x=1;while(c=1){{x=x+1}[1/2]{c=0}}", "x"))); 
-		
-		mainCalculator.clearFixpointCache();
-		mainView.getDeltaInput().setText("0.001");
-		mainView.setIterationCount(100);
 		assertEquals("1.4990234375", mainCalculator.calculation(mainCalculator.wp("c=1;x=1;while(c=1){{x=x+1}[1/2]{c=0}}", "x"))); 
 	}
 	
@@ -161,5 +156,16 @@ class MainTest {
 		sigma.put("(x=1)&(c=1)", "2.0");
 
 		assertEquals("iff((x=0)&(c=0),0.0;(x=0)&(c=1),1.0;(x=1)&(c=0),1.0;(x=1)&(c=1),2.0)", mainCalculator.fixpointIfConversion(sigma));
+	}
+	
+	@Test
+	void testFixpointToMap() {
+		LinkedHashMap<String,String> fixpointMap = new LinkedHashMap<String,String>();
+		fixpointMap = mainCalculator.fixpointToMap("iff((x=0)&(c=0),0.0;(x=0)&(c=1),1.0;(x=1)&(c=0),1.0;(x=1)&(c=1),2.0)");
+		assertEquals("0.0",fixpointMap.get("(x=0)&(c=0)"));
+		assertEquals("1.0",fixpointMap.get("(x=0)&(c=1)"));
+		assertEquals("1.0",fixpointMap.get("(x=1)&(c=0)"));
+		assertEquals("2.0",fixpointMap.get("(x=1)&(c=1)"));
+
 	}
 }

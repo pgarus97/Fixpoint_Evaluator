@@ -8,13 +8,15 @@ persistent file caching of fixpoints to load / save for faster results
 fix while in while non expansiveness proof
 hover over buttons for full text in whileLoops
 make log appear in runtime => threads? concurrency in swing
-write readme with usage and documentation
+write readme with usage and documentation / rename github
+add license
 Question: Dont we need to consider [not guard ] * f in Phi(X) somehow? => we basically test wp hash
 reset Cache button
 write tests for all new methods
 write systematic tests
 //TODO cache saves wrong if assignment before while saves?
 //TODO fixpoint witness input if needed? where all needed variable combinations can be inputted 
+comment all methods and code
 
 DONE:
 DONE while after while all sigma fix

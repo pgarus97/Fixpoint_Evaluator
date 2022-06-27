@@ -1,6 +1,7 @@
 package prototype;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,8 +19,6 @@ private WPCalculatorView mainView;
 private ArrayList<LinkedHashMap<String, String>> allSigma = new ArrayList<LinkedHashMap<String, String>>();
 private ArrayList<String> whileLoops = new ArrayList<String>();
 private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,String>();
-private LinkedHashMap<String,LinkedHashMap<String,String>> concreteCache = new LinkedHashMap<String,LinkedHashMap<String,String>>();
-
 
 
 	public String wp(String C, String f) {
@@ -45,7 +44,6 @@ private LinkedHashMap<String,LinkedHashMap<String,String>> concreteCache = new L
 
 				//TODO detailed log: mainView.getResult().setText(mainView.getResult().getText() + "\n" + "Demonic Choice process. Breaking down into: min(" + resultC1 + "," + resultC2 + ")"); 
 
-				//TODO change back to truncation method
 				return calculation("min(" + resultC1 + "," + resultC2 + ")");
 
 			}
@@ -233,52 +231,72 @@ private LinkedHashMap<String,LinkedHashMap<String,String>> concreteCache = new L
 			}			
 			fixpoint.put(identifier, Double.toString(sigmaResult));	
 		}
-		concreteCache.put(whileTerm + " ("+f+")", fixpoint);
 		return fixpointIfConversion(fixpoint);
 	}
 	
 	
 	public String evaluateFixpoint(String currentWhile, String fixpoint, String delta) {
-		//currentWhile = C(f)
-		//fixpoint = iff(id,value;...)
 		
+		HashSet<String> sigmaSet = new HashSet<String>();
 		LinkedHashMap<String,String> Xslash = new LinkedHashMap<String,String>();
-		LinkedHashMap<String,String> wpX = new LinkedHashMap<String,String>();
-		LinkedHashMap<String,String> wpXslash = new LinkedHashMap<String,String>();
+		LinkedHashMap<String,String> wphashX = new LinkedHashMap<String,String>();
+		LinkedHashMap<String,String> wphashXslash = new LinkedHashMap<String,String>();
 		
-		//TODO need to get fixpointCache for specified fixpoint => or not because witness? this only works for LFP
-		//TODO need to create a new LinkedHashMap for X from the string somehow, otherwise witness wont work
-		//TODO then we dont need concreteCache at all
 		String currentC = currentWhile.split(" ")[0];
 		System.out.println("CurrentC: " +currentC);
-		String currentF = currentWhile.split(" ")[1];
-		System.out.println("CurrentF: " +currentF);
-		currentF = currentF.substring(1,currentF.length()-1);
-		System.out.println("CurrentF: " +currentF);
-		//TODO still can use this if we check condition: if currentWhile exists in concrete Cache?
-		//LinkedHashMap<String, String> X = fixpointToMap(fixpoint); //TODO takes a fixpoint iff and transforms into a map; needed for witness
-		LinkedHashMap<String,String> X = concreteCache.get(currentWhile); //only for LFP test cases; can delete concreteCache after fixpointToMap
+		LinkedHashMap<String, String> X = fixpointToMap(fixpoint);
 		for(Map.Entry<String, String> entry : X.entrySet()) {
 			String XslashValue = calculation("r("+entry.getValue()+"-"+delta+")");
 			Xslash.put(entry.getKey(),XslashValue);
-			//TODO get C from currentWhile and calculate wp with C and X as f
-			//iff((x=0)&(c=0),1.0;(x=0)&(c=1),0.0;(x=1)&(c=0),1.0;(x=1)&(c=1),1.0)
-			//TODO before currentC we need to insert concrete sigma (entry) values? x=1;c=1;currentC ; otherwise it will create double values?
-			//=> need to be considered separately since we then get dependencies and condition check etc.
-			//for each char in entry.getKey(), create string with x=1;C=0 => just replace?
-			String concreteSigma = entry.getKey().replace("&", ";");
-			concreteSigma = concreteSigma.replace("(", "");
-			concreteSigma = concreteSigma.replace(")", "");
-			wpX.put(entry.getKey(),calculation(wp(concreteSigma+";"+currentC,entry.getValue())));
-			//TODO does not take dependencies...
-			wpXslash.put(entry.getKey(),calculation(wp(concreteSigma+";"+currentC,XslashValue)));
-			System.out.println(fixpointIfConversion(wpX));
-			System.out.println("Test: "+ entry.getKey().replace("&", ";")+";"+currentC);
+			sigmaSet.add(entry.getKey());
+		}
+		//TODO implement check if witness = fixpoint	
+		wphashX = fixpointToMap(wp(currentC,fixpoint));
+		wphashXslash = fixpointToMap(wp(currentC,fixpointIfConversion(Xslash)));
+		
+		//TODO maybe we need to calculate wphashX and wphashXslash through second for loop inside hashmap, 
+		//for example if fixpoint contains non numerical values
+		mainView.getResult().append("\n\n" + "Evaluation Results: ");
+		mainView.getResult().append("\n" + "X: " + X);
+		mainView.getResult().append("\n" + "X': " + Xslash);
+		mainView.getResult().append("\n" + "WP-Hash (X): " + wphashX);
+		mainView.getResult().append("\n" + "WP-Hash (X'): " + wphashXslash);
+		
+		//TODO start here with a full sigmaSet and remove on == 1?
+		//TODO dont calculate entries that = 0 since not in [Y]^X; can skip where X=0 (our calculation r() guarantees that already)
+		for(String entry : sigmaSet) {
+			double entryResult = Double.parseDouble(calculation(wphashX.get(entry)+"-"+ wphashXslash.get(entry) +">=" +delta));
+			if(entryResult == 1.0) {
+				sigmaSet.remove(entry);
+			}
+		}
+		if(sigmaSet.isEmpty()) {
+			mainView.getResult().append("\n\n" + "The hash-function's result was an empty set. This means the witness is already the least fixpoint." );
+		}else {
+			//TODO calculate fixpoint iteration for set
 		}
 		
+		return X.toString();
+	}
+	
+	
+	public LinkedHashMap<String,String> fixpointToMap(String fixpoint) {
+		LinkedHashMap<String,String> convFixpoint = new LinkedHashMap<String,String>();
+		fixpoint = fixpoint.substring(4,fixpoint.length()-1);
+		fixpoint += ";";
+		System.out.println("Fixpoint: "+fixpoint);
 
+		while(fixpoint.length()>0) {
+			String identifier = fixpoint.substring(0,fixpoint.indexOf(","));
+			System.out.println("Id: "+identifier);
+			fixpoint = fixpoint.substring(identifier.length()+1);
+			String value = fixpoint.substring(0,fixpoint.indexOf(";"));
+			System.out.println("Value: "+value);
+			convFixpoint.put(identifier, value);
+			fixpoint = fixpoint.substring(value.length()+1);
+		}
 		
-		return fixpointIfConversion(wpXslash);
+		return convFixpoint;
 	}
 	
 	public String fixpointIfConversion(LinkedHashMap<String,String> fixpoint) {
@@ -305,7 +323,6 @@ private LinkedHashMap<String,LinkedHashMap<String,String>> concreteCache = new L
 		Double result = e.calculate();
 		System.out.println("Result: " + result);
 
-		//breaks is result too complicated to calculate ?
 		if(result.isNaN()) {
 			//throw exception and break + log
 			System.out.println("There are unknown variables in the formula!");
