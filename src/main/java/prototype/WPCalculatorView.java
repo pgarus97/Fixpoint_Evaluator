@@ -7,6 +7,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -97,7 +99,7 @@ private JTextArea fixpointResult;
 		
 	    cDesc = new JLabel("Input the Program (C) here:");
 	    cDesc.setBounds(5,0,170, 20);
-	    cInput = new JTextField("x=1;c=0;while(c=1){{x=x+1}[1/2]{c=0}};while(c=0){x=4;c=1}");
+	    cInput = new JTextField("while(c=1){{x=x+1}[1/2]{c=0}}");
 	    cInput.setBounds(5,20,170, 20);
 	    
 	    
@@ -318,9 +320,7 @@ private JTextArea fixpointResult;
 	    	    }
 	    	    result.append("\n" + "Witness: " + witness );
 
-	    	    String evalResult = mainCalculator.evaluateFixpoint(currentWhileTerm, witness, fixpointDelta);
-	    	    result.append("\n" + "Result: " + evalResult);
-
+	    	    mainCalculator.evaluateFixpoint(currentWhileTerm, witness, fixpointDelta, true, new LinkedHashSet<String>());
 
 	    	}
 	    });

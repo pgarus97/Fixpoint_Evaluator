@@ -3,8 +3,10 @@ package prototype;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.math.NumberUtils;
 import org.mariuszgromada.math.mxparser.Expression;
@@ -19,6 +21,7 @@ private WPCalculatorView mainView;
 private ArrayList<LinkedHashMap<String, String>> allSigma = new ArrayList<LinkedHashMap<String, String>>();
 private ArrayList<String> whileLoops = new ArrayList<String>();
 private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,String>();
+
 
 
 	public String wp(String C, String f) {
@@ -97,7 +100,7 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 				//while process
 				//TODO implement sigma forward parsing? then we could check condition before doing fixpoint iteration for performance boost
 				System.out.println("Enter while process"); 
-				String condition = C.substring(C.indexOf("(")+1,C.indexOf(")"));
+				String condition = C.substring(C.indexOf("(")+1,C.indexOf("{")-1);
 				System.out.println("Condition: "+condition);
 				String whileC = C.substring(condition.length());
 				whileC = getInsideBracket(whileC.substring(whileC.indexOf("{")+1));
@@ -234,49 +237,109 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 		return fixpointIfConversion(fixpoint);
 	}
 	
-	
-	public String evaluateFixpoint(String currentWhile, String fixpoint, String delta) {
+	//TODO write tests
+	public void evaluateFixpoint(String currentWhile, String fixpoint, String delta, boolean initialize, LinkedHashSet<String> sigmaSet) {
 		
-		HashSet<String> sigmaSet = new HashSet<String>();
 		LinkedHashMap<String,String> Xslash = new LinkedHashMap<String,String>();
-		LinkedHashMap<String,String> wphashX = new LinkedHashMap<String,String>();
-		LinkedHashMap<String,String> wphashXslash = new LinkedHashMap<String,String>();
+		LinkedHashMap<String,String> phihashX = new LinkedHashMap<String,String>();
+		LinkedHashMap<String,String> phihashXslash = new LinkedHashMap<String,String>();
 		
 		String currentC = currentWhile.split(" ")[0];
-		System.out.println("CurrentC: " +currentC);
+		String currentF = currentWhile.split(" ")[1];
+		currentF = currentF.substring(1,currentF.length()-1);
+		String condition = currentC.substring(currentC.indexOf("(")+1,currentC.indexOf("{")-1);
+		String whileC = currentC.substring(condition.length());
+		whileC = getInsideBracket(whileC.substring(whileC.indexOf("{")+1));
+
+		//TODO implement check if witness = fixpoint
 		LinkedHashMap<String, String> X = fixpointToMap(fixpoint);
-		for(Map.Entry<String, String> entry : X.entrySet()) {
-			String XslashValue = calculation("r("+entry.getValue()+"-"+delta+")");
-			Xslash.put(entry.getKey(),XslashValue);
-			sigmaSet.add(entry.getKey());
-		}
-		//TODO implement check if witness = fixpoint	
-		wphashX = fixpointToMap(wp(currentC,fixpoint));
-		wphashXslash = fixpointToMap(wp(currentC,fixpointIfConversion(Xslash)));
 		
-		//TODO maybe we need to calculate wphashX and wphashXslash through second for loop inside hashmap, 
-		//for example if fixpoint contains non numerical values
+
+		
+		if(initialize == true) {
+			for(Map.Entry<String, String> entry : X.entrySet()) {
+				if(!entry.getValue().equals("0") && !entry.getValue().equals("0.0")) {
+					sigmaSet.add(entry.getKey());
+
+				}
+			}
+		}
+		
+		//save current set for iteration comparison
+		LinkedHashSet<String> previousSigmaSet = new LinkedHashSet<String>();
+		for(String copiedSigma : sigmaSet) {
+			previousSigmaSet.add(copiedSigma);
+		}
+		
+		for(Map.Entry<String, String> entry : X.entrySet()) {
+			String XslashValue = "";
+			if(!sigmaSet.contains(entry.getKey())) {
+				XslashValue = entry.getValue();
+				phihashX.put(entry.getKey(), entry.getValue()); //TODO this is wrong I think, needs to be calculated
+			}else {
+				String concreteSigma = entry.getKey().replace("&", ";");
+				concreteSigma = concreteSigma.replace("(", "");
+				concreteSigma = concreteSigma.replace(")", "");
+				XslashValue = calculation("r("+entry.getValue()+"-"+delta+")");
+				phihashX.put(entry.getKey(), calculation(wp(concreteSigma+";"+whileC,fixpoint)));
+			}
+			Xslash.put(entry.getKey(),XslashValue);
+		}
+		for(Map.Entry<String, String> entry : Xslash.entrySet()) {
+			if(entry.getValue().equals("0") || entry.getValue().equals("0.0")) { //TODO this is wrong I think, needs to be calculated
+				phihashXslash.put(entry.getKey(), entry.getValue());
+			}else {
+				String entryF = currentF;
+				String entryCondition = condition;
+				String concreteSigma = entry.getKey().replace("&", ";");;
+				concreteSigma = concreteSigma.replace("(", "");
+				concreteSigma = concreteSigma.replace(")", "");
+				String[] entryVariables = concreteSigma.split(";");
+				for(int i = 0; i < entryVariables.length; i++) {
+					String index = entryVariables[i].substring(0,1);
+					String cut = entryVariables[i].substring(entryVariables[i].indexOf("=")+1);
+					entryF = entryF.replace(index, cut);
+					entryCondition = entryCondition.replace(index, cut);
+				}
+				if(calculation(entryCondition).equals("0.0")) {
+					phihashXslash.put(entry.getKey(), calculation(entryF));
+				}else {
+					phihashXslash.put(entry.getKey(), calculation(wp(concreteSigma+";"+whileC,fixpointIfConversion(Xslash))));
+				}
+			}
+		}
+
 		mainView.getResult().append("\n\n" + "Evaluation Results: ");
 		mainView.getResult().append("\n" + "X: " + X);
 		mainView.getResult().append("\n" + "X': " + Xslash);
-		mainView.getResult().append("\n" + "WP-Hash (X): " + wphashX);
-		mainView.getResult().append("\n" + "WP-Hash (X'): " + wphashXslash);
+		mainView.getResult().append("\n" + "Phi-Hash (X): " + phihashX);
+		mainView.getResult().append("\n" + "Phi-Hash (X'): " + phihashXslash);
 		
-		//TODO start here with a full sigmaSet and remove on == 1?
-		//TODO dont calculate entries that = 0 since not in [Y]^X; can skip where X=0 (our calculation r() guarantees that already)
-		for(String entry : sigmaSet) {
-			double entryResult = Double.parseDouble(calculation(wphashX.get(entry)+"-"+ wphashXslash.get(entry) +">=" +delta));
-			if(entryResult == 1.0) {
-				sigmaSet.remove(entry);
+		for(Map.Entry<String, String> entry : X.entrySet()) {
+			double entryResult = Double.parseDouble(calculation(phihashX.get(entry.getKey())+"-"+ phihashXslash.get(entry.getKey()) +">=" +delta));
+			if(entryResult == 0.0) {
+				sigmaSet.remove(entry.getKey());
 			}
 		}
+
 		if(sigmaSet.isEmpty()) {
-			mainView.getResult().append("\n\n" + "The hash-function's result was an empty set. This means the witness is already the least fixpoint." );
+			System.out.println("The hash-function's result is an empty set. This means the witness is already the least fixpoint.");
+			mainView.getResult().append("\n\n" + "The hash-function's result is an empty set. This means the witness is already the least fixpoint." );
 		}else {
-			//TODO calculate fixpoint iteration for set
+			mainView.getResult().append("\n\n" + "The hash-function's result is not an empty set. This means the witness is above the least fixpoint." );
+			mainView.getResult().append("\n" + "Following states are still in the result set: " );
+			System.out.println("The hash-function's result is not an empty set. This means the witness is above the least fixpoint." );
+					System.out.println("Following states are still in the result set: ");
+			for(String state : sigmaSet) {
+				mainView.getResult().append(state + ",");
+				System.out.println(state + ",");
+			}
+			System.out.println("TEST: "+ previousSigmaSet);
+			if(!previousSigmaSet.toString().equals(sigmaSet.toString())) {
+				evaluateFixpoint(currentWhile, fixpoint, delta, false, sigmaSet);
+			}
 		}
-		
-		return X.toString();
+
 	}
 	
 	

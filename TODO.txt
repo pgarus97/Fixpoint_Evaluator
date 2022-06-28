@@ -18,6 +18,15 @@ write systematic tests
 //TODO fixpoint witness input if needed? where all needed variable combinations can be inputted 
 comment all methods and code
 
+fix:
+Evaluation Results: 
+X: {(x=0)&(c=0)=0.0, (x=0)&(c=1)=0.498046875, (x=1)&(c=0)=1.0, (x=1)&(c=1)=0.998046875}
+X': {(x=0)&(c=0)=0.0, (x=0)&(c=1)=0.398046875, (x=1)&(c=0)=0.9, (x=1)&(c=1)=0.898046875}
+Phi-Hash (X): {(x=0)&(c=0)=0.0, (x=0)&(c=1)=0.4990234375, (x=1)&(c=0)=1.0, (x=1)&(c=1)=0.9990234375}
+Phi-Hash (X'): {(x=0)&(c=0)=0.0, (x=0)&(c=1)=0.4490234375, (x=1)&(c=0)=1.0, (x=1)&(c=1)=0.8990234375}
+
+=> need to round x1c1? 
+
 DONE:
 DONE while after while all sigma fix
 DONE while in while caching

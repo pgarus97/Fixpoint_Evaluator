@@ -49,5 +49,7 @@ this process cuts it in half for no reason
 
 => getInsideIf doesnt consider "iff" ?
 
+x=1;c=0;while(c=1){{x=x+1}[1/2]{c=0}};while(c=0){x=4;c=1}
+
 
 
