@@ -1,13 +1,11 @@
 package prototype;
 
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 
 import javax.swing.BorderFactory;
@@ -71,10 +69,6 @@ private JButton fixpointEvalButton;
 private JLabel fixpointDeltaDesc;
 private JTextField fixpointDeltaInput;
 
-private JScrollPane fixpointResultScroll;
-private JTextArea fixpointResult;
-
-
 
 //TODO implement tips from https://stackoverflow.com/questions/62875613/cannot-refer-to-the-non-final-local-variable-display-defined-in-an-enclosing-sco
 //TODO make better input descriptions on hover
@@ -130,23 +124,20 @@ private JTextArea fixpointResult;
 	    iterationField.setBounds(430,60,200, 20);
 	    
 	    usedVarsDesc = new JLabel("Enter all used variables (e.g. xyz) ");
-	    usedVarsDesc.setVisible(false);
 	    usedVarsDesc.setBounds(500,80,200, 20);
 	    usedVars = new JTextField("xc");
-	    usedVars.setVisible(false);
 	    usedVars.setBounds(500,100,200, 20);
 	    
 	    deltaDesc = new JLabel("Input delta (fixpoint iteration stop) here:");
 	    deltaDesc.setBounds(500,120,400, 20);
-	    deltaDesc.setVisible(false);
 		deltaInput = new JTextField("0.001");
-	    deltaInput.setVisible(false);
 		deltaInput.setBounds(500,140,200, 20);
 
 	    calcButton = new JButton("Calculate!");
 	    calcButton.setBounds(5,100,150, 40);
 	    
 	    allSigmaIteration.setBounds(200,100,300, 50);
+	    allSigmaIteration.setSelected(true);
 	    
 	    examineFixpointButton = new JToggleButton("Examine Fixpoints");
 	    examineFixpointButton.setBounds(650,20,200, 40);
@@ -225,7 +216,8 @@ private JTextArea fixpointResult;
 	    frame.setVisible(true);
 	    
 	    allSigmaIteration.addActionListener(new ActionListener(){  
-	    	public void actionPerformed(ActionEvent e){  
+	    	public void actionPerformed(ActionEvent e){ 
+	    		mainCalculator.clearFixpointCache();
 	    		if (allSigmaIteration.isSelected()) {
 	    	    	usedVars.setVisible(true);
 	    	    	usedVarsDesc.setVisible(true);
@@ -272,7 +264,7 @@ private JTextArea fixpointResult;
 	    
 	    calcButton.addActionListener(new ActionListener(){  
 	    	//TODO log in real time somehow => https://docs.oracle.com/javase/tutorial/uiswing/concurrency/index.html#:~:text=Careful%20use%20of%20concurrency%20is%20particularly%20important%20to,must%20learn%20how%20the%20Swing%20framework%20employs%20threads.
-	    	public void actionPerformed(ActionEvent e){  
+	    	public void actionPerformed(ActionEvent e){
 	    		if(calculationLog() == false) {
 	    			return;
 	    		}
@@ -285,7 +277,7 @@ private JTextArea fixpointResult;
 	    		
 	    		result.append("\n\n" + "Calculation Time: " + (end - start)/1000 + "s");
 	    	    result.append("\n" + "Result: " + calcResult);
-	    	    if(cInput.getText().contains("while(")) {
+	    	    if(cInput.getText().contains("while(") && allSigmaIteration.isSelected()) {
 		    	    examineFixpointButton.setVisible(true);
 		    	    int counter = 0;
 		    		for (String loop: mainCalculator.getWhileLoops()) {	
@@ -308,7 +300,9 @@ private JTextArea fixpointResult;
 	    
 	    fixpointEvalButton.addActionListener(new ActionListener() {
 	    	public void actionPerformed(ActionEvent e) {
-	    		result.append("\n\n" + "Selected While-Term: " + currentWhileTerm);
+	    		result.append("\n\n" + "*************************");
+	    		result.append("\n\n" + "Starting fixpoint evaluation. Information: ");
+	    		result.append("\n" + "Selected While-Term: " + currentWhileTerm);
 	    	    result.append("\n" + "LFP: " + mainCalculator.getFixpointCache().get(currentWhileTerm));
 	    	    String witness = witnessInput.getText();
 	    	    String fixpointDelta = fixpointDeltaInput.getText();
@@ -320,7 +314,7 @@ private JTextArea fixpointResult;
 	    	    }
 	    	    result.append("\n" + "Witness: " + witness );
 
-	    	    mainCalculator.evaluateFixpoint(currentWhileTerm, witness, fixpointDelta, true, new LinkedHashSet<String>());
+	    	    mainCalculator.evaluateFixpoint(currentWhileTerm, witness, fixpointDelta, 1, new LinkedHashSet<String>());
 
 	    	}
 	    });

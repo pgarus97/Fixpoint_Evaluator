@@ -1,12 +1,10 @@
 package prototype;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.math.NumberUtils;
 import org.mariuszgromada.math.mxparser.Expression;
@@ -238,7 +236,7 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 	}
 	
 	//TODO write tests
-	public void evaluateFixpoint(String currentWhile, String fixpoint, String delta, boolean initialize, LinkedHashSet<String> sigmaSet) {
+	public void evaluateFixpoint(String currentWhile, String fixpoint, String delta, int iterationCount, LinkedHashSet<String> sigmaSet) {
 		
 		LinkedHashMap<String,String> Xslash = new LinkedHashMap<String,String>();
 		LinkedHashMap<String,String> phihashX = new LinkedHashMap<String,String>();
@@ -256,7 +254,7 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 		
 
 		
-		if(initialize == true) {
+		if(iterationCount == 1) {
 			for(Map.Entry<String, String> entry : X.entrySet()) {
 				if(!entry.getValue().equals("0") && !entry.getValue().equals("0.0")) {
 					sigmaSet.add(entry.getKey());
@@ -275,7 +273,7 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 			String XslashValue = "";
 			if(!sigmaSet.contains(entry.getKey())) {
 				XslashValue = entry.getValue();
-				phihashX.put(entry.getKey(), entry.getValue()); //TODO this is wrong I think, needs to be calculated
+				phihashX.put(entry.getKey(), entry.getValue()); //TODO this is wrong I think, needs to be calculated phi hash needs to be calculated on its own
 			}else {
 				String concreteSigma = entry.getKey().replace("&", ";");
 				concreteSigma = concreteSigma.replace("(", "");
@@ -308,12 +306,7 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 				}
 			}
 		}
-
-		mainView.getResult().append("\n\n" + "Evaluation Results: ");
-		mainView.getResult().append("\n" + "X: " + X);
-		mainView.getResult().append("\n" + "X': " + Xslash);
-		mainView.getResult().append("\n" + "Phi-Hash (X): " + phihashX);
-		mainView.getResult().append("\n" + "Phi-Hash (X'): " + phihashXslash);
+		
 		
 		for(Map.Entry<String, String> entry : X.entrySet()) {
 			double entryResult = Double.parseDouble(calculation(phihashX.get(entry.getKey())+"-"+ phihashXslash.get(entry.getKey()) +">=" +delta));
@@ -321,22 +314,26 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 				sigmaSet.remove(entry.getKey());
 			}
 		}
+		
+		//outputting the result
+		mainView.getResult().append("\n\n" + "-----------------------------------");
+		mainView.getResult().append("\n\n" + "Hash-Function Results: (Iteration " + iterationCount + ")");
+		mainView.getResult().append("\n\n" + "X: " + X);
+		mainView.getResult().append("\n" + "X': " + Xslash);
+		mainView.getResult().append("\n" + "Phi-Hash (X): " + phihashX);
+		mainView.getResult().append("\n" + "Phi-Hash (X'): " + phihashXslash);
 
 		if(sigmaSet.isEmpty()) {
-			System.out.println("The hash-function's result is an empty set. This means the witness is already the least fixpoint.");
 			mainView.getResult().append("\n\n" + "The hash-function's result is an empty set. This means the witness is already the least fixpoint." );
 		}else {
 			mainView.getResult().append("\n\n" + "The hash-function's result is not an empty set. This means the witness is above the least fixpoint." );
 			mainView.getResult().append("\n" + "Following states are still in the result set: " );
-			System.out.println("The hash-function's result is not an empty set. This means the witness is above the least fixpoint." );
-					System.out.println("Following states are still in the result set: ");
 			for(String state : sigmaSet) {
 				mainView.getResult().append(state + ",");
-				System.out.println(state + ",");
 			}
-			System.out.println("TEST: "+ previousSigmaSet);
+			mainView.getResult().append(" therefore continuing iteration.");
 			if(!previousSigmaSet.toString().equals(sigmaSet.toString())) {
-				evaluateFixpoint(currentWhile, fixpoint, delta, false, sigmaSet);
+				evaluateFixpoint(currentWhile, fixpoint, delta, (iterationCount+1), sigmaSet);
 			}
 		}
 
