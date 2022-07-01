@@ -230,7 +230,8 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 					}
 				}
 			}			
-			fixpoint.put(identifier, Double.toString(sigmaResult));	
+			double roundResult = Math.round(sigmaResult * 100.0) / 100.0;
+			fixpoint.put(identifier, Double.toString(roundResult));	
 		}
 		return fixpointIfConversion(fixpoint);
 	}
@@ -241,19 +242,8 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 		LinkedHashMap<String,String> Xslash = new LinkedHashMap<String,String>();
 		LinkedHashMap<String,String> phihashX = new LinkedHashMap<String,String>();
 		LinkedHashMap<String,String> phihashXslash = new LinkedHashMap<String,String>();
-		
-		String currentC = currentWhile.split(" ")[0];
-		String currentF = currentWhile.split(" ")[1];
-		currentF = currentF.substring(1,currentF.length()-1);
-		String condition = currentC.substring(currentC.indexOf("(")+1,currentC.indexOf("{")-1);
-		String whileC = currentC.substring(condition.length());
-		whileC = getInsideBracket(whileC.substring(whileC.indexOf("{")+1));
-
-		//TODO implement check if witness = fixpoint
 		LinkedHashMap<String, String> X = fixpointToMap(fixpoint);
-		
 
-		
 		if(iterationCount == 1) {
 			for(Map.Entry<String, String> entry : X.entrySet()) {
 				if(!entry.getValue().equals("0") && !entry.getValue().equals("0.0")) {
@@ -268,45 +258,31 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 		for(String copiedSigma : sigmaSet) {
 			previousSigmaSet.add(copiedSigma);
 		}
+
+		phihashX = calculatePhiHash(X, currentWhile, fixpoint);
+		
+		//checks whether the witness is a fixpoint or not
+		System.out.println("LinkedHashMap to string: " +X.toString());
+		System.out.println("LinkedHashMap to string: " +phihashX.toString());
+
+		//TODO needs rounding of values to properly work
+		if(!X.toString().equals(phihashX.toString())) {
+			mainView.getResult().append("\n\n" + "-----------------------------------");
+			mainView.getResult().append("\n\n" + "The inputted witness is not a fixpoint! Cannot evaluate non-fixpoints!");
+			return;
+		} 
 		
 		for(Map.Entry<String, String> entry : X.entrySet()) {
 			String XslashValue = "";
 			if(!sigmaSet.contains(entry.getKey())) {
 				XslashValue = entry.getValue();
-				phihashX.put(entry.getKey(), entry.getValue()); //TODO this is wrong I think, needs to be calculated phi hash needs to be calculated on its own
 			}else {
-				String concreteSigma = entry.getKey().replace("&", ";");
-				concreteSigma = concreteSigma.replace("(", "");
-				concreteSigma = concreteSigma.replace(")", "");
-				XslashValue = calculation("r("+entry.getValue()+"-"+delta+")");
-				phihashX.put(entry.getKey(), calculation(wp(concreteSigma+";"+whileC,fixpoint)));
+				XslashValue = calculation("r("+entry.getValue()+"-"+delta+")");		
 			}
 			Xslash.put(entry.getKey(),XslashValue);
 		}
-		for(Map.Entry<String, String> entry : Xslash.entrySet()) {
-			if(entry.getValue().equals("0") || entry.getValue().equals("0.0")) { //TODO this is wrong I think, needs to be calculated
-				phihashXslash.put(entry.getKey(), entry.getValue());
-			}else {
-				String entryF = currentF;
-				String entryCondition = condition;
-				String concreteSigma = entry.getKey().replace("&", ";");;
-				concreteSigma = concreteSigma.replace("(", "");
-				concreteSigma = concreteSigma.replace(")", "");
-				String[] entryVariables = concreteSigma.split(";");
-				for(int i = 0; i < entryVariables.length; i++) {
-					String index = entryVariables[i].substring(0,1);
-					String cut = entryVariables[i].substring(entryVariables[i].indexOf("=")+1);
-					entryF = entryF.replace(index, cut);
-					entryCondition = entryCondition.replace(index, cut);
-				}
-				if(calculation(entryCondition).equals("0.0")) {
-					phihashXslash.put(entry.getKey(), calculation(entryF));
-				}else {
-					phihashXslash.put(entry.getKey(), calculation(wp(concreteSigma+";"+whileC,fixpointIfConversion(Xslash))));
-				}
-			}
-		}
 		
+		phihashXslash = calculatePhiHash(Xslash, currentWhile, fixpointIfConversion(Xslash));
 		
 		for(Map.Entry<String, String> entry : X.entrySet()) {
 			double entryResult = Double.parseDouble(calculation(phihashX.get(entry.getKey())+"-"+ phihashXslash.get(entry.getKey()) +">=" +delta));
@@ -339,6 +315,37 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 
 	}
 	
+	public LinkedHashMap<String,String> calculatePhiHash(LinkedHashMap<String,String> input, String currentWhile, String fixpointIf){
+		
+		String currentC = currentWhile.split(" ")[0];
+		String currentF = currentWhile.split(" ")[1];
+		currentF = currentF.substring(1,currentF.length()-1);
+		String condition = currentC.substring(currentC.indexOf("(")+1,currentC.indexOf("{")-1);
+		String whileC = currentC.substring(condition.length());
+		whileC = getInsideBracket(whileC.substring(whileC.indexOf("{")+1));
+		
+		LinkedHashMap<String,String> result = new LinkedHashMap<String,String>();
+		for(Map.Entry<String, String> entry : input.entrySet()) {
+			String entryF = currentF;
+			String entryCondition = condition;
+			String concreteSigma = entry.getKey().replace("&", ";");;
+			concreteSigma = concreteSigma.replace("(", "");
+			concreteSigma = concreteSigma.replace(")", "");
+			String[] entryVariables = concreteSigma.split(";");
+			for(int i = 0; i < entryVariables.length; i++) {
+				String index = entryVariables[i].substring(0,1);
+				String cut = entryVariables[i].substring(entryVariables[i].indexOf("=")+1);
+				entryF = entryF.replace(index, cut);
+				entryCondition = entryCondition.replace(index, cut);
+			}
+			if(calculation(entryCondition).equals("0.0")) {
+				result.put(entry.getKey(), calculation(entryF));
+			}else {
+				result.put(entry.getKey(), calculation(wp(concreteSigma+";"+whileC,fixpointIf)));
+			}
+		}
+		return result;
+	}
 	
 	public LinkedHashMap<String,String> fixpointToMap(String fixpoint) {
 		LinkedHashMap<String,String> convFixpoint = new LinkedHashMap<String,String>();
