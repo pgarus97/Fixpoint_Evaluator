@@ -1,33 +1,41 @@
 New TODO list system:
 
 TODO:
-Implement hash function + iteration
-adjust GUI according to hash function calculation
-allow witness input and calculation
+
 persistent file caching of fixpoints to load / save for faster results
 fix while in while non expansiveness proof
 hover over buttons for full text in whileLoops
 make log appear in runtime => threads? concurrency in swing
 write readme with usage and documentation / rename github
 add license
-Question: Dont we need to consider [not guard ] * f in Phi(X) somehow? => we basically test wp hash
 reset Cache button
 write tests for all new methods
 write systematic tests
 //TODO cache saves wrong if assignment before while saves?
 //TODO fixpoint witness input if needed? where all needed variable combinations can be inputted 
 comment all methods and code
+data structure instead of straight working on string C? => not really needed...
 
-fix:
-Evaluation Results: 
-X: {(x=0)&(c=0)=0.0, (x=0)&(c=1)=0.498046875, (x=1)&(c=0)=1.0, (x=1)&(c=1)=0.998046875}
-X': {(x=0)&(c=0)=0.0, (x=0)&(c=1)=0.398046875, (x=1)&(c=0)=0.9, (x=1)&(c=1)=0.898046875}
-Phi-Hash (X): {(x=0)&(c=0)=0.0, (x=0)&(c=1)=0.4990234375, (x=1)&(c=0)=1.0, (x=1)&(c=1)=0.9990234375}
-Phi-Hash (X'): {(x=0)&(c=0)=0.0, (x=0)&(c=1)=0.4490234375, (x=1)&(c=0)=1.0, (x=1)&(c=1)=0.8990234375}
+Presentation TODO: 
+-short basic introduction 1 page to upside down
+-basic introduction 1 page to almost sure -> wp function definition
+1 page with while phi definition => we calculate the LFP and want Phi hash from this
 
-=> need to round x1c1? 
+how algorithms work: wp (parsing, calculation), all sigma fixpoint iteration, evaluate fixpoint
+=> ideas to continue from here: 
+- witness generating? -> maybe try to not only calculate the LFP of a while function, but generate other possible witnesses as well
+- improve the current solver (sigma forwarding, persistent cache, witness evaluation from second fixpoint iteration method , better UI ...)
+- implement strategy iteration option for programs containing the demonic choice operator
+- extend the software for doing the same kind of procedure with the second paper : Incorrectness Logic => either fully or as a prototype for comparison?
+
+End: naming ideas
 
 DONE:
+need to round x1c1? DONE
+Implement hash function + iteration DONE
+adjust GUI according to hash function calculation DONE
+allow witness input and calculation DONE
+Question: Dont we need to consider [not guard ] * f in Phi(X) somehow? => we basically test wp hash DONE we consider PHI not wp
 DONE while after while all sigma fix
 DONE while in while caching
 DONE while button list on select highlight selected one, as well as examine button
