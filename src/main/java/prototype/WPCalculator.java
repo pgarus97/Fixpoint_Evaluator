@@ -21,7 +21,10 @@ private ArrayList<String> whileLoops = new ArrayList<String>();
 private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,String>();
 
 
-
+	/*
+	 * Main method that represents the weakest precondition transformer function (wp)
+	 * Takes a programm (C) and a postexpectation (f) as input and recursively calculates the result of the formula wp[C](f) for any sigma.
+	 */
 	public String wp(String C, String f) {
 		//sequential process
 		//TODO detailed log: mainView.getResult().setText(mainView.getResult().getText() + "\n" + "wp["+C+"]("+f+")"); 
@@ -112,7 +115,7 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 				if(!fixpointCache.containsKey(C+" ("+f+")")) {
 					String fixpoint="";
 					if (mainView.getAllSigmaIteration().isSelected()) {		 
-						fixpoint = fixpointIterationAllSigma(condition, whileC, f,C);
+						fixpoint = fixpointIterationAllSigma(condition, whileC, f);
 					} else {
 						fixpoint = fixpointIterationIterativ(condition, whileC, f); 
 					}
@@ -174,6 +177,10 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 	
 	}
 	
+	/*
+	 * Function that takes a mathematical term (exp) as input and tries to calculate a concrete result from it using the MathParser component.
+	 * If no concrete result can be calculated (e.g. if there are still unresolved variables), the function returns the term as it is. 
+	 */
 	public String calculation(String exp) {
 		Function restrictValue = new Function("r", "min(max(0,x),"+mainView.getRestriction()+")", "x");
 		Expression e = new Expression(exp,restrictValue);
@@ -188,6 +195,11 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 		}
 	}
 	
+	/*
+	 * Function that calculates the iterative (up until count) approach of a fixpoint iteration for while loops.
+	 * It takes the while condition (condition), the program (C) and the postexpectation (f) as input.
+	 * The output is a term that represents the fixpoint of the given input.
+	 */
 	public String fixpointIterationIterativ(String condition, String C, String f) {
 		String caseF = "0"; //X^0 initialization
 		for(int i=0; i<mainView.getIterationCount(); i++) {
@@ -197,7 +209,12 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 		return caseF;
 	}
 	
-	public String fixpointIterationAllSigma(String condition, String C, String f, String whileTerm) {
+	/*
+	 * Function that calculates the all-sigma approach of a fixpoint iteration for while loops.
+	 * It takes the while condition (condition), the program (C) and the postexpectation (f) as input.
+	 * The output is a term that represents the fixpoint of the given input.
+	 */
+	public String fixpointIterationAllSigma(String condition, String C, String f) {
 		LinkedHashMap<String,String> fixpoint = new LinkedHashMap<String, String>();
 		
 		for(LinkedHashMap<String,String> sigma : allSigma) {
@@ -221,6 +238,7 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 					//TODO future improvement: directly input sigma through assignment = f.replace x with sigma x and keep dependency somehow
 					sigmaResult = calculateConcreteSigma(caseF,sigma);
 					
+					//checks if the distance between the iterations has reached the delta threshold and stops the iteration if it is the case
 					if(i > 2) {
 						if(sigmaResult-previousResult < Double.parseDouble(mainView.getDeltaInput().getText())) {
 							break;
@@ -229,7 +247,7 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 						}
 					}
 				}
-			}			
+			}
 			double roundResult = Math.round(sigmaResult * 100.0) / 100.0;
 			fixpoint.put(identifier, Double.toString(roundResult));	
 		}
@@ -237,6 +255,12 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 	}
 	
 	//TODO write tests
+	/*
+	 * evaluates a given fixpoint / witness based on the "Upside-Down" Theory and checks whether it is the least possible fixpoint already or 
+	 * if there is still room to improve it.
+	 * It takes a program while loop (currentWhile), a witness (fixpoint), the threshold (delta), the current iteration (interationCount), and 
+	 * a set of variable assignments Y' (sigmaSet) as input.
+	 */
 	public void evaluateFixpoint(String currentWhile, String fixpoint, String delta, int iterationCount, LinkedHashSet<String> sigmaSet) {
 		
 		LinkedHashMap<String,String> Xslash = new LinkedHashMap<String,String>();
@@ -244,11 +268,11 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 		LinkedHashMap<String,String> phihashXslash = new LinkedHashMap<String,String>();
 		LinkedHashMap<String, String> X = fixpointToMap(fixpoint);
 
+		//fills the initial sigmaSet (Y') if the iteration is in its first loop
 		if(iterationCount == 1) {
 			for(Map.Entry<String, String> entry : X.entrySet()) {
 				if(!entry.getValue().equals("0") && !entry.getValue().equals("0.0")) {
 					sigmaSet.add(entry.getKey());
-
 				}
 			}
 		}
@@ -284,6 +308,7 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 		
 		phihashXslash = calculatePhiHash(Xslash, currentWhile, fixpointIfConversion(Xslash));
 		
+		//removes variable assignments from the sigmaSet that do not fulfill the delta threshold
 		for(Map.Entry<String, String> entry : X.entrySet()) {
 			double entryResult = Double.parseDouble(calculation(phihashX.get(entry.getKey())+"-"+ phihashXslash.get(entry.getKey()) +">=" +delta));
 			if(entryResult == 0.0) {
@@ -307,14 +332,22 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 			for(String state : sigmaSet) {
 				mainView.getResult().append(state + ",");
 			}
-			mainView.getResult().append(" therefore continuing iteration.");
 			if(!previousSigmaSet.toString().equals(sigmaSet.toString())) {
+				mainView.getResult().append(" therefore continuing iteration.");
 				evaluateFixpoint(currentWhile, fixpoint, delta, (iterationCount+1), sigmaSet);
+			}else {
+				mainView.getResult().append(" but since no change in the set has been detected, the iteration stops now.");
+
 			}
 		}
 
 	}
 	
+	/*
+	 * Function that represents hash function from the "Upside-Down" theory applied to the Phi function from the wp-transformer. 
+	 * It takes a fixpoint as map (input), the analyzed while loop (currentWhile) and the fixpoint in the mathematical iff-term format (fixpointIf) as input
+	 * and outputs a new function as a map.
+	 */
 	public LinkedHashMap<String,String> calculatePhiHash(LinkedHashMap<String,String> input, String currentWhile, String fixpointIf){
 		
 		String currentC = currentWhile.split(" ")[0];
@@ -347,6 +380,9 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 		return result;
 	}
 	
+	/*
+	 * Function that transforms a fixpoint in mathematical iff-term format into a map.
+	 */
 	public LinkedHashMap<String,String> fixpointToMap(String fixpoint) {
 		LinkedHashMap<String,String> convFixpoint = new LinkedHashMap<String,String>();
 		fixpoint = fixpoint.substring(4,fixpoint.length()-1);
@@ -366,6 +402,9 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 		return convFixpoint;
 	}
 	
+	/*
+	 * Function that transforms a fixpoint in map format into a mathematical iff-term format.
+	 */
 	public String fixpointIfConversion(LinkedHashMap<String,String> fixpoint) {
 		String result = "iff(";
 		for(Map.Entry<String, String> entry : fixpoint.entrySet()) {
@@ -377,6 +416,11 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 	}
 	
 	//TODO add other possibility of calculating concrete sigma: wp("sigma=x=1;c=1";caseF,null); = Xi
+	/*
+	 * Function that calculates a concrete mathematical result for a variable term with given variable assignments.
+	 * It takes a postexpectation during the fixpoint-iteration (f) and a concrete variable assignment (sigma) as input and
+	 * outputs a numerical value or throws an exception in case it cannot be calculated.
+	 */
 	public Double calculateConcreteSigma(String f, LinkedHashMap<String,String> sigma) {
 		System.out.println("Concrete Sigma f : " + f);
 		for(Map.Entry<String, String> entry : sigma.entrySet()) {
@@ -393,19 +437,23 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 		if(result.isNaN()) {
 			//throw exception and break + log
 			System.out.println("There are unknown variables in the formula!");
+			//TODO expection instead of null
 			return null;
 		}else {
 			return result;
 		}
 	}
 	
-	//fills allSigma with all possibilities of variable and value combinations
+	/*
+	 * Function that fills a data structure with all possibilities of variable and value combinations.
+	 * It takes a string of all used variables (varInput) as input and outputs a List of maps that represent all possible
+	 * variable/value combinations.
+	 */
 	public ArrayList<LinkedHashMap<String,String>> fillAllSigma(String varInput) {
 		allSigma.clear();
 		
 		List<List<Integer>> preCartesianValues = new ArrayList<List<Integer>>(); 
 		
-		//TODO only goes from 1-9 since character
 		List<Integer> restrictedList = new ArrayList<Integer>();
 		for (int i = 0 ; i < mainView.getRestriction()+1; i++) {
 			restrictedList.add(i);
@@ -427,7 +475,10 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 		return allSigma;
 	}		
 	
-	//start with C in one index after first appearance of start char
+	/*
+	 * parser assistance functions
+	 */
+	
 	public String getInsideBracket(String C) {
 		int bracketCount = 1;
 		String result = "";
@@ -520,46 +571,11 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 		}
 		return result;
 	}
-	
- //Deprecated method to calculate restrictions on variables without MathParser
-  public String truncate(String input) {
-	String result ="";
-	for(int i = 0; i < input.length(); i++) {
-		char character = input.charAt(i);
-		if(character == '#') {
-			String inside = getInsideBracket(input.substring(i+2));
-			String insideCalc = calculation(inside);
-			if(NumberUtils.isCreatable(insideCalc)) {
-				double insideValue = Double.parseDouble(insideCalc);
-				if(insideValue <= 0) {
-					input = input.replace("#{"+inside+"}", "0");
-					i--;
-				}else {
-					String truncatedValue = Double.toString(NumberUtils.min(insideValue,mainView.getRestriction()));							
-					input = input.replace("#{"+inside+"}", truncatedValue);
-					i--;
-				}
-			}else {
-				if(inside.contains("#")) {
-					String subterm = truncate(inside);
-					String replacedInput = input.replace("#{"+inside+"}", "#{"+subterm+"}");
-					if(!replacedInput.equals(input)) {
-						input = replacedInput;
-						i--;
-					}else {
-						result = result + "#";
-					}
-				}else {
-					result = result + "#";
-				}
-			}				
-		}else {
-			result = result + character;
-		}
-	}
-		return result;
-  	}
 
+	/*
+	 * getter & setter methods
+	 */
+	
 	public ArrayList<String> getWhileLoops() {
 		return whileLoops;
 	}
@@ -588,5 +604,45 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 		this.mainView = mainView;
 	}
 	
+	/*
+	 * Deprecated function to calculate restrictions on variables without MathParser
+	 */
+	public String truncate(String input) {
+		String result ="";
+		for(int i = 0; i < input.length(); i++) {
+			char character = input.charAt(i);
+			if(character == '#') {
+				String inside = getInsideBracket(input.substring(i+2));
+				String insideCalc = calculation(inside);
+				if(NumberUtils.isCreatable(insideCalc)) {
+					double insideValue = Double.parseDouble(insideCalc);
+					if(insideValue <= 0) {
+						input = input.replace("#{"+inside+"}", "0");
+						i--;
+					}else {
+						String truncatedValue = Double.toString(NumberUtils.min(insideValue,mainView.getRestriction()));							
+						input = input.replace("#{"+inside+"}", truncatedValue);
+						i--;
+					}
+				}else {
+					if(inside.contains("#")) {
+						String subterm = truncate(inside);
+						String replacedInput = input.replace("#{"+inside+"}", "#{"+subterm+"}");
+						if(!replacedInput.equals(input)) {
+							input = replacedInput;
+							i--;
+						}else {
+							result = result + "#";
+						}
+					}else {
+						result = result + "#";
+					}
+				}				
+			}else {
+				result = result + character;
+			}
+		}
+		return result;
+  	}
 	
 }

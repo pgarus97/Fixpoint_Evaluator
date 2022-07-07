@@ -1,6 +1,6 @@
 package prototype;
 
-public class Main {
+public class MainClass {
 
 	public static void main(String[] args) {
 		WPCalculator mainCalculator = new WPCalculator();
@@ -9,5 +9,4 @@ public class Main {
 		mainCalculator.linkView(mainView);
 		mainView.linkCalculator(mainCalculator);
 	}
-
 }

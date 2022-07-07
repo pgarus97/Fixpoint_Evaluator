@@ -7,7 +7,6 @@ fix while in while non expansiveness proof
 hover over buttons for full text in whileLoops
 make log appear in runtime => threads? concurrency in swing
 write readme with usage and documentation / rename github
-add license
 reset Cache button
 write tests for all new methods
 write systematic tests
@@ -16,21 +15,11 @@ write systematic tests
 comment all methods and code
 data structure instead of straight working on string C? => not really needed...
 
-Presentation TODO: 
--short basic introduction 1 page to upside down
--basic introduction 1 page to almost sure -> wp function definition
-1 page with while phi definition => we calculate the LFP and want Phi hash from this
-
-how algorithms work: wp (parsing, calculation), all sigma fixpoint iteration, evaluate fixpoint
-=> ideas to continue from here: 
-- witness generating? -> maybe try to not only calculate the LFP of a while function, but generate other possible witnesses as well
-- improve the current solver (sigma forwarding, persistent cache, witness evaluation from second fixpoint iteration method , better UI ...)
-- implement strategy iteration option for programs containing the demonic choice operator
-- extend the software for doing the same kind of procedure with the second paper : Incorrectness Logic => either fully or as a prototype for comparison?
-
-End: naming ideas
+clear cache on restriction/iteration count change
+//TODO for presentation: check how to calculate least and greatest fixpoint of second example
 
 DONE:
+add license DONE
 need to round x1c1? DONE
 Implement hash function + iteration DONE
 adjust GUI according to hash function calculation DONE

@@ -94,6 +94,8 @@ class MainTest {
 
 		mainView.setRestriction(10);
 		mainView.setIterationCount(10);
+		mainView.getAllSigmaIteration().setSelected(false);
+
 
 		assertEquals("1.0", mainCalculator.calculation(mainCalculator.wp("c=0;x=1;while(c=1){{x=x+1}[1/2]{c=0}}", "x")));
 		assertEquals("1.978515625", mainCalculator.calculation(mainCalculator.wp("c=1;x=1;while(c=1){{x=x+1}[1/2]{c=0}}", "x"))); 
@@ -103,14 +105,13 @@ class MainTest {
 	
 	@Test
 	void testAllSigmaWhile() {	
-
+		
 		mainView.setRestriction(2);
 		mainView.setIterationCount(100);
-		mainView.getAllSigmaIteration().setSelected(true);
 		mainCalculator.fillAllSigma("xc");
 
 		assertEquals("1.0", mainCalculator.calculation(mainCalculator.wp("c=0;x=1;while(c=1){{x=x+1}[1/2]{c=0}}", "x")));
-		assertEquals("1.4990234375", mainCalculator.calculation(mainCalculator.wp("c=1;x=1;while(c=1){{x=x+1}[1/2]{c=0}}", "x"))); 
+		assertEquals("1.5", mainCalculator.calculation(mainCalculator.wp("c=1;x=1;while(c=1){{x=x+1}[1/2]{c=0}}", "x"))); 
 	}
 	
 	@Test

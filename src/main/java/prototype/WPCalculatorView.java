@@ -120,7 +120,7 @@ private JTextField fixpointDeltaInput;
 	    
 	    iterationDesc = new JLabel("Input the iteration count here:");
 	    iterationDesc.setBounds(430,40,200, 20);
-	    iterationField = new JTextField("10");
+	    iterationField = new JTextField("");
 	    iterationField.setBounds(430,60,200, 20);
 	    
 	    usedVarsDesc = new JLabel("Enter all used variables (e.g. xyz) ");
