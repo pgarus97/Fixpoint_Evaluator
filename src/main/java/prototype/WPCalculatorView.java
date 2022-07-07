@@ -392,6 +392,10 @@ private JTextField fixpointDeltaInput;
 		return true;
 	}
 	
+	/*
+	 * getter & setter methods
+	 */
+	
 	public JTextArea getResult() {
 		return result;
 	}
@@ -430,6 +434,14 @@ private JTextField fixpointDeltaInput;
 
 	public void setDeltaInput(JTextField deltaInput) {
 		this.deltaInput = deltaInput;
+	}
+	
+	public String getCurrentWhileTerm() {
+		return currentWhileTerm;
+	}
+
+	public void setCurrentWhileTerm(String currentWhileTerm) {
+		this.currentWhileTerm = currentWhileTerm;
 	}
 
 	public void linkCalculator(WPCalculator mainCalculator) {

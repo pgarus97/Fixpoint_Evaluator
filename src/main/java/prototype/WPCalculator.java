@@ -254,14 +254,13 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 		return fixpointIfConversion(fixpoint);
 	}
 	
-	//TODO write tests
 	/*
 	 * evaluates a given fixpoint / witness based on the "Upside-Down" Theory and checks whether it is the least possible fixpoint already or 
 	 * if there is still room to improve it.
 	 * It takes a program while loop (currentWhile), a witness (fixpoint), the threshold (delta), the current iteration (interationCount), and 
 	 * a set of variable assignments Y' (sigmaSet) as input.
 	 */
-	public void evaluateFixpoint(String currentWhile, String fixpoint, String delta, int iterationCount, LinkedHashSet<String> sigmaSet) {
+	public LinkedHashSet<String> evaluateFixpoint(String currentWhile, String fixpoint, String delta, int iterationCount, LinkedHashSet<String> sigmaSet) {
 		
 		LinkedHashMap<String,String> Xslash = new LinkedHashMap<String,String>();
 		LinkedHashMap<String,String> phihashX = new LinkedHashMap<String,String>();
@@ -271,7 +270,7 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 		//fills the initial sigmaSet (Y') if the iteration is in its first loop
 		if(iterationCount == 1) {
 			for(Map.Entry<String, String> entry : X.entrySet()) {
-				if(!entry.getValue().equals("0") && !entry.getValue().equals("0.0")) {
+				if(!entry.getValue().equals("0.0")) {
 					sigmaSet.add(entry.getKey());
 				}
 			}
@@ -289,11 +288,10 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 		System.out.println("LinkedHashMap to string: " +X.toString());
 		System.out.println("LinkedHashMap to string: " +phihashX.toString());
 
-		//TODO needs rounding of values to properly work
 		if(!X.toString().equals(phihashX.toString())) {
 			mainView.getResult().append("\n\n" + "-----------------------------------");
 			mainView.getResult().append("\n\n" + "The inputted witness is not a fixpoint! Cannot evaluate non-fixpoints!");
-			return;
+			return sigmaSet;
 		} 
 		
 		for(Map.Entry<String, String> entry : X.entrySet()) {
@@ -334,13 +332,12 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 			}
 			if(!previousSigmaSet.toString().equals(sigmaSet.toString())) {
 				mainView.getResult().append(" therefore continuing iteration.");
-				evaluateFixpoint(currentWhile, fixpoint, delta, (iterationCount+1), sigmaSet);
+				sigmaSet = evaluateFixpoint(currentWhile, fixpoint, delta, (iterationCount+1), sigmaSet);
 			}else {
 				mainView.getResult().append(" but since no change in the set has been detected, the iteration stops now.");
-
 			}
 		}
-
+		return sigmaSet;
 	}
 	
 	/*
@@ -348,7 +345,7 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 	 * It takes a fixpoint as map (input), the analyzed while loop (currentWhile) and the fixpoint in the mathematical iff-term format (fixpointIf) as input
 	 * and outputs a new function as a map.
 	 */
-	public LinkedHashMap<String,String> calculatePhiHash(LinkedHashMap<String,String> input, String currentWhile, String fixpointIf){
+	private LinkedHashMap<String,String> calculatePhiHash(LinkedHashMap<String,String> input, String currentWhile, String fixpointIf){
 		
 		String currentC = currentWhile.split(" ")[0];
 		String currentF = currentWhile.split(" ")[1];

@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 
 import org.junit.jupiter.api.Test;
 
@@ -107,7 +108,6 @@ class MainTest {
 	void testAllSigmaWhile() {	
 		
 		mainView.setRestriction(2);
-		mainView.setIterationCount(100);
 		mainCalculator.fillAllSigma("xc");
 
 		assertEquals("1.0", mainCalculator.calculation(mainCalculator.wp("c=0;x=1;while(c=1){{x=x+1}[1/2]{c=0}}", "x")));
@@ -167,6 +167,16 @@ class MainTest {
 		assertEquals("1.0",fixpointMap.get("(x=0)&(c=1)"));
 		assertEquals("1.0",fixpointMap.get("(x=1)&(c=0)"));
 		assertEquals("2.0",fixpointMap.get("(x=1)&(c=1)"));
-
+	}
+	
+	@Test
+	void testEvaluateFixpoint() {
+		mainView.setRestriction(1);
+		//LFP
+		assertEquals("[]",mainCalculator.evaluateFixpoint("while(c=1){{x=x+1}[1/2]{c=0}} (x)", "iff((x=0)&(c=0),0.0;(x=0)&(c=1),0.5;(x=1)&(c=0),1.0;(x=1)&(c=1),1.0)", "0.1", 1, new LinkedHashSet<String>()).toString());
+		//witness
+		assertEquals("[(x=0)&(c=1), (x=1)&(c=1)]",mainCalculator.evaluateFixpoint("while(c=1){x=x+1} (x)", "iff((x=0)&(c=0),0.0;(x=0)&(c=1),1.0;(x=1)&(c=0),1.0;(x=1)&(c=1),1.0)", "0.1", 1, new LinkedHashSet<String>()).toString());
+		//no fixpoint
+		assertEquals("[(x=0)&(c=0), (x=0)&(c=1), (x=1)&(c=0), (x=1)&(c=1)]",mainCalculator.evaluateFixpoint("while(c=1){x=x+1} (x)", "iff((x=0)&(c=0),1.0;(x=0)&(c=1),0.5;(x=1)&(c=0),1.0;(x=1)&(c=1),1.0)", "0.1", 1, new LinkedHashSet<String>()).toString());
 	}
 }
