@@ -1,69 +1,78 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>masterthesis</groupId>
-  <artifactId>prototype</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
-  <properties>
-    <maven.compiler.source>11</maven.compiler.source>
-    <maven.compiler.target>11</maven.compiler.target>
-    <java.version>11</java.version>
-    <maven.build.timestamp.format>dd-MM-yy_HH:mm</maven.build.timestamp.format>
-    <builddate>${maven.build.timestamp}</builddate>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>3.2.4</version>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
-                        <configuration>
-                            <transformers>
-                                <transformer
-                                    implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>prototype.MainClass.java</mainClass>
-                                </transformer>
-                            </transformers>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
-   <dependencies>
-   	<dependency>
-	   <groupId>org.mariuszgromada.math</groupId>
-	   <artifactId>MathParser.org-mXparser</artifactId>
-	   <version>5.0.2</version>
-    </dependency>
-	<!-- https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter -->
-	<dependency>
-	    <groupId>org.junit.jupiter</groupId>
-	    <artifactId>junit-jupiter</artifactId>
-	    <version>5.8.2</version>
-	    <scope>test</scope>
-	</dependency>
-	<!-- https://mvnrepository.com/artifact/org.apache.commons/commons-lang3 -->
-	<dependency>
-	    <groupId>org.apache.commons</groupId>
-	    <artifactId>commons-lang3</artifactId>
-	    <version>3.12.0</version>
-	</dependency>
-	<!-- https://mvnrepository.com/artifact/com.google.guava/guava -->
-	<dependency>
-	    <groupId>com.google.guava</groupId>
-	    <artifactId>guava</artifactId>
-	    <version>31.1-jre</version>
-	</dependency>
-
-
-    
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>masterthesis</groupId>
+	<artifactId>prototype</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>A Calculator for Probabilistic Program Expectations</name>
+	<description>A tool for evaluating fixpoints and calculating weakest preexpectations</description>
+	<licenses>
+		<license>
+			<name>MIT</name>
+			<url>https://www.opensource.org/licenses/mit-license.php</url>
+			<distribution>repo</distribution>
+			<comments>License file can be found in root directory under MIT-License.txt</comments>
+		</license>
+	</licenses>
+	<properties>
+	    <maven.compiler.source>11</maven.compiler.source>
+	    <maven.compiler.target>11</maven.compiler.target>
+	    <java.version>11</java.version>
+	    <maven.build.timestamp.format>dd-MM-yy_HH:mm</maven.build.timestamp.format>
+	    <builddate>${maven.build.timestamp}</builddate>
+	    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  	</properties>
+	<build>
+	    <plugins>
+		    <plugin>
+		        <groupId>org.apache.maven.plugins</groupId>
+		        <artifactId>maven-jar-plugin</artifactId>
+		        <version>2.4</version>
+		        <configuration>
+		            <archive>
+		                <index>true</index>
+		                <manifest>
+		                    <mainClass>prototype.MainClass</mainClass>
+		                </manifest>
+		            </archive>
+		        </configuration>
+		    </plugin>
+		    <plugin>
+			    <artifactId>maven-surefire-plugin</artifactId>
+			    <version>2.19</version>
+			    <dependencies>
+			        <dependency>
+			            <groupId>org.junit.platform</groupId>
+			            <artifactId>junit-platform-surefire-provider</artifactId>
+			            <version>1.0.0</version>
+			        </dependency>
+			    </dependencies>
+			</plugin>
+		</plugins>
+	</build>
+	<dependencies>
+	   	<dependency>
+		   <groupId>org.mariuszgromada.math</groupId>
+		   <artifactId>MathParser.org-mXparser</artifactId>
+		   <version>5.0.2</version>
+	    </dependency>
+		<!-- https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter -->
+		<dependency>
+		    <groupId>org.junit.jupiter</groupId>
+		    <artifactId>junit-jupiter</artifactId>
+		    <version>5.8.2</version>
+		    <scope>test</scope>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.apache.commons/commons-lang3 -->
+		<dependency>
+		    <groupId>org.apache.commons</groupId>
+		    <artifactId>commons-lang3</artifactId>
+		    <version>3.12.0</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/com.google.guava/guava -->
+		<dependency>
+		    <groupId>com.google.guava</groupId>
+		    <artifactId>guava</artifactId>
+		    <version>31.1-jre</version>
+		</dependency>
    </dependencies> 
 </project>

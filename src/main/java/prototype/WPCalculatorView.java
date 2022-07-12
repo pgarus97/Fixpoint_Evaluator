@@ -84,8 +84,7 @@ private JTextField fixpointDeltaInput;
 		cPanel.setLayout(new BoxLayout(cPanel, BoxLayout.LINE_AXIS));
 		fPanel = new JPanel();
 		fPanel.setLayout(new BoxLayout(fPanel, BoxLayout.LINE_AXIS));
-
-		
+	
 		descPanel = new JPanel();
 		descPanel.setLayout(new BoxLayout(descPanel, BoxLayout.PAGE_AXIS));
 		inputPanel = new JPanel();
@@ -95,8 +94,8 @@ private JTextField fixpointDeltaInput;
 	    cDesc.setBounds(5,0,170, 20);
 	    cInput = new JTextField("while(c=1){{x=x+1}[1/2]{c=0}}");
 	    cInput.setBounds(5,20,170, 20);
-	    
-	    
+	    cInput.setToolTipText(cInput.getText());
+	        
 	    fDesc = new JLabel("Input the postexpectation (f) here:");
 	    fDesc.setBounds(200,0,200, 20);
 		fInput = new JTextField("x");
@@ -113,6 +112,7 @@ private JTextField fixpointDeltaInput;
 	    panel.add(descPanel);
 	    panel.add(inputPanel);
 	    */
+	    
 	    restrictionDesc = new JLabel("Input the restriction (k) here:");
 	    restrictionDesc.setBounds(430,0,200, 20);
 	    restrictionField = new JTextField("1");
@@ -160,6 +160,7 @@ private JTextField fixpointDeltaInput;
 
 	    lfpButton = new JButton("Select LFP");
 	    witnessInput = new JTextField("Witness XY");
+	    witnessInput.setToolTipText(witnessInput.getText());
 	    witnessInput.setPreferredSize(new Dimension (500,20));
 	    witnessInput.setMaximumSize(witnessInput.getPreferredSize());
 	    fixpointEvalButton = new JButton("Evaluate Fixpoint");
@@ -231,23 +232,7 @@ private JTextField fixpointDeltaInput;
 	    	    }
     	   }  
 	    });
-	    
-	    /* For button hover
-	     * button.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                System.out.println("entered");
-                label.setVisible(true);
-            }
 
-            @Override
-            public void mouseExited(MouseEvent e) {
-                System.out.println("exited");
-                label.setVisible(false);
-            }
-        });
-	     */
-	    
 	    examineFixpointButton.addItemListener(new ItemListener() {
             public void itemStateChanged(ItemEvent event) {
                 if (event.getStateChange() == ItemEvent.SELECTED) {
@@ -281,8 +266,11 @@ private JTextField fixpointDeltaInput;
 		    	    examineFixpointButton.setVisible(true);
 		    	    int counter = 0;
 		    		for (String loop: mainCalculator.getWhileLoops()) {	
-		    			whileLoops.add(new JToggleButton(loop));
-		    			whileLoops.get(counter).addItemListener(whileLoopToggle);
+		    			JToggleButton tempButton = new JToggleButton(loop);
+		    			tempButton.addItemListener(whileLoopToggle);
+		    			tempButton.setToolTipText(tempButton.getText());
+		    			whileLoops.add(tempButton);
+
 		    			whileLoopPanel.add(whileLoops.get(counter));
 		    			whileLoopPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 		    			counter++;
@@ -297,6 +285,18 @@ private JTextField fixpointDeltaInput;
 	    		witnessInput.setText(mainCalculator.getFixpointCache().get(currentWhileTerm));
 	    	}  
 		}); 
+	    
+	    witnessInput.addActionListener(new ActionListener() {
+	    	public void actionPerformed(ActionEvent e) {
+	    	    witnessInput.setToolTipText(witnessInput.getText());
+	    	}
+	    });
+	    
+	    cInput.addActionListener(new ActionListener() {
+	    	public void actionPerformed(ActionEvent e) {
+	    	    cInput.setToolTipText(cInput.getText());
+	    	}
+	    });
 	    
 	    fixpointEvalButton.addActionListener(new ActionListener() {
 	    	public void actionPerformed(ActionEvent e) {
@@ -338,6 +338,19 @@ private JTextField fixpointDeltaInput;
         }
     };
 	
+   /* public MouseAdapter fullWhileHover = new MouseAdapter() {
+        @Override
+        public void mouseEntered(MouseEvent e) {
+            System.out.println("entered");
+            label.setVisible(true);
+        }
+
+        @Override
+        public void mouseExited(MouseEvent e) {
+            System.out.println("exited");
+            label.setVisible(false);
+        }
+    }*/
 	
 	
 	public void prepareCalculation() {
