@@ -6,6 +6,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 
 import javax.swing.BorderFactory;
@@ -26,7 +27,6 @@ import org.apache.commons.lang3.math.NumberUtils;
 
 public class WPCalculatorView {
 	
-JCheckBox allSigmaIteration = new JCheckBox("Enable all-sigma fixpoint-iteration.");
 
 //TODO read those values directly from the fields instead of variables to be uniform
 private double restriction = 2;
@@ -57,6 +57,8 @@ private JButton calcButton;
 private JScrollPane scroll;
 private JTextArea result;
 private JToggleButton examineFixpointButton;
+private JCheckBox allSigmaIteration;
+private JCheckBox sigmaForwarding;
 
 private ArrayList<JToggleButton> whileLoops; 
 private JScrollPane whileLoopScroll;
@@ -147,8 +149,12 @@ private JButton loadCache;
 	    calcButton = new JButton("Calculate!");
 	    calcButton.setBounds(5,100,150, 40);
 	    
+	    allSigmaIteration = new JCheckBox("Enable all-sigma fixpoint-iteration.");
 	    allSigmaIteration.setBounds(200,100,300, 50);
 	    allSigmaIteration.setSelected(true);
+	    
+	    sigmaForwarding = new JCheckBox("Enable sigma-forwarding.");
+	    sigmaForwarding.setBounds(200,135,300, 50);
 	    
 	    examineFixpointButton = new JToggleButton("Examine Fixpoints");
 	    examineFixpointButton.setBounds(650,20,200, 40);
@@ -216,6 +222,7 @@ private JButton loadCache;
  
 	    frame.add(examineFixpointButton);
 	    frame.add(allSigmaIteration); 
+	    frame.add(sigmaForwarding); 
 	    frame.add(cDesc);
 	    frame.add(cInput);
 	    frame.add(fDesc);
@@ -302,7 +309,15 @@ private JButton loadCache;
 	    		
 	    		String calcResult = "";
 	    		double start = System.currentTimeMillis();
-	    		calcResult = mainCalculator.calculation(mainCalculator.wp(cInput.getText().replace(" ", ""),fInput.getText())); 
+	    		if(sigmaForwarding.isSelected()) {
+	    			result.append( "\n\n" + "Sigma-Forwarding activated.");
+	    			String sigmaForwardResult = mainCalculator.sigmaForwarding(cInput.getText().replace(" ", ""), new LinkedHashMap<String,String>());
+		    		sigmaForwardResult = sigmaForwardResult.substring(0,sigmaForwardResult.length()-1);
+	    			result.append( "\n" + "Sigma-Forwarding Result: wp["+ sigmaForwardResult+"]("+fInput.getText()+")");
+	    			calcResult = mainCalculator.calculation(mainCalculator.wp(sigmaForwardResult,fInput.getText())); 
+	    		}else {
+		    		calcResult = mainCalculator.calculation(mainCalculator.wp(cInput.getText().replace(" ", ""),fInput.getText())); 
+	    		}
 	    		double end = System.currentTimeMillis();
 	    		
 	    		result.append("\n\n" + "Calculation Time: " + (end - start)/1000 + "s");
@@ -315,7 +330,6 @@ private JButton loadCache;
 		    			tempButton.addItemListener(whileLoopToggle);
 		    			tempButton.setToolTipText(tempButton.getText());
 		    			whileLoops.add(tempButton);
-
 		    			whileLoopPanel.add(whileLoops.get(counter));
 		    			whileLoopPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 		    			counter++;

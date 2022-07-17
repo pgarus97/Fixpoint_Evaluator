@@ -2,23 +2,20 @@ New TODO list system:
 
 TODO:
 
-persistent file caching of fixpoints to load / save for faster results
+
 fix while in while non expansiveness proof
-hover over buttons for full text in whileLoops
+
 make log appear in runtime => threads? concurrency in swing
 write readme with usage and documentation / rename github
-reset Cache button
-write tests for all new methods
 write systematic tests
-//TODO cache saves wrong if assignment before while saves?
-//TODO fixpoint witness input if needed? where all needed variable combinations can be inputted 
-comment all methods and code
-data structure instead of straight working on string C? => not really needed...
-
-clear cache on restriction/iteration count change
-//TODO for presentation: check how to calculate least and greatest fixpoint of second example
+clear cache on restriction/iteration count change (?)
 
 DONE:
+comment all methods and code DONE
+persistent file caching of fixpoints to load / save for faster results DONE
+hover over buttons for full text in whileLoops DONE
+reset Cache button DONE
+write tests for all new methods DONE
 add license DONE
 need to round x1c1? DONE
 Implement hash function + iteration DONE

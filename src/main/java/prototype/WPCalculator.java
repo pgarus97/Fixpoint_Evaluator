@@ -58,7 +58,7 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 
 			}
 			
-			else if(C.startsWith("if")) {
+			else if(C.startsWith("if") && !C.startsWith("iff")) {
 				//conditional process
 				System.out.println("Enter conditional process"); 
 				String condition = getInsideBracket(C.substring(C.indexOf("{")+1));
@@ -138,7 +138,7 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 				
 			}else {
 				//variable assignments
-				if(C.contains("skip")){
+				if(C.startsWith("skip")){
 					System.out.println("Enter skip process"); 
 					String skipResult = C.replace("skip", f);
 					//TODO detailed log: mainView.getResult().setText(mainView.getResult().getText() + "\n" + "Assignment skip process." + skipResult);
@@ -181,6 +181,155 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 		}
 	
 	}
+	
+	/*
+	 * Function that allows for optimizing the wp-transformer by pre-parsing the inputted program C.
+	 * The algorithm is looking for concrete variable assignments of which we know their value
+	 * at given points, like for example in while or if conditions.
+	 */
+	public String sigmaForwarding(String C,LinkedHashMap<String,String> currentSigma) {
+		//TODO create trace to follow transformations of C
+		String result="";
+		String C1 = getSequentialCut(C);
+		System.out.println("C1: " + C1);
+		if(C1.startsWith("min{")) {
+			//demonic choice process
+			//TODO for now blackbox
+			for(Map.Entry<String, String> entry : currentSigma.entrySet()) {
+				entry.setValue(null);
+			}
+			result += C1+";";
+			/*TODO look into demonic choice operator for assignments etc.
+			 * String demC1 = getInsideBracket(C.substring(C.indexOf("{")+1));	
+			String demC2 = C.substring(C.indexOf(demC1));
+			demC2 = getInsideBracket(demC2.substring(demC2.indexOf("{")+1));
+			
+			System.out.println("demC1= "+demC1); 
+			System.out.println("demC2= "+demC2);
+			//TODO here we interfere with sigma forwarding if possible
+			
+			String resultC1 = wp(demC1,f);
+			String resultC2 = wp(demC2,f);
+
+			//TODO detailed log: mainView.getResult().setText(mainView.getResult().getText() + "\n" + "Demonic Choice process. Breaking down into: min(" + resultC1 + "," + resultC2 + ")"); 
+
+			return calculation("min(" + resultC1 + "," + resultC2 + ")");
+*/
+		}
+		
+		else if(C1.startsWith("if") && !C1.startsWith("iff")) {
+			//conditional process
+			System.out.println("Enter conditional process"); 
+			String condition = getInsideBracket(C1.substring(C1.indexOf("{")+1));
+			System.out.println("Conditional: "+condition); 
+			String ifC1 = C1.substring(condition.length()+4);
+			ifC1 = getInsideBracket(ifC1.substring(ifC1.indexOf("{")+1));
+			String ifC2 = C.substring(C.indexOf(ifC1));
+			ifC2 = getInsideBracket(ifC2.substring(ifC2.indexOf("{")+1));
+			System.out.println("C1= "+ifC1); 
+			System.out.println("C2= "+ifC2);
+			//check condition
+			for(Map.Entry<String, String> entry : currentSigma.entrySet()) {
+				if(entry.getValue()!=null) {
+					condition = condition.replace(entry.getKey(), entry.getValue());
+				}
+			}
+			if(calculation(condition).equals("1.0")) {
+				result += ifC1+";";
+				System.out.println(result);
+
+			}else if(calculation(condition).equals("0.0")) {
+				result += ifC2+";";
+				System.out.println(result);
+
+			}else {
+				result += C1+";";
+			}
+		}
+		
+		else if(C1.startsWith("{")){
+			result += C1+";";
+			//TODO improve to only make ? on values which are inside probability; for now blackbox
+			for(Map.Entry<String, String> entry : currentSigma.entrySet()) {
+				entry.setValue(null);
+			}
+		}
+		else if(C1.startsWith("while")){
+			//while process
+			
+			System.out.println("Enter while process"); 
+			String condition = C1.substring(C1.indexOf("(")+1,C1.indexOf("{")-1);
+			System.out.println("Condition: "+condition);
+			String whileC = C1.substring(condition.length());
+			whileC = getInsideBracket(whileC.substring(whileC.indexOf("{")+1));
+			System.out.println("whileC: "+whileC);	
+			for(Map.Entry<String, String> entry : currentSigma.entrySet()) {
+				if(entry.getValue()!=null) {
+					condition = condition.replace(entry.getKey(), entry.getValue());
+				}
+			}
+			if(calculation(condition).equals("0.0")) {
+				result += "skip;";
+				System.out.println(result);
+				}else {
+				//TODO treat while as a blackbox for now
+				for(Map.Entry<String, String> entry : currentSigma.entrySet()) {
+					entry.setValue(null);
+				}
+				result += C1+";";
+			}
+			//TODO input currentSigma into fixpoint cached result for concrete Value
+			/*if(!fixpointCache.containsKey(C+" ("+f+")")) {
+				String fixpoint="";
+				if (mainView.getAllSigmaIteration().isSelected()) {		 
+					fixpoint = fixpointIterationAllSigma(condition, whileC, f);
+				} else {
+					fixpoint = fixpointIterationIterativ(condition, whileC, f); 
+				}
+				fixpointCache.put(C+" ("+f+")", fixpoint);
+				System.out.println("Put into Cache: "+ C+"("+f+")" + " " + fixpoint);
+
+				return fixpoint;
+					
+			}else {
+				System.out.println("Skipped because value has been found in fixpoint cache.");
+				System.out.println("Cached LFP: "+ fixpointCache.get(C+" ("+f+")"));
+				return fixpointCache.get(C+" ("+f+")");
+			}*/
+		}else {
+			//variable assignments
+			if(C1.startsWith("skip")){
+				System.out.println("Enter skip process"); 
+				result += C1+";";
+
+			}else {
+				System.out.println("Enter assignment process"); 
+				String indexC = C1.substring(0,1);
+				String cutC = C1.substring(C.indexOf("=")+1);
+				//if replace cutC is calculatable only => update value
+				for(Map.Entry<String, String> entry : currentSigma.entrySet()) {
+					if(entry.getValue()!=null) {
+						cutC = cutC.replace(entry.getKey(), entry.getValue());
+					}
+				}
+				cutC = calculation(cutC);
+				if(NumberUtils.isCreatable(cutC)) {
+					currentSigma.put(indexC, cutC);
+					result += indexC+"="+cutC+";";
+				}else {
+					currentSigma.put(indexC, null);
+					result += C1+";";
+				}	
+			}
+		}
+		if(!C1.equals(C)) {
+			String C2 = C.substring(C1.length()+1);
+			result += sigmaForwarding(C2,currentSigma);
+		}
+		
+		return result;
+	}
+	
 	
 	/*
 	 * Function that takes a mathematical term (exp) as input and tries to calculate a concrete result from it using the MathParser component.
@@ -439,7 +588,7 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 		if(result.isNaN()) {
 			//throw exception and break + log
 			System.out.println("There are unknown variables in the formula!");
-			//TODO expection instead of null
+			mainView.getResult().append("\n\n" + "There are unknown variables in the formula!");
 			return null;
 		}else {
 			return result;

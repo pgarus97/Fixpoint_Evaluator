@@ -2,7 +2,6 @@ package prototype;
 
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -194,5 +193,13 @@ class MainTest {
 		assertEquals(null,mainCalculator.getFixpointCache().get("while(c=1){{x=x+1}[1/2]{c=0}} (x)"));
 		mainCalculator.loadFixpointCache();
 		assertEquals("iff((x=0)&(c=0),0.0;(x=0)&(c=1),0.5;(x=1)&(c=0),1.0;(x=1)&(c=1),1.0)",mainCalculator.getFixpointCache().get("while(c=1){{x=x+1}[1/2]{c=0}} (x)"));
+	}
+	
+	@Test
+	void testSigmaForwarding() {
+		assertEquals("x=1.0;x=2.0;{x=x+1}[1/2]{c=0};if{x=2}{x=0}else{c=0};",mainCalculator.sigmaForwarding("x=1;x=x+1;{x=x+1}[1/2]{c=0};if{x=2}{x=0}else{c=0}",new LinkedHashMap<String,String>()));
+		assertEquals("x=1.0;x=2.0;x=0;",mainCalculator.sigmaForwarding("x=1;x=x+1;if{x=2}{x=0}else{c=0}",new LinkedHashMap<String,String>()));
+		assertEquals("x=1.0;c=0.0;c=0;",mainCalculator.sigmaForwarding("x=1;c=0;if{c=1}{x=0}else{c=0}",new LinkedHashMap<String,String>()));
+		assertEquals("x=1.0;c=0.0;skip;",mainCalculator.sigmaForwarding("x=1;c=0;while(c=1){{x=x+1}[1/2]{c=0}}",new LinkedHashMap<String,String>()));
 	}
 }
