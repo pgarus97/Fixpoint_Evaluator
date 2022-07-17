@@ -69,12 +69,23 @@ private JButton fixpointEvalButton;
 private JLabel fixpointDeltaDesc;
 private JTextField fixpointDeltaInput;
 
+private JPanel cachePanel;
+private JButton resetCache;
+private JButton saveCache;
+private JButton loadCache;
+
+
 
 //TODO implement tips from https://stackoverflow.com/questions/62875613/cannot-refer-to-the-non-final-local-variable-display-defined-in-an-enclosing-sco
 //TODO make better input descriptions on hover
 //TODO full log checkbox and shorten normal output
 
 	public WPCalculatorView() {
+		
+		/*
+		 * GUI implementation
+		 */
+		
 		frame = new JFrame("WP-Calculator");	
 	    
 		panel = new JPanel();
@@ -151,13 +162,13 @@ private JTextField fixpointDeltaInput;
 	    whileLoopScroll.setBounds(900,50,250, 250);
 	    whileLoopScroll.setVisible(false);
 	    
-	    
+	    //evaluation panel
 	    fixpointDeltaDesc = new JLabel("Input delta here:");
 	    fixpointDeltaInput = new JTextField("0.1");
 	    //TODO can change the preferred size if we put it in another panel as the boxlayout makes all components same size.
 	    fixpointDeltaInput.setPreferredSize(new Dimension (500,20));
 	    fixpointDeltaInput.setMaximumSize(fixpointDeltaInput.getPreferredSize());
-
+	    
 	    lfpButton = new JButton("Select LFP");
 	    witnessInput = new JTextField("Witness XY");
 	    witnessInput.setToolTipText(witnessInput.getText());
@@ -180,11 +191,29 @@ private JTextField fixpointDeltaInput;
 	    evaluationPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 	    evaluationPanel.setVisible(false);
 	    
-	    frame.add(evaluationPanel);
-
-
-
+	    //cache panel
+	    cachePanel = new JPanel();
+	    cachePanel.setBounds(10,810 ,400, 20);
+		cachePanel.setLayout(new BoxLayout(cachePanel, BoxLayout.LINE_AXIS));
+	    resetCache = new JButton("Reset Cache");
+	    saveCache = new JButton("Save Cache");
+	    loadCache = new JButton("Load Cache");
+	    cachePanel.add(resetCache);
+	    cachePanel.add(saveCache);
+	    cachePanel.add(loadCache);
 	    
+	    result = new JTextArea();
+	    scroll = new JScrollPane(result);
+	    scroll.setBounds(10,200 ,800, 600); 
+	    result.setEditable(false);
+	    
+	    /*
+	     * add all components to mainframe
+	     */
+	   
+	    frame.add(cachePanel);
+	    frame.add(evaluationPanel);
+ 
 	    frame.add(examineFixpointButton);
 	    frame.add(allSigmaIteration); 
 	    frame.add(cDesc);
@@ -201,12 +230,7 @@ private JTextField fixpointDeltaInput;
 	    frame.add(deltaInput);
 		frame.add(whileLoopScroll);
 	    frame.add(calcButton);
-	    
-	    result = new JTextArea();
-	    scroll = new JScrollPane(result);
-	    scroll.setBounds(10,200 ,800, 600); 
-	    result.setEditable(false);
-	    
+
 	    frame.getContentPane().add(scroll);
 	    
 	    frame.add(panel);
@@ -216,9 +240,30 @@ private JTextField fixpointDeltaInput;
 	    frame.setLayout(null); 
 	    frame.setVisible(true);
 	    
-	    allSigmaIteration.addActionListener(new ActionListener(){  
+	    /*
+	     * button listeners
+	     */
+	    
+	    resetCache.addActionListener(new ActionListener(){  
 	    	public void actionPerformed(ActionEvent e){ 
 	    		mainCalculator.clearFixpointCache();
+    	   }  
+	    });  
+	    
+	    saveCache.addActionListener(new ActionListener(){  
+	    	public void actionPerformed(ActionEvent e){ 
+	    		mainCalculator.saveFixpointCache();
+    	   }  
+	    });
+	    
+	    loadCache.addActionListener(new ActionListener(){  
+	    	public void actionPerformed(ActionEvent e){ 
+	    		mainCalculator.loadFixpointCache();
+    	   }  
+	    });
+
+	    allSigmaIteration.addActionListener(new ActionListener(){  
+	    	public void actionPerformed(ActionEvent e){ 
 	    		if (allSigmaIteration.isSelected()) {
 	    	    	usedVars.setVisible(true);
 	    	    	usedVarsDesc.setVisible(true);

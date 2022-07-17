@@ -29,7 +29,7 @@ x=0;c=0;while(x<2){while(c<2){c=c+1;x=x+1}} with restriction 6 iteration 4 = 2.0
 
 while after while test:
 
-x=1;c=0;while(c=1){{x=x+1}[1/2]{c=0}};while(c=0){x=4;c=1}
+
 x=1;while(c=1){{x=x+1}[1/2]{c=0}};{x=3}[1/2]{x=10};if{x<5}{x=x+1}else{x=x-1}
 x=1;{x=3}[1/2]{x=10};if{x<5}{x=x+1}else{x=x-1};while(c=1){{x=x+1}[1/2]{c=0}}
 

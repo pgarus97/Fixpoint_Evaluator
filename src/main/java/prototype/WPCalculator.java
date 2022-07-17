@@ -1,5 +1,11 @@
 package prototype;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -23,7 +29,7 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 
 	/*
 	 * Main method that represents the weakest precondition transformer function (wp)
-	 * Takes a programm (C) and a postexpectation (f) as input and recursively calculates the result of the formula wp[C](f) for any sigma.
+	 * Takes a program (C) and a postexpectation (f) as input and recursively calculates the result of the formula wp[C](f) for any sigma.
 	 */
 	public String wp(String C, String f) {
 		//sequential process
@@ -107,7 +113,6 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 				whileC = getInsideBracket(whileC.substring(whileC.indexOf("{")+1));
 				System.out.println("whileC: "+whileC);
 				
-				//TODO need to somehow give into the view C and f separately 
 				if(!whileLoops.contains(C+" ("+f+")")) {
 					whileLoops.add(C+" ("+f+")");
 				}
@@ -568,6 +573,54 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 		}
 		return result;
 	}
+	
+	/*
+	 * fixpoint cache methods
+	 */
+	
+	public void clearFixpointCache() {
+		fixpointCache.clear();
+		mainView.getResult().append("\n\n" + "Cache cleared.");
+
+	}
+	
+	/*
+	 * writes a fixpointCache to file
+	 */
+	public void saveFixpointCache() {
+		new File("Cache").mkdir(); 
+	    //boolean res = directory.mkdir();
+		FileOutputStream fout;
+		try {
+			fout = new FileOutputStream("Cache/fixpointCache");
+			try (ObjectOutputStream oos = new ObjectOutputStream(fout)) {
+				oos.writeObject(fixpointCache);
+				mainView.getResult().append("\n\n" + "Cache saved.");
+			}
+		} catch (IOException e) {
+			mainView.getResult().append("\n\n" + "WARNING: failed to save Cache.");
+			e.printStackTrace();
+		}	
+	}
+	
+	/*
+	 * reads a saved fixpointCache from file
+	 */
+	@SuppressWarnings("unchecked")
+	public void loadFixpointCache() {
+		FileInputStream fin;
+		try {
+			fin = new FileInputStream("Cache/fixpointCache");
+			try (ObjectInputStream ois = new ObjectInputStream(fin)) {
+				LinkedHashMap<String, String> fileCache = (LinkedHashMap<String, String>) ois.readObject();
+				fixpointCache = fileCache;
+				mainView.getResult().append("\n\n" + "Cache loaded.");
+			}
+		} catch (IOException | ClassNotFoundException e) {
+			mainView.getResult().append("\n\n" + "WARNING: failed to load Cache.");
+			e.printStackTrace();
+		}
+	}
 
 	/*
 	 * getter & setter methods
@@ -591,10 +644,6 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 	
 	public void flushWhileLoops() {
 		whileLoops.clear();
-	}
-	
-	public void clearFixpointCache() {
-		fixpointCache.clear();
 	}
 	
 	public void linkView(WPCalculatorView mainView) {
