@@ -1,4 +1,4 @@
-package prototype;
+package mainClass;
 
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -9,17 +9,27 @@ import java.util.LinkedHashSet;
 
 import org.junit.jupiter.api.Test;
 
+import controller.MainController;
+import model.WPCalculator;
+import view.WPCalculatorView;
+
 class MainTest {
 	
 	//TODO make systematic border tests etc.
+	//TODO make one big view test
 	
 	WPCalculator mainCalculator = new WPCalculator();
 	WPCalculatorView mainView = new WPCalculatorView();
+	MainController mainController= new MainController();
 	
 	MainTest(){
-		mainCalculator.linkView(mainView);
-		mainView.linkCalculator(mainCalculator);
-		mainView.setRestriction(10); //default case
+		mainController.link(mainView, mainCalculator);
+		mainCalculator.setRestriction(10); //default test case
+		mainCalculator.setAllSigmaSelection(true); //default case
+		mainCalculator.setIterationDelta(0.001); //default case
+		mainCalculator.setIterationCount(Double.POSITIVE_INFINITY); //default case
+
+
 		
 	}
 	
@@ -92,10 +102,8 @@ class MainTest {
 	
 	@Test
 	void testWhile() {	
-
-		mainView.setRestriction(10);
-		mainView.setIterationCount(10);
-		mainView.getAllSigmaIteration().setSelected(false);
+		mainCalculator.setIterationCount(10);
+		mainCalculator.setAllSigmaSelection(false);
 
 
 		assertEquals("1.0", mainCalculator.calculation(mainCalculator.wp("c=0;x=1;while(c=1){{x=x+1}[1/2]{c=0}}", "x")));
@@ -107,7 +115,7 @@ class MainTest {
 	@Test
 	void testAllSigmaWhile() {	
 		
-		mainView.setRestriction(2);
+		mainCalculator.setRestriction(2);
 		mainCalculator.fillAllSigma("xc");
 
 		assertEquals("1.0", mainCalculator.calculation(mainCalculator.wp("c=0;x=1;while(c=1){{x=x+1}[1/2]{c=0}}", "x")));
@@ -116,8 +124,7 @@ class MainTest {
 	
 	@Test
 	void testfillAllSigma() {
-
-		mainView.setRestriction(1); //var from {0,1}
+		mainCalculator.setRestriction(1); //var from {0,1}
 		
 		ArrayList<LinkedHashMap<String,String>> allSigma = mainCalculator.fillAllSigma("xy");
 		
@@ -133,12 +140,13 @@ class MainTest {
 		
 		assert allSigma.get(3).get("x").equals("1");
 		assert allSigma.get(3).get("y").equals("1");
+
 	}
 	
 	@Test
 	void testCalculateConcreteSigma() {
 		
-		mainView.setRestriction(1); //var from {0,1}
+		mainCalculator.setRestriction(1); //var from {0,1}
 		ArrayList<LinkedHashMap<String,String>> allSigma = mainCalculator.fillAllSigma("xy");
 
 		assertEquals(1.0,mainCalculator.calculateConcreteSigma("if(x=0,1,y)", allSigma.get(0)));
@@ -171,7 +179,7 @@ class MainTest {
 	
 	@Test
 	void testEvaluateFixpoint() {
-		mainView.setRestriction(1);
+		mainCalculator.setRestriction(1);
 		//LFP
 		assertEquals("[]",mainCalculator.evaluateFixpoint("while(c=1){{x=x+1}[1/2]{c=0}} (x)", "iff((x=0)&(c=0),0.0;(x=0)&(c=1),0.5;(x=1)&(c=0),1.0;(x=1)&(c=1),1.0)", "0.1", 1, new LinkedHashSet<String>()).toString());
 		//witness
@@ -182,17 +190,18 @@ class MainTest {
 	
 	@Test
 	void testCacheMethods() {
-		mainView.setRestriction(1);
+		mainCalculator.setRestriction(1);
 		mainCalculator.fillAllSigma("xc");
-		mainCalculator.clearFixpointCache();
+		mainController.clearFixpointCache();
+		
+		assertEquals(null,mainController.getLFP("while(c=1){{x=x+1}[1/2]{c=0}} (x)"));
+		mainController.wp("while(c=1){{x=x+1}[1/2]{c=0}}", "x",false);
+		assertEquals("iff((x=0)&(c=0),0.0;(x=0)&(c=1),0.5;(x=1)&(c=0),1.0;(x=1)&(c=1),1.0)",mainController.getLFP("while(c=1){{x=x+1}[1/2]{c=0}} (x)"));
+		mainController.saveFixpointCache();
+		mainController.clearFixpointCache();
 		assertEquals(null,mainCalculator.getFixpointCache().get("while(c=1){{x=x+1}[1/2]{c=0}} (x)"));
-		mainCalculator.wp("while(c=1){{x=x+1}[1/2]{c=0}}", "x");
-		assertEquals("iff((x=0)&(c=0),0.0;(x=0)&(c=1),0.5;(x=1)&(c=0),1.0;(x=1)&(c=1),1.0)",mainCalculator.getFixpointCache().get("while(c=1){{x=x+1}[1/2]{c=0}} (x)"));
-		mainCalculator.saveFixpointCache();
-		mainCalculator.clearFixpointCache();
-		assertEquals(null,mainCalculator.getFixpointCache().get("while(c=1){{x=x+1}[1/2]{c=0}} (x)"));
-		mainCalculator.loadFixpointCache();
-		assertEquals("iff((x=0)&(c=0),0.0;(x=0)&(c=1),0.5;(x=1)&(c=0),1.0;(x=1)&(c=1),1.0)",mainCalculator.getFixpointCache().get("while(c=1){{x=x+1}[1/2]{c=0}} (x)"));
+		mainController.loadFixpointCache();
+		assertEquals("iff((x=0)&(c=0),0.0;(x=0)&(c=1),0.5;(x=1)&(c=0),1.0;(x=1)&(c=1),1.0)",mainController.getLFP("while(c=1){{x=x+1}[1/2]{c=0}} (x)"));
 	}
 	
 	@Test
@@ -201,5 +210,8 @@ class MainTest {
 		assertEquals("x=1.0;x=2.0;x=0;",mainCalculator.sigmaForwarding("x=1;x=x+1;if{x=2}{x=0}else{c=0}",new LinkedHashMap<String,String>()));
 		assertEquals("x=1.0;c=0.0;c=0;",mainCalculator.sigmaForwarding("x=1;c=0;if{c=1}{x=0}else{c=0}",new LinkedHashMap<String,String>()));
 		assertEquals("x=1.0;c=0.0;skip;",mainCalculator.sigmaForwarding("x=1;c=0;while(c=1){{x=x+1}[1/2]{c=0}}",new LinkedHashMap<String,String>()));
+		assertEquals("x=0.0;c=0.0;{y=x+1}[1/2]{c=x+2};skip;",mainCalculator.sigmaForwarding("x=0;c=0;{y=x+1}[1/2]{c=x+2};while(x=1){{x=x+1}[1/2]{c=0}}",new LinkedHashMap<String,String>()));
+		assertEquals("x=0.0;c=0.0;min{y=x+1}{c=c+1};skip;",mainCalculator.sigmaForwarding("x=0;c=0;min{y=x+1}{c=c+1};while(x=1){{x=x+1}[1/2]{c=0}}",new LinkedHashMap<String,String>()));
+
 	}
 }

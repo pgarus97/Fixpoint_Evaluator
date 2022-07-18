@@ -1,9 +1,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>masterthesis</groupId>
-	<artifactId>prototype</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<name>A Calculator for Probabilistic Program Expectations</name>
+	<groupId>pgarus</groupId>
+	<artifactId>fixpoint_evaluator</artifactId>
+	<version>1.0.0</version>
+	<name>A Tool for Computing Probabilistic Program Expectations</name>
 	<description>A tool for evaluating fixpoints and calculating weakest preexpectations</description>
 	<licenses>
 		<license>
@@ -55,14 +55,7 @@
 		   <artifactId>MathParser.org-mXparser</artifactId>
 		   <version>5.0.2</version>
 	    </dependency>
-		<!-- https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter -->
-		<dependency>
-		    <groupId>org.junit.jupiter</groupId>
-		    <artifactId>junit-jupiter</artifactId>
-		    <version>5.8.2</version>
-		    <scope>test</scope>
-		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.apache.commons/commons-lang3 -->
+	    <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-lang3 -->
 		<dependency>
 		    <groupId>org.apache.commons</groupId>
 		    <artifactId>commons-lang3</artifactId>
@@ -74,5 +67,13 @@
 		    <artifactId>guava</artifactId>
 		    <version>31.1-jre</version>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter -->
+		<dependency>
+		    <groupId>org.junit.jupiter</groupId>
+		    <artifactId>junit-jupiter</artifactId>
+		    <version>5.8.2</version>
+		    <scope>test</scope>
+		</dependency>
+		
    </dependencies> 
 </project>

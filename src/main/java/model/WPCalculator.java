@@ -1,4 +1,4 @@
-package prototype;
+package model;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -19,17 +19,24 @@ import org.mariuszgromada.math.mxparser.Function;
 import com.google.common.collect.Lists;
 //Parser Documentation: https://github.com/mariuszgromada/MathParser.org-mXparser
 
+import controller.ControllerHandler;
+
+//main model
+
 public class WPCalculator {
 
-private WPCalculatorView mainView;
+private ControllerHandler mainController;
 private ArrayList<LinkedHashMap<String, String>> allSigma = new ArrayList<LinkedHashMap<String, String>>();
 private ArrayList<String> whileLoops = new ArrayList<String>();
 private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,String>();
-
+private double restriction;
+private double iterationCount;
+private boolean allSigmaSelection;
+private double iterationDelta;
 
 	/*
 	 * Main method that represents the weakest precondition transformer function (wp)
-	 * Takes a program (C) and a postexpectation (f) as input and recursively calculates the result of the formula wp[C](f) for any sigma.
+	 * Takes a program (C) and a post expectation (f) as input and recursively calculates the result of the formula wp[C](f) for any sigma (variable assignment).
 	 */
 	public String wp(String C, String f) {
 		//sequential process
@@ -119,7 +126,7 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 				//TODO while in while cache 
 				if(!fixpointCache.containsKey(C+" ("+f+")")) {
 					String fixpoint="";
-					if (mainView.getAllSigmaIteration().isSelected()) {		 
+					if (allSigmaSelection) {		 
 						fixpoint = fixpointIterationAllSigma(condition, whileC, f);
 					} else {
 						fixpoint = fixpointIterationIterativ(condition, whileC, f); 
@@ -188,46 +195,26 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 	 * at given points, like for example in while or if conditions.
 	 */
 	public String sigmaForwarding(String C,LinkedHashMap<String,String> currentSigma) {
-		//TODO create trace to follow transformations of C
 		String result="";
 		String C1 = getSequentialCut(C);
 		System.out.println("C1: " + C1);
 		if(C1.startsWith("min{")) {
 			//demonic choice process
-			//TODO for now blackbox
 			for(Map.Entry<String, String> entry : currentSigma.entrySet()) {
-				entry.setValue(null);
+				if(C1.contains(entry.getKey()+"=")) {
+					entry.setValue(null);
+				}
 			}
-			result += C1+";";
-			/*TODO look into demonic choice operator for assignments etc.
-			 * String demC1 = getInsideBracket(C.substring(C.indexOf("{")+1));	
-			String demC2 = C.substring(C.indexOf(demC1));
-			demC2 = getInsideBracket(demC2.substring(demC2.indexOf("{")+1));
-			
-			System.out.println("demC1= "+demC1); 
-			System.out.println("demC2= "+demC2);
-			//TODO here we interfere with sigma forwarding if possible
-			
-			String resultC1 = wp(demC1,f);
-			String resultC2 = wp(demC2,f);
-
-			//TODO detailed log: mainView.getResult().setText(mainView.getResult().getText() + "\n" + "Demonic Choice process. Breaking down into: min(" + resultC1 + "," + resultC2 + ")"); 
-
-			return calculation("min(" + resultC1 + "," + resultC2 + ")");
-*/
+			result += C1+";";	
 		}
 		
 		else if(C1.startsWith("if") && !C1.startsWith("iff")) {
 			//conditional process
-			System.out.println("Enter conditional process"); 
 			String condition = getInsideBracket(C1.substring(C1.indexOf("{")+1));
-			System.out.println("Conditional: "+condition); 
 			String ifC1 = C1.substring(condition.length()+4);
 			ifC1 = getInsideBracket(ifC1.substring(ifC1.indexOf("{")+1));
 			String ifC2 = C.substring(C.indexOf(ifC1));
 			ifC2 = getInsideBracket(ifC2.substring(ifC2.indexOf("{")+1));
-			System.out.println("C1= "+ifC1); 
-			System.out.println("C2= "+ifC2);
 			//check condition
 			for(Map.Entry<String, String> entry : currentSigma.entrySet()) {
 				if(entry.getValue()!=null) {
@@ -236,33 +223,27 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 			}
 			if(calculation(condition).equals("1.0")) {
 				result += ifC1+";";
-				System.out.println(result);
-
 			}else if(calculation(condition).equals("0.0")) {
 				result += ifC2+";";
-				System.out.println(result);
-
 			}else {
 				result += C1+";";
 			}
 		}
 		
 		else if(C1.startsWith("{")){
+			//probability process
 			result += C1+";";
-			//TODO improve to only make ? on values which are inside probability; for now blackbox
 			for(Map.Entry<String, String> entry : currentSigma.entrySet()) {
-				entry.setValue(null);
+				if(C1.contains(entry.getKey()+"=")) {
+					entry.setValue(null);
+				}
 			}
 		}
 		else if(C1.startsWith("while")){
 			//while process
-			
-			System.out.println("Enter while process"); 
 			String condition = C1.substring(C1.indexOf("(")+1,C1.indexOf("{")-1);
-			System.out.println("Condition: "+condition);
 			String whileC = C1.substring(condition.length());
 			whileC = getInsideBracket(whileC.substring(whileC.indexOf("{")+1));
-			System.out.println("whileC: "+whileC);	
 			for(Map.Entry<String, String> entry : currentSigma.entrySet()) {
 				if(entry.getValue()!=null) {
 					condition = condition.replace(entry.getKey(), entry.getValue());
@@ -270,43 +251,22 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 			}
 			if(calculation(condition).equals("0.0")) {
 				result += "skip;";
-				System.out.println(result);
-				}else {
-				//TODO treat while as a blackbox for now
+			} else {
 				for(Map.Entry<String, String> entry : currentSigma.entrySet()) {
-					entry.setValue(null);
+					if(C1.contains(entry.getKey()+"=")) {
+						entry.setValue(null);
+					}
 				}
 				result += C1+";";
-			}
-			//TODO input currentSigma into fixpoint cached result for concrete Value
-			/*if(!fixpointCache.containsKey(C+" ("+f+")")) {
-				String fixpoint="";
-				if (mainView.getAllSigmaIteration().isSelected()) {		 
-					fixpoint = fixpointIterationAllSigma(condition, whileC, f);
-				} else {
-					fixpoint = fixpointIterationIterativ(condition, whileC, f); 
-				}
-				fixpointCache.put(C+" ("+f+")", fixpoint);
-				System.out.println("Put into Cache: "+ C+"("+f+")" + " " + fixpoint);
-
-				return fixpoint;
-					
-			}else {
-				System.out.println("Skipped because value has been found in fixpoint cache.");
-				System.out.println("Cached LFP: "+ fixpointCache.get(C+" ("+f+")"));
-				return fixpointCache.get(C+" ("+f+")");
-			}*/
+			}			
 		}else {
 			//variable assignments
 			if(C1.startsWith("skip")){
-				System.out.println("Enter skip process"); 
 				result += C1+";";
 
 			}else {
-				System.out.println("Enter assignment process"); 
 				String indexC = C1.substring(0,1);
 				String cutC = C1.substring(C.indexOf("=")+1);
-				//if replace cutC is calculatable only => update value
 				for(Map.Entry<String, String> entry : currentSigma.entrySet()) {
 					if(entry.getValue()!=null) {
 						cutC = cutC.replace(entry.getKey(), entry.getValue());
@@ -326,7 +286,6 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 			String C2 = C.substring(C1.length()+1);
 			result += sigmaForwarding(C2,currentSigma);
 		}
-		
 		return result;
 	}
 	
@@ -336,7 +295,7 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 	 * If no concrete result can be calculated (e.g. if there are still unresolved variables), the function returns the term as it is. 
 	 */
 	public String calculation(String exp) {
-		Function restrictValue = new Function("r", "min(max(0,x),"+mainView.getRestriction()+")", "x");
+		Function restrictValue = new Function("r", "min(max(0,x),"+restriction+")", "x");
 		Expression e = new Expression(exp,restrictValue);
 		System.out.println("Expression:" + exp);
 		Double result = e.calculate();
@@ -356,7 +315,7 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 	 */
 	public String fixpointIterationIterativ(String condition, String C, String f) {
 		String caseF = "0"; //X^0 initialization
-		for(int i=0; i<mainView.getIterationCount(); i++) {
+		for(int i=0; i<iterationCount; i++) {
 			String X = wp(C, caseF);
 			caseF = "if("+condition+","+X+","+f+")";
 		}
@@ -386,7 +345,7 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 			if(e.calculate() == 0.0) {
 				sigmaResult = calculateConcreteSigma(f,sigma);
 			}else {
-				for(int i=0; i<mainView.getIterationCount(); i++) {
+				for(int i=0; i<iterationCount; i++) {
 					String X = wp(C, caseF);
 					caseF = "if("+condition+","+X+","+f+")";
 					//TODO future improvement: directly input sigma through assignment = f.replace x with sigma x and keep dependency somehow
@@ -394,7 +353,7 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 					
 					//checks if the distance between the iterations has reached the delta threshold and stops the iteration if it is the case
 					if(i > 2) {
-						if(sigmaResult-previousResult < Double.parseDouble(mainView.getDeltaInput().getText())) {
+						if(sigmaResult-previousResult < iterationDelta) {
 							break;
 						}else {
 							previousResult = sigmaResult;
@@ -443,8 +402,8 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 		System.out.println("LinkedHashMap to string: " +phihashX.toString());
 
 		if(!X.toString().equals(phihashX.toString())) {
-			mainView.getResult().append("\n\n" + "-----------------------------------");
-			mainView.getResult().append("\n\n" + "The inputted witness is not a fixpoint! Cannot evaluate non-fixpoints!");
+			mainController.output("\n\n" + "-----------------------------------");
+			mainController.output("\n\n" + "The inputted witness is not a fixpoint! Cannot evaluate non-fixpoints!");
 			return sigmaSet;
 		} 
 		
@@ -469,26 +428,26 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 		}
 		
 		//outputting the result
-		mainView.getResult().append("\n\n" + "-----------------------------------");
-		mainView.getResult().append("\n\n" + "Hash-Function Results: (Iteration " + iterationCount + ")");
-		mainView.getResult().append("\n\n" + "X: " + X);
-		mainView.getResult().append("\n" + "X': " + Xslash);
-		mainView.getResult().append("\n" + "Phi-Hash (X): " + phihashX);
-		mainView.getResult().append("\n" + "Phi-Hash (X'): " + phihashXslash);
+		mainController.output("\n\n" + "-----------------------------------");
+		mainController.output("\n\n" + "Hash-Function Results: (Iteration " + iterationCount + ")");
+		mainController.output("\n\n" + "X: " + X);
+		mainController.output("\n" + "X': " + Xslash);
+		mainController.output("\n" + "Phi-Hash (X): " + phihashX);
+		mainController.output("\n" + "Phi-Hash (X'): " + phihashXslash);
 
 		if(sigmaSet.isEmpty()) {
-			mainView.getResult().append("\n\n" + "The hash-function's result is an empty set. This means the witness is already the least fixpoint." );
+			mainController.output("\n\n" + "The hash-function's result is an empty set. This means the witness is already the least fixpoint." );
 		}else {
-			mainView.getResult().append("\n\n" + "The hash-function's result is not an empty set. This means the witness is above the least fixpoint." );
-			mainView.getResult().append("\n" + "Following states are still in the result set: " );
+			mainController.output("\n\n" + "The hash-function's result is not an empty set. This means the witness is above the least fixpoint." );
+			mainController.output("\n" + "Following states are still in the result set: " );
 			for(String state : sigmaSet) {
-				mainView.getResult().append(state + ",");
+				mainController.output(state + ",");
 			}
 			if(!previousSigmaSet.toString().equals(sigmaSet.toString())) {
-				mainView.getResult().append(" therefore continuing iteration.");
+				mainController.output(" therefore continuing iteration.");
 				sigmaSet = evaluateFixpoint(currentWhile, fixpoint, delta, (iterationCount+1), sigmaSet);
 			}else {
-				mainView.getResult().append(" but since no change in the set has been detected, the iteration stops now.");
+				mainController.output(" but since no change in the set has been detected, the iteration stops now.");
 			}
 		}
 		return sigmaSet;
@@ -579,7 +538,7 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 		}
 		System.out.println("Concrete Sigma f after replace : " + f);
 
-		Function restrictValue = new Function("r", "min(max(0,x),"+mainView.getRestriction()+")", "x");
+		Function restrictValue = new Function("r", "min(max(0,x),"+restriction+")", "x");
 		Expression e = new Expression(f,restrictValue);
 
 		Double result = e.calculate();
@@ -588,7 +547,7 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 		if(result.isNaN()) {
 			//throw exception and break + log
 			System.out.println("There are unknown variables in the formula!");
-			mainView.getResult().append("\n\n" + "There are unknown variables in the formula!");
+			mainController.output("\n\n" + "There are unknown variables in the formula!");
 			return null;
 		}else {
 			return result;
@@ -606,7 +565,7 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 		List<List<Integer>> preCartesianValues = new ArrayList<List<Integer>>(); 
 		
 		List<Integer> restrictedList = new ArrayList<Integer>();
-		for (int i = 0 ; i < mainView.getRestriction()+1; i++) {
+		for (int i = 0 ; i < restriction+1; i++) {
 			restrictedList.add(i);
 		}
 		
@@ -615,7 +574,7 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 		}
 
 		List<List<Integer>> postCartesianValues = Lists.cartesianProduct(preCartesianValues);
-		
+
 		for(int i = 0 ; i < postCartesianValues.size(); i++){
 			LinkedHashMap<String, String> tempMap = new LinkedHashMap<String,String>();
 			for(int j = 0 ; j < postCartesianValues.get(i).size(); j++){
@@ -623,6 +582,7 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 			}
 			allSigma.add(tempMap);
 		}
+		System.out.println(allSigma);
 		return allSigma;
 	}		
 	
@@ -729,7 +689,7 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 	
 	public void clearFixpointCache() {
 		fixpointCache.clear();
-		mainView.getResult().append("\n\n" + "Cache cleared.");
+		mainController.output("\n\n" + "Cache cleared.");
 
 	}
 	
@@ -744,10 +704,10 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 			fout = new FileOutputStream("Cache/fixpointCache");
 			try (ObjectOutputStream oos = new ObjectOutputStream(fout)) {
 				oos.writeObject(fixpointCache);
-				mainView.getResult().append("\n\n" + "Cache saved.");
+				mainController.output("\n\n" + "Cache saved.");
 			}
 		} catch (IOException e) {
-			mainView.getResult().append("\n\n" + "WARNING: failed to save Cache.");
+			mainController.output("\n\n" + "WARNING: failed to save Cache.");
 			e.printStackTrace();
 		}	
 	}
@@ -763,10 +723,10 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 			try (ObjectInputStream ois = new ObjectInputStream(fin)) {
 				LinkedHashMap<String, String> fileCache = (LinkedHashMap<String, String>) ois.readObject();
 				fixpointCache = fileCache;
-				mainView.getResult().append("\n\n" + "Cache loaded.");
+				mainController.output("\n\n" + "Cache loaded.");
 			}
 		} catch (IOException | ClassNotFoundException e) {
-			mainView.getResult().append("\n\n" + "WARNING: failed to load Cache.");
+			mainController.output("\n\n" + "WARNING: failed to load Cache.");
 			e.printStackTrace();
 		}
 	}
@@ -795,10 +755,42 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 		whileLoops.clear();
 	}
 	
-	public void linkView(WPCalculatorView mainView) {
-		this.mainView = mainView;
+	public void setHandler(ControllerHandler controller) {
+		mainController = controller;
+	}
+
+	public double getRestriction() {
+		return restriction;
+	}
+
+	public void setRestriction(double restriction) {
+		this.restriction = restriction;
+	}
+
+	public double getIterationCount() {
+		return iterationCount;
+	}
+
+	public void setIterationCount(double iterationCount) {
+		this.iterationCount = iterationCount;
 	}
 	
+	public double getIterationDelta() {
+		return iterationDelta;
+	}
+	
+	public void setIterationDelta(double iterationDelta) {
+		this.iterationDelta = iterationDelta;
+	}
+
+	public boolean isAllSigmaSelection() {
+		return allSigmaSelection;
+	}
+
+	public void setAllSigmaSelection(boolean allSigmaSelection) {
+		this.allSigmaSelection = allSigmaSelection;
+	}
+
 	/*
 	 * Deprecated function to calculate restrictions on variables without MathParser
 	 */
@@ -815,7 +807,7 @@ private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,St
 						input = input.replace("#{"+inside+"}", "0");
 						i--;
 					}else {
-						String truncatedValue = Double.toString(NumberUtils.min(insideValue,mainView.getRestriction()));							
+						String truncatedValue = Double.toString(NumberUtils.min(insideValue,restriction));							
 						input = input.replace("#{"+inside+"}", truncatedValue);
 						i--;
 					}

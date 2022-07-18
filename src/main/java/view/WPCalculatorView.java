@@ -1,4 +1,4 @@
-package prototype;
+package view;
 
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
@@ -6,8 +6,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -22,16 +20,14 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 
-import org.apache.commons.lang3.math.NumberUtils;
+import controller.ControllerHandler;
 
+//main view
 
 public class WPCalculatorView {
 	
 
-//TODO read those values directly from the fields instead of variables to be uniform
-private double restriction = 2;
-private double iterationCount = 10;
-private WPCalculator mainCalculator;
+private ControllerHandler mainController;
 private String currentWhileTerm;
 
 //Declaration of components
@@ -253,19 +249,19 @@ private JButton loadCache;
 	    
 	    resetCache.addActionListener(new ActionListener(){  
 	    	public void actionPerformed(ActionEvent e){ 
-	    		mainCalculator.clearFixpointCache();
+	    		mainController.clearFixpointCache();
     	   }  
 	    });  
 	    
 	    saveCache.addActionListener(new ActionListener(){  
 	    	public void actionPerformed(ActionEvent e){ 
-	    		mainCalculator.saveFixpointCache();
+	    		mainController.saveFixpointCache();
     	   }  
 	    });
 	    
 	    loadCache.addActionListener(new ActionListener(){  
 	    	public void actionPerformed(ActionEvent e){ 
-	    		mainCalculator.loadFixpointCache();
+	    		mainController.loadFixpointCache();
     	   }  
 	    });
 
@@ -302,46 +298,17 @@ private JButton loadCache;
 	    calcButton.addActionListener(new ActionListener(){  
 	    	//TODO log in real time somehow => https://docs.oracle.com/javase/tutorial/uiswing/concurrency/index.html#:~:text=Careful%20use%20of%20concurrency%20is%20particularly%20important%20to,must%20learn%20how%20the%20Swing%20framework%20employs%20threads.
 	    	public void actionPerformed(ActionEvent e){
-	    		if(calculationLog() == false) {
+	    		if(mainController.prepareCalculationModel(restrictionField.getText(),iterationField.getText(),allSigmaIteration.isSelected(),usedVars.getText(),deltaInput.getText()) == false) {
 	    			return;
 	    		}
-	    		prepareCalculation();
-	    		
-	    		String calcResult = "";
-	    		double start = System.currentTimeMillis();
-	    		if(sigmaForwarding.isSelected()) {
-	    			result.append( "\n\n" + "Sigma-Forwarding activated.");
-	    			String sigmaForwardResult = mainCalculator.sigmaForwarding(cInput.getText().replace(" ", ""), new LinkedHashMap<String,String>());
-		    		sigmaForwardResult = sigmaForwardResult.substring(0,sigmaForwardResult.length()-1);
-	    			result.append( "\n" + "Sigma-Forwarding Result: wp["+ sigmaForwardResult+"]("+fInput.getText()+")");
-	    			calcResult = mainCalculator.calculation(mainCalculator.wp(sigmaForwardResult,fInput.getText())); 
-	    		}else {
-		    		calcResult = mainCalculator.calculation(mainCalculator.wp(cInput.getText().replace(" ", ""),fInput.getText())); 
-	    		}
-	    		double end = System.currentTimeMillis();
-	    		
-	    		result.append("\n\n" + "Calculation Time: " + (end - start)/1000 + "s");
-	    	    result.append("\n" + "Result: " + calcResult);
-	    	    if(cInput.getText().contains("while(") && allSigmaIteration.isSelected()) {
-		    	    examineFixpointButton.setVisible(true);
-		    	    int counter = 0;
-		    		for (String loop: mainCalculator.getWhileLoops()) {	
-		    			JToggleButton tempButton = new JToggleButton(loop);
-		    			tempButton.addItemListener(whileLoopToggle);
-		    			tempButton.setToolTipText(tempButton.getText());
-		    			whileLoops.add(tempButton);
-		    			whileLoopPanel.add(whileLoops.get(counter));
-		    			whileLoopPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-		    			counter++;
-		    		}
-	    	    }
-	    	    
+	    		prepareCalculationView();
+	    		mainController.wp(cInput.getText(), fInput.getText(), sigmaForwarding.isSelected());    	    
     	   }  
 	    }); 
 	    
 	    lfpButton.addActionListener(new ActionListener(){
 	    	public void actionPerformed(ActionEvent e){
-	    		witnessInput.setText(mainCalculator.getFixpointCache().get(currentWhileTerm));
+	    		witnessInput.setText(mainController.getLFP(currentWhileTerm));
 	    	}  
 		}); 
 	    
@@ -359,22 +326,7 @@ private JButton loadCache;
 	    
 	    fixpointEvalButton.addActionListener(new ActionListener() {
 	    	public void actionPerformed(ActionEvent e) {
-	    		result.append("\n\n" + "*************************");
-	    		result.append("\n\n" + "Starting fixpoint evaluation. Information: ");
-	    		result.append("\n" + "Selected While-Term: " + currentWhileTerm);
-	    	    result.append("\n" + "LFP: " + mainCalculator.getFixpointCache().get(currentWhileTerm));
-	    	    String witness = witnessInput.getText();
-	    	    String fixpointDelta = fixpointDeltaInput.getText();
-	    	    if(fixpointDelta != "" && NumberUtils.isCreatable(fixpointDelta)) {
-		    	    result.append("\n" + "Delta: " + fixpointDelta );
-	    	    }else {
-		    	    result.append("\n" + "The inputted delta: '" + fixpointDelta + "' is not a number!");
-		    	    return;
-	    	    }
-	    	    result.append("\n" + "Witness: " + witness );
-
-	    	    mainCalculator.evaluateFixpoint(currentWhileTerm, witness, fixpointDelta, 1, new LinkedHashSet<String>());
-
+	    		mainController.evaluateFixpoint(currentWhileTerm, witnessInput.getText(), fixpointDeltaInput.getText());
 	    	}
 	    });
 	}
@@ -411,59 +363,37 @@ private JButton loadCache;
         }
     }*/
 	
-	
-	public void prepareCalculation() {
+    public void prepareEvaluationView(ArrayList<String> modelLoops) {
+		if(allSigmaIteration.isSelected()) {
+    		examineFixpointButton.setVisible(true);
+    	    int counter = 0;
+    		for (String loop: modelLoops) {	
+    			JToggleButton tempButton = new JToggleButton(loop);
+    			tempButton.addItemListener(whileLoopToggle);
+    			tempButton.setToolTipText(tempButton.getText());
+    			whileLoops.add(tempButton);
+    			whileLoopPanel.add(whileLoops.get(counter));
+    			whileLoopPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+    			counter++;
+    		}
+    	}  		
+	}
+    
+	public void prepareCalculationView() {
 	    evaluationPanel.setVisible(false);
 		examineFixpointButton.setVisible(false);
 		whileLoopScroll.setVisible(false);
 		examineFixpointButton.setSelected(false);
-		mainCalculator.fillAllSigma(usedVars.getText());
-		mainCalculator.flushWhileLoops();
 		whileLoopPanel.removeAll();
 		whileLoops.clear();
+		updateFrame();
+		
+	}
+	
+	public void updateFrame() {
 		frame.validate();
 		frame.repaint();
-		
 	}
-	
-	public boolean calculationLog() {
-		result.setText("Information:");
-		
-		if(!restrictionField.getText().isEmpty()) {
-			result.append("\n" + "Variable restriction set to {0,...," + restrictionField.getText() + "}.");
-    		setRestriction(Double.parseDouble(restrictionField.getText()));
-		}else {
-			//default case
-			result.append("\n" + "No restriction inputted. Set to default {0,...,1}.");
-    		setRestriction(1);
-		}
-		if(!iterationField.getText().isEmpty()) {
-			result.append("\n" + "Iteration count set to " + iterationField.getText() + ".");
-    		setIterationCount(Integer.parseInt(iterationField.getText()));
-	    }else {
-	    	if (allSigmaIteration.isSelected()) {
-    			result.append("\n" + "No iteration count inputted. Taking all sigma default: infinite iteration.");
-    	    	setIterationCount(Double.POSITIVE_INFINITY);
-	    	}else {
-	    		//default case 
-    			result.append("\n" + "No iteration count inputted. Taking default count = 10.");
-	    		setIterationCount(10);
-	    	}
-	    }
-		if (allSigmaIteration.isSelected()) {
-			if(usedVars.getText().isEmpty()) {
-    			result.append("\n\n" + "No used variables inputted! You need to input all variables in C.");
-    			return false;
-			}
-			if(deltaInput.getText().isEmpty()) {
-    			result.append("\n" + "No delta for the iteration inputted. Taking default delta = 0.001.");
-    			deltaInput.setText("0.001");
-			}
-		}
-		result.append( "\n\n" + "Calculating: wp["+cInput.getText()+"]("+fInput.getText()+")");
-		return true;
-	}
-	
 	/*
 	 * getter & setter methods
 	 */
@@ -474,22 +404,6 @@ private JButton loadCache;
 
 	public void setResult(JTextArea result) {
 		this.result = result;
-	}
-	
-	public double getRestriction() {
-		return restriction;
-	}
-
-	public void setRestriction(double restriction) {
-		this.restriction = restriction;
-	}
-
-	public double getIterationCount() {
-		return iterationCount;
-	}
-
-	public void setIterationCount(double iterationCount) {
-		this.iterationCount = iterationCount;
 	}
 	
 	public JCheckBox getAllSigmaIteration() {
@@ -515,9 +429,15 @@ private JButton loadCache;
 	public void setCurrentWhileTerm(String currentWhileTerm) {
 		this.currentWhileTerm = currentWhileTerm;
 	}
-
-	public void linkCalculator(WPCalculator mainCalculator) {
-		this.mainCalculator = mainCalculator;
+	
+	public void setHandler(ControllerHandler controller) {
+		mainController = controller;
+	}
+	
+	public void clearResult() {
+		result.setText("");
+		result.validate();
+		result.repaint();
 	}
 	
 }
