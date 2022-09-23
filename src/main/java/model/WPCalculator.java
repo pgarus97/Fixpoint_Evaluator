@@ -77,16 +77,19 @@ private double iterationDelta;
 				
 				System.out.println("C1= "+ifC1); 
 				System.out.println("C2= "+ifC2);
-				String resultC1 = wp(ifC1,f);
-				String resultC2 = wp(ifC2,f);
+				
 				//TODO detailed log: mainView.getResult().setText(mainView.getResult().getText() + "\n" + "Conditional process. Breaking down into: if("+condition+") then "+ resultC1 +" else "+ resultC2); 
 				String condResult = calculation(condition);
 				if(condResult.equals("1.0")) {
+					String resultC1 = wp(ifC1,f);
 					return calculation(resultC1);
 				}
 				if(condResult.equals("0.0")) {
+					String resultC2 = wp(ifC2,f);
 					return calculation(resultC2);
 				}
+				String resultC1 = wp(ifC1,f);
+				String resultC2 = wp(ifC2,f);
 				return calculation("if(" + condition + "," + resultC1 + "," + resultC2 + ")");
 
 			}
@@ -112,7 +115,6 @@ private double iterationDelta;
 			}
 			else if(C.startsWith("while")){
 				//while process
-				//TODO implement sigma forward parsing? then we could check condition before doing fixpoint iteration for performance boost
 				System.out.println("Enter while process"); 
 				String condition = C.substring(C.indexOf("(")+1,C.indexOf("{")-1);
 				System.out.println("Condition: "+condition);
@@ -291,26 +293,26 @@ private double iterationDelta;
 	
 	
 	/*
-	 * Function that takes a mathematical term (exp) as input and tries to calculate a concrete result from it using the MathParser component.
+	 * Function that takes a mathematical term (term) as input and tries to calculate a concrete result from it using the MathParser component.
 	 * If no concrete result can be calculated (e.g. if there are still unresolved variables), the function returns the term as it is. 
 	 */
-	public String calculation(String exp) {
+	public String calculation(String term) {
 		Function restrictValue = new Function("r", "min(max(0,x),"+restriction+")", "x");
-		Expression e = new Expression(exp,restrictValue);
-		System.out.println("Expression:" + exp);
+		Expression e = new Expression(term,restrictValue);
+		System.out.println("Expression:" + term);
 		Double result = e.calculate();
 		if(!result.isNaN()) {
 			System.out.println("Calculation Result: " + result);
 			return Double.toString(result);
 		}else {
-			System.out.println("Calculation Result: " + exp);
-			return exp;
+			System.out.println("Calculation Result: " + term);
+			return term;
 		}
 	}
 	
 	/*
 	 * Function that calculates the iterative (up until count) approach of a fixpoint iteration for while loops.
-	 * It takes the while condition (condition), the program (C) and the postexpectation (f) as input.
+	 * It takes the while condition (condition), the program (C) and the post-expectation (f) as input.
 	 * The output is a term that represents the fixpoint of the given input.
 	 */
 	public String fixpointIterationIterativ(String condition, String C, String f) {
@@ -324,7 +326,7 @@ private double iterationDelta;
 	
 	/*
 	 * Function that calculates the all-sigma approach of a fixpoint iteration for while loops.
-	 * It takes the while condition (condition), the program (C) and the postexpectation (f) as input.
+	 * It takes the while condition (condition), the program (C) and the post-expectation (f) as input.
 	 * The output is a term that represents the fixpoint of the given input.
 	 */
 	public String fixpointIterationAllSigma(String condition, String C, String f) {

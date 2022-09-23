@@ -1,11 +1,19 @@
 New TODO list system:
 
+Important TODOs:
+detailed log
+invariant boundary testing
+
+create data structures instead of straight string manipulation? New Calculation object or something with C F etc. saved => Fixpoint object, Function object etc.
+=> private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,String>(); instead <Fixpoint>
+
+maven build
+
+not only fixpoints as witnesses?
+
 TODO:
 
 remove delta input for evaluation; if hash if defined for all components
-create data structures instead of straight string manipulation? New Calculation object or something with C F etc. saved
-create MVC pattern controller!!!
-fix while in while non expansiveness proof
 fix maven guava dependency
 make log appear in runtime => threads? concurrency in swing
 write readme with usage and documentation / rename github
@@ -13,6 +21,7 @@ write systematic tests
 clear cache on restriction/iteration count change (?)
 
 DONE:
+create MVC pattern controller!!! DONE
 comment all methods and code DONE
 persistent file caching of fixpoints to load / save for faster results DONE
 hover over buttons for full text in whileLoops DONE

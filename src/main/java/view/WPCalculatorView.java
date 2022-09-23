@@ -73,7 +73,6 @@ private JButton saveCache;
 private JButton loadCache;
 
 
-
 //TODO implement tips from https://stackoverflow.com/questions/62875613/cannot-refer-to-the-non-final-local-variable-display-defined-in-an-enclosing-sco
 //TODO make better input descriptions on hover
 //TODO full log checkbox and shorten normal output

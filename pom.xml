@@ -31,7 +31,7 @@
 		            <archive>
 		                <index>true</index>
 		                <manifest>
-		                    <mainClass>prototype.MainClass</mainClass>
+		                    <mainClass>fixpoint_evaluator.MainClass</mainClass>
 		                </manifest>
 		            </archive>
 		        </configuration>
