@@ -26,7 +26,7 @@ import controller.ControllerHandler;
 public class WPCalculator {
 
 private ControllerHandler mainController;
-private ArrayList<LinkedHashMap<String, String>> allSigma = new ArrayList<LinkedHashMap<String, String>>();
+private ArrayList<State> allSigma = new ArrayList<State>();
 private ArrayList<String> whileLoops = new ArrayList<String>();
 private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,String>();
 private double restriction;
@@ -331,13 +331,13 @@ private double iterationDelta;
 	 */
 	public String fixpointIterationAllSigma(String condition, String C, String f) {		
 		Fixpoint leastFixpoint = new Fixpoint();
-		for(LinkedHashMap<String,String> sigma : allSigma) {
+		for(State sigma : allSigma) {
 			double sigmaResult = 0.0;
 			double previousResult = 0.0;
 			String caseF = "0"; //X_0 initialization
 			String identifier = "";
 			String sigmaCondition = condition;
-			for(Map.Entry<String, String> entry : sigma.entrySet()) {
+			for(Map.Entry<String, String> entry : sigma.getContentMap().entrySet()) {
 				identifier += "&("+entry.getKey()+"="+entry.getValue()+")"; //creates identifier based on variables and values
 				sigmaCondition = sigmaCondition.replace(entry.getKey(), entry.getValue());
 			}	
@@ -397,7 +397,7 @@ private double iterationDelta;
 			previousSigmaSet.add(copiedSigma);
 		}
 
-		phihashX = calculatePhiHash(X, currentWhile, fixpoint);
+		phihashX = calculatePhiHash(X, currentWhile);
 		
 		//checks whether the witness is a fixpoint or not
 		System.out.println("LinkedHashMap to string: " +X.getContentString());
@@ -419,8 +419,8 @@ private double iterationDelta;
 			}
 			Xslash.addContentFromMap(entry.getKey(),XslashValue);
 		}
-		
-		phihashXslash = calculatePhiHash(Xslash, currentWhile, Xslash.setStringFromMap());
+		Xslash.setStringFromMap();
+		phihashXslash = calculatePhiHash(Xslash, currentWhile);
 		
 		//removes variable assignments from the sigmaSet that do not fulfill the delta threshold
 		for(Map.Entry<String, String> entry : X.getContentMap().entrySet()) {
@@ -461,7 +461,7 @@ private double iterationDelta;
 	 * It takes a fixpoint as map (input), the analyzed while loop (currentWhile) and the fixpoint in the mathematical iff-term format (fixpointIf) as input
 	 * and outputs a new function as a map.
 	 */
-	private Fixpoint calculatePhiHash(Fixpoint input, String currentWhile, String fixpointIf){
+	private Fixpoint calculatePhiHash(Fixpoint input, String currentWhile){
 		
 		String currentC = currentWhile.split(" ")[0];
 		String currentF = currentWhile.split(" ")[1];
@@ -487,57 +487,22 @@ private double iterationDelta;
 			if(calculation(entryCondition).equals("0.0")) {
 				result.addContentFromMap(entry.getKey(), calculation(entryF));
 			}else {
-				result.addContentFromMap(entry.getKey(), calculation(wp(concreteSigma+";"+whileC,fixpointIf)));
+				result.addContentFromMap(entry.getKey(), calculation(wp(concreteSigma+";"+whileC,input.getContentString())));
 			}
 		}
 		result.setStringFromMap();
 		return result;
 	}
-	
-	/*
-	 * Function that transforms a fixpoint in mathematical iff-term format into a map.
-	 */
-	/*public LinkedHashMap<String,String> fixpointToMap(String fixpoint) {
-		LinkedHashMap<String,String> convFixpoint = new LinkedHashMap<String,String>();
-		fixpoint = fixpoint.substring(4,fixpoint.length()-1);
-		fixpoint += ";";
-		System.out.println("Fixpoint: "+fixpoint);
 
-		while(fixpoint.length()>0) {
-			String identifier = fixpoint.substring(0,fixpoint.indexOf(","));
-			System.out.println("Id: "+identifier);
-			fixpoint = fixpoint.substring(identifier.length()+1);
-			String value = fixpoint.substring(0,fixpoint.indexOf(";"));
-			System.out.println("Value: "+value);
-			convFixpoint.put(identifier, value);
-			fixpoint = fixpoint.substring(value.length()+1);
-		}
-		
-		return convFixpoint;
-	}
-	*/
-	/*
-	 * Function that transforms a fixpoint in map format into a mathematical iff-term format.
-	 */
-	/*public String fixpointIfConversion(LinkedHashMap<String,String> fixpoint) {
-		String result = "iff(";
-		for(Map.Entry<String, String> entry : fixpoint.entrySet()) {
-			result += ";" + entry.getKey()+","+entry.getValue();
-		}
-		result = result.replaceFirst(";", "");
-		result += ")";
-		return result;
-	}*/
-	
 	//TODO add other possibility of calculating concrete sigma: wp("sigma=x=1;c=1";caseF,null); = Xi
 	/*
 	 * Function that calculates a concrete mathematical result for a variable term with given variable assignments.
 	 * It takes a post-expectation during the fixpoint-iteration (f) and a concrete variable assignment (sigma) as input and
 	 * outputs a numerical value or throws an exception in case it cannot be calculated.
 	 */
-	public Double calculateConcreteSigma(String f, LinkedHashMap<String,String> sigma) { //TODO state object
+	public Double calculateConcreteSigma(String f, State sigma) {
 		System.out.println("Concrete Sigma f : " + f);
-		for(Map.Entry<String, String> entry : sigma.entrySet()) {
+		for(Map.Entry<String, String> entry : sigma.getContentMap().entrySet()) {
 			f = f.replace(entry.getKey(), entry.getValue());
 		}
 		System.out.println("Concrete Sigma f after replace : " + f);
@@ -563,7 +528,7 @@ private double iterationDelta;
 	 * It takes a string of all used variables (varInput) as input and outputs a List of maps that represent all possible
 	 * variable/value combinations.
 	 */
-	public ArrayList<LinkedHashMap<String,String>> fillAllSigma(String varInput) {
+	public ArrayList<State> fillAllSigma(String varInput) {
 		allSigma.clear();
 		
 		List<List<Integer>> preCartesianValues = new ArrayList<List<Integer>>(); 
@@ -580,11 +545,11 @@ private double iterationDelta;
 		List<List<Integer>> postCartesianValues = Lists.cartesianProduct(preCartesianValues);
 
 		for(int i = 0 ; i < postCartesianValues.size(); i++){
-			LinkedHashMap<String, String> tempMap = new LinkedHashMap<String,String>(); //TODO state object
+			State tempState = new State(); 
 			for(int j = 0 ; j < postCartesianValues.get(i).size(); j++){
-			tempMap.put(String.valueOf(varInput.charAt(j)), postCartesianValues.get(i).get(j).toString());
+			tempState.put(String.valueOf(varInput.charAt(j)), postCartesianValues.get(i).get(j).toString());
 			}
-			allSigma.add(tempMap);
+			allSigma.add(tempState);
 		}
 		System.out.println(allSigma);
 		return allSigma;

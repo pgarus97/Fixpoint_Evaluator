@@ -68,27 +68,20 @@ public class Fixpoint {
 		contentMap.put(identifier, value);
 	}
 	
-	
 	public LinkedHashMap<String, String> getContentMap() {
 		return contentMap;
 	}
-
-
 
 	public void setContentMap(LinkedHashMap<String, String> contentMap) {
 		this.contentMap = contentMap;
 	}
 
-
-
 	public String getContentString() {
 		return contentString;
 	}
 
-
-
 	public void setContentString(String contentString) {
 		this.contentString = contentString;
 	}
-
+	
 }
