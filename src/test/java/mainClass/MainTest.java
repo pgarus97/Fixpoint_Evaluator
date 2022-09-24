@@ -7,9 +7,11 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import controller.MainController;
+import model.Fixpoint;
 import model.WPCalculator;
 import view.WPCalculatorView;
 
@@ -28,9 +30,6 @@ class MainTest {
 		mainCalculator.setAllSigmaSelection(true); //default case
 		mainCalculator.setIterationDelta(0.001); //default case
 		mainCalculator.setIterationCount(Double.POSITIVE_INFINITY); //default case
-
-
-		
 	}
 	
 	@Test
@@ -158,23 +157,22 @@ class MainTest {
 	
 	@Test
 	void testFixpointIfConversion() {
-		LinkedHashMap<String,String> sigma = new LinkedHashMap<String,String>();
-		sigma.put("(x=0)&(c=0)", "0.0");
-		sigma.put("(x=0)&(c=1)", "1.0");
-		sigma.put("(x=1)&(c=0)", "1.0");
-		sigma.put("(x=1)&(c=1)", "2.0");
+		Fixpoint fixpointMap = new Fixpoint();
+		fixpointMap.addContentFromMap("(x=0)&(c=0)", "0.0");
+		fixpointMap.addContentFromMap("(x=0)&(c=1)", "1.0");
+		fixpointMap.addContentFromMap("(x=1)&(c=0)", "1.0");
+		fixpointMap.addContentFromMap("(x=1)&(c=1)", "2.0");
 
-		assertEquals("iff((x=0)&(c=0),0.0;(x=0)&(c=1),1.0;(x=1)&(c=0),1.0;(x=1)&(c=1),2.0)", mainCalculator.fixpointIfConversion(sigma));
+		assertEquals("iff((x=0)&(c=0),0.0;(x=0)&(c=1),1.0;(x=1)&(c=0),1.0;(x=1)&(c=1),2.0)", fixpointMap.setStringFromMap());
 	}
 	
 	@Test
 	void testFixpointToMap() {
-		LinkedHashMap<String,String> fixpointMap = new LinkedHashMap<String,String>();
-		fixpointMap = mainCalculator.fixpointToMap("iff((x=0)&(c=0),0.0;(x=0)&(c=1),1.0;(x=1)&(c=0),1.0;(x=1)&(c=1),2.0)");
-		assertEquals("0.0",fixpointMap.get("(x=0)&(c=0)"));
-		assertEquals("1.0",fixpointMap.get("(x=0)&(c=1)"));
-		assertEquals("1.0",fixpointMap.get("(x=1)&(c=0)"));
-		assertEquals("2.0",fixpointMap.get("(x=1)&(c=1)"));
+		Fixpoint fixpointMap = new Fixpoint("iff((x=0)&(c=0),0.0;(x=0)&(c=1),1.0;(x=1)&(c=0),1.0;(x=1)&(c=1),2.0)");
+		assertEquals("0.0",fixpointMap.getContentMap().get("(x=0)&(c=0)"));
+		assertEquals("1.0",fixpointMap.getContentMap().get("(x=0)&(c=1)"));
+		assertEquals("1.0",fixpointMap.getContentMap().get("(x=1)&(c=0)"));
+		assertEquals("2.0",fixpointMap.getContentMap().get("(x=1)&(c=1)"));
 	}
 	
 	@Test

@@ -1,6 +1,7 @@
 New TODO list system:
 
 Important TODOs:
+create exceptions
 detailed log
 invariant boundary testing
 
