@@ -154,6 +154,7 @@ public class MainController implements ControllerHandler {
 	    output("\n" + "Witness: " + witness );
 
 	    mainCalculator.evaluateFixpoint(currentWhileTerm, witness, fixpointDelta, 1, new LinkedHashSet<String>());
+	    //TODO do reduction of state here with returning sigmaSet?
 	}
 	
 }
