@@ -16,5 +16,6 @@ public interface ControllerHandler {
 	void wp(String C, String f, boolean sigmaForwarding);
 	String getLFP(String currentWhileTerm);
 	void evaluateFixpoint(String currentWhileTerm, String text, String text2);
+	String createAllSigmaFixpoint(String currentWhileTerm, String usedVars);
 
 }

@@ -311,7 +311,7 @@ private double iterationDelta;
 	}
 	
 	/*
-	 * Function that calculates the iterative (up until count) approach of a fixpoint iteration for while loops.
+	 * Function that calculates the iterative (up until iterationCount) approach of a fixpoint iteration for while loops.
 	 * It takes the while condition (condition), the program (C) and the post-expectation (f) as input.
 	 * The output is a term that represents the fixpoint of the given input.
 	 */
@@ -460,7 +460,6 @@ private double iterationDelta;
 	 * and outputs a new function as a map.
 	 */
 	private Fixpoint calculatePhiHash(Fixpoint input, String currentWhile){
-		
 		String currentC = currentWhile.split(" ")[0];
 		String currentF = currentWhile.split(" ")[1];
 		currentF = currentF.substring(1,currentF.length()-1);
@@ -492,6 +491,30 @@ private double iterationDelta;
 		return result;
 	}
 
+	/*
+	 * Function that represents the hash function from the "Upside-Down" theory applied to the Phi function from the wp-transformer. 
+	 * It takes a fixpoint as map (input), the analyzed while loop (currentWhile) and the fixpoint in the mathematical iff-term format (fixpointIf) as input
+	 * and outputs a new function as a map.
+	 */
+	public String createAllSigmaFixpoint(String currentWhileTerm, String usedVars){
+		Fixpoint leastFixpoint = new Fixpoint();
+		ArrayList<State> allSigma = fillAllSigma(usedVars);
+		for(State sigma : allSigma) {
+			String identifier = "";
+			Double value = calculateConcreteSigma(currentWhileTerm, sigma);
+			System.out.println("This is the value:" + value);
+			for(Map.Entry<String, String> entry : sigma.getContentMap().entrySet()) {
+				identifier += "&("+entry.getKey()+"="+entry.getValue()+")"; //creates identifier based on variables and values
+				System.out.println("This is the id:" + identifier);
+			}	
+			identifier = identifier.replaceFirst("&","");
+			double roundResult = Math.round(value * 100.0) / 100.0;
+			leastFixpoint.addContentFromMap(identifier, Double.toString(roundResult));	
+		}
+		
+		return leastFixpoint.setStringFromMap();
+	}
+	
 	//TODO add other possibility of calculating concrete sigma: wp("sigma=x=1;c=1";caseF,null); = Xi
 	/*
 	 * Function that calculates a concrete mathematical result for a variable term with given variable assignments.

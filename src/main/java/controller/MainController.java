@@ -31,9 +31,9 @@ public class MainController implements ControllerHandler {
 	 */
 	@Override
 	public void wp(String C, String f, boolean sigmaForwarding) {
+		double start = System.currentTimeMillis();
 		output( "\n\n" + "Calculating: wp["+C+"]("+f+")");
 		String calcResult = "";
-		double start = System.currentTimeMillis();
 		if(sigmaForwarding) {
 			output( "\n\n" + "Sigma-Forwarding activated.");
 			String sigmaForwardResult = mainCalculator.sigmaForwarding(C.replace(" ", ""), new LinkedHashMap<String,String>());
@@ -50,6 +50,47 @@ public class MainController implements ControllerHandler {
 	    if(C.contains("while(")) {
 	    	mainView.prepareEvaluationView(mainCalculator.getWhileLoops());
 	    }   		
+	}
+	
+	@Override
+	public String createAllSigmaFixpoint(String currentWhileTerm, String usedVars) {
+		double start = System.currentTimeMillis();
+	    output("\n\n" + "Converting to allSigma fixpoint notation...");
+		String currentLFP = mainCalculator.getFixpointCache().get(currentWhileTerm);
+		String result = mainCalculator.createAllSigmaFixpoint(currentLFP, usedVars);
+		mainCalculator.getFixpointCache().replace(currentWhileTerm, result);
+		double end = System.currentTimeMillis();
+		
+		output("\n" + "Success! Calculation Time: " + (end - start)/1000 + "s");
+		output("\n" + "Converted fixpoint:");
+	    output("\n" + result);
+
+		return result;
+	}
+	
+
+	/*
+	 * Prepares model with all needed inputs from the view in order to perform a fixpoint evaluation on a given witness
+	 */
+	@Override
+	public void evaluateFixpoint(String currentWhileTerm, String witness, String fixpointDelta) {
+	    double start = System.currentTimeMillis();
+		output("\n\n" + "*************************");
+		output("\n\n" + "Starting fixpoint evaluation. Information: ");
+		output("\n" + "Selected While-Term: " + currentWhileTerm);
+	    output("\n" + "LFP: " + getLFP(currentWhileTerm));
+	    if(fixpointDelta != "" && NumberUtils.isCreatable(fixpointDelta)) {
+    	    output("\n" + "Delta: " + fixpointDelta );
+	    }else {
+    	    output("\n" + "The inputted delta: '" + fixpointDelta + "' is not a number!");
+    	    return;
+	    }
+	    output("\n" + "Witness: " + witness );
+
+	    mainCalculator.evaluateFixpoint(currentWhileTerm, witness, fixpointDelta, 1, new LinkedHashSet<String>());
+	    double end = System.currentTimeMillis();
+		
+		output("\n\n" + "Calculation Time: " + (end - start)/1000 + "s");
 	}
 	
 	/*
@@ -135,26 +176,4 @@ public class MainController implements ControllerHandler {
 	public String getLFP(String currentWhileTerm) {
 		return mainCalculator.getFixpointCache().get(currentWhileTerm);
 	}
-
-	/*
-	 * Prepares model with all needed inputs from the view in order to perform a fixpoint evaluation on a given witness
-	 */
-	@Override
-	public void evaluateFixpoint(String currentWhileTerm, String witness, String fixpointDelta) {
-		output("\n\n" + "*************************");
-		output("\n\n" + "Starting fixpoint evaluation. Information: ");
-		output("\n" + "Selected While-Term: " + currentWhileTerm);
-	    output("\n" + "LFP: " + getLFP(currentWhileTerm));
-	    if(fixpointDelta != "" && NumberUtils.isCreatable(fixpointDelta)) {
-    	    output("\n" + "Delta: " + fixpointDelta );
-	    }else {
-    	    output("\n" + "The inputted delta: '" + fixpointDelta + "' is not a number!");
-    	    return;
-	    }
-	    output("\n" + "Witness: " + witness );
-
-	    mainCalculator.evaluateFixpoint(currentWhileTerm, witness, fixpointDelta, 1, new LinkedHashSet<String>());
-	    //TODO do reduction of state here with returning sigmaSet?
-	}
-	
 }

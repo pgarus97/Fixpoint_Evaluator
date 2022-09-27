@@ -50,6 +50,8 @@ private JTextField iterationField;
 private JLabel deltaDesc;
 private JTextField deltaInput;
 private JButton calcButton;
+private JButton convertButton;
+private JLabel convertDesc;
 private JScrollPane scroll;
 private JTextArea result;
 private JToggleButton examineFixpointButton;
@@ -144,6 +146,13 @@ private JButton loadCache;
 	    calcButton = new JButton("Calculate!");
 	    calcButton.setBounds(5,100,150, 40);
 	    
+	    convertDesc = new JLabel("Convert to allSigma format!");
+	    convertDesc.setBounds(500,120,400, 20);
+	    convertDesc.setVisible(false);
+	    convertButton = new JButton("Convert!");
+	    convertButton.setBounds(500,140,200, 20);
+	    convertButton.setVisible(false);
+	    
 	    allSigmaIteration = new JCheckBox("Enable all-sigma fixpoint-iteration.");
 	    allSigmaIteration.setBounds(200,100,300, 50);
 	    allSigmaIteration.setSelected(true);
@@ -230,6 +239,8 @@ private JButton loadCache;
 	    frame.add(usedVarsDesc);
 	    frame.add(deltaDesc);
 	    frame.add(deltaInput);
+	    frame.add(convertDesc);
+	    frame.add(convertButton);
 		frame.add(whileLoopScroll);
 	    frame.add(calcButton);
 
@@ -272,8 +283,8 @@ private JButton loadCache;
 	    	    	deltaInput.setVisible(true);
 	    	    	deltaDesc.setVisible(true);
 	    	    }else {
-	    	    	usedVars.setVisible(false);
-	    	    	usedVarsDesc.setVisible(false);
+	    	    	// usedVars.setVisible(false);
+	    	    	// usedVarsDesc.setVisible(false);
 	    	    	deltaInput.setVisible(false);
 	    	    	deltaDesc.setVisible(false);
 	    	    }
@@ -305,10 +316,28 @@ private JButton loadCache;
     	   }  
 	    }); 
 	    
+	    convertButton.addActionListener(new ActionListener(){  
+	    	public void actionPerformed(ActionEvent e){
+	    		String currentProgram = cInput.getText() + " (" + fInput.getText() + ")";
+	    		for(JToggleButton tempButton: whileLoops) {
+		    		if(currentProgram.equals(tempButton.getText())) {
+		    			break;
+		    		}else {
+		    			//TODO throw exception
+		    			return;
+		    		}
+	    		}
+	    		mainController.createAllSigmaFixpoint(currentProgram, usedVars.getText());   
+	    		convertButton.setVisible(false);
+	    		convertDesc.setVisible(false);
+	    		examineFixpointButton.setVisible(true);
+	    		}  
+	    });
+	    
 	    lfpButton.addActionListener(new ActionListener(){
 	    	public void actionPerformed(ActionEvent e){
-	    		witnessInput.setText(mainController.getLFP(currentWhileTerm));
-	    	}  
+	    			witnessInput.setText(mainController.getLFP(currentWhileTerm));
+	    	}
 		}); 
 	    
 	    witnessInput.addActionListener(new ActionListener() {
@@ -365,17 +394,21 @@ private JButton loadCache;
     public void prepareEvaluationView(ArrayList<String> modelLoops) {
 		if(allSigmaIteration.isSelected()) {
     		examineFixpointButton.setVisible(true);
-    	    int counter = 0;
-    		for (String loop: modelLoops) {	
-    			JToggleButton tempButton = new JToggleButton(loop);
-    			tempButton.addItemListener(whileLoopToggle);
-    			tempButton.setToolTipText(tempButton.getText());
-    			whileLoops.add(tempButton);
-    			whileLoopPanel.add(whileLoops.get(counter));
-    			whileLoopPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-    			counter++;
-    		}
-    	}  		
+		}else {
+			convertButton.setVisible(true);
+		    convertDesc.setVisible(true);
+
+		}
+	    int counter = 0;
+		for (String loop: modelLoops) {	
+			JToggleButton tempButton = new JToggleButton(loop);
+			tempButton.addItemListener(whileLoopToggle);
+			tempButton.setToolTipText(tempButton.getText());
+			whileLoops.add(tempButton);
+			whileLoopPanel.add(whileLoops.get(counter));
+			whileLoopPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+			counter++;
+		}		
 	}
     
 	public void prepareCalculationView() {
@@ -385,6 +418,8 @@ private JButton loadCache;
 		examineFixpointButton.setSelected(false);
 		whileLoopPanel.removeAll();
 		whileLoops.clear();
+		convertButton.setVisible(false);
+		convertDesc.setVisible(false);
 		updateFrame();
 		
 	}

@@ -207,6 +207,15 @@ class MainTest {
 		assertEquals("x=1.0;c=0.0;skip;",mainCalculator.sigmaForwarding("x=1;c=0;while(c=1){{x=x+1}[1/2]{c=0}}",new LinkedHashMap<String,String>()));
 		assertEquals("x=0.0;c=0.0;{y=x+1}[1/2]{c=x+2};skip;",mainCalculator.sigmaForwarding("x=0;c=0;{y=x+1}[1/2]{c=x+2};while(x=1){{x=x+1}[1/2]{c=0}}",new LinkedHashMap<String,String>()));
 		assertEquals("x=0.0;c=0.0;min{y=x+1}{c=c+1};skip;",mainCalculator.sigmaForwarding("x=0;c=0;min{y=x+1}{c=c+1};while(x=1){{x=x+1}[1/2]{c=0}}",new LinkedHashMap<String,String>()));
-
+	}
+	
+	@Test
+	void testCreateAllSigmaFixpoint() {
+		mainCalculator.setRestriction(1);
+		mainCalculator.setIterationCount(10);
+		mainController.clearFixpointCache();
+		mainCalculator.setAllSigmaSelection(false);
+		mainController.wp("while(c=1){{x=x+1}[1/2]{c=0}}", "x",false);
+		assertEquals("iff((x=0)&(c=0),0.0;(x=0)&(c=1),0.5;(x=1)&(c=0),1.0;(x=1)&(c=1),1.0)",mainController.createAllSigmaFixpoint("while(c=1){{x=x+1}[1/2]{c=0}} (x)", "xc"));
 	}
 }
