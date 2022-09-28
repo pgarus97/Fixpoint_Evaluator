@@ -190,23 +190,39 @@ private double iterationDelta;
 		}
 	
 	}
+
+	//TODO desc
+	public State setSigmaValuesNull(State currentSigma, String C) {
+		for(Map.Entry<String, String> entry : currentSigma.getContentMap().entrySet()) {
+			if(C.contains(entry.getKey()+"=")) {
+				entry.setValue(null);
+			}
+		}
+		return currentSigma;
+	}
+	
+	//TODO desc
+	public String replaceStringFromSigma(State currentSigma, String input) {
+		for(Map.Entry<String, String> entry : currentSigma.getContentMap().entrySet()) {
+			if(entry.getValue()!=null) {
+				input = input.replace(entry.getKey(), entry.getValue());
+			}
+		}
+		return input;
+	}
 	
 	/*
 	 * Function that allows for optimizing the wp-transformer by pre-parsing the inputted program C.
 	 * The algorithm is looking for concrete variable assignments of which we know their value
 	 * at given points, like for example in while or if conditions.
 	 */
-	public String sigmaForwarding(String C,LinkedHashMap<String,String> currentSigma) {
+	public String sigmaForwarding(String C, State currentSigma) {
 		String result="";
 		String C1 = getSequentialCut(C);
 		System.out.println("C1: " + C1);
 		if(C1.startsWith("min{")) {
 			//demonic choice process
-			for(Map.Entry<String, String> entry : currentSigma.entrySet()) {
-				if(C1.contains(entry.getKey()+"=")) {
-					entry.setValue(null);
-				}
-			}
+			currentSigma = setSigmaValuesNull(currentSigma, C1);
 			result += C1+";";	
 		}
 		
@@ -217,67 +233,42 @@ private double iterationDelta;
 			ifC1 = getInsideBracket(ifC1.substring(ifC1.indexOf("{")+1));
 			String ifC2 = C.substring(C.indexOf(ifC1));
 			ifC2 = getInsideBracket(ifC2.substring(ifC2.indexOf("{")+1));
-			//check condition
-			for(Map.Entry<String, String> entry : currentSigma.entrySet()) {
-				if(entry.getValue()!=null) {
-					condition = condition.replace(entry.getKey(), entry.getValue());
-				}
-			}
+			condition = replaceStringFromSigma(currentSigma, condition);
 			if(calculation(condition).equals("1.0")) {
 				result += ifC1+";";
 			}else if(calculation(condition).equals("0.0")) {
 				result += ifC2+";";
 			}else {
+				currentSigma = setSigmaValuesNull(currentSigma, C1);
 				result += C1+";";
 			}
 		}
 		
 		else if(C1.startsWith("{")){
 			//probability process
+			currentSigma = setSigmaValuesNull(currentSigma, C1);
 			result += C1+";";
-			for(Map.Entry<String, String> entry : currentSigma.entrySet()) {
-				if(C1.contains(entry.getKey()+"=")) {
-					entry.setValue(null);
-				}
-			}
 		}
 		else if(C1.startsWith("while")){
 			//while process
 			String condition = C1.substring(C1.indexOf("(")+1,C1.indexOf("{")-1);
 			String whileC = C1.substring(condition.length());
 			whileC = getInsideBracket(whileC.substring(whileC.indexOf("{")+1));
-			for(Map.Entry<String, String> entry : currentSigma.entrySet()) {
-				if(entry.getValue()!=null) {
-					condition = condition.replace(entry.getKey(), entry.getValue());
-				}
-			}
-			if(calculation(condition).equals("0.0")) {
-				result += "skip;";
-			} else {
-				for(Map.Entry<String, String> entry : currentSigma.entrySet()) {
-					if(C1.contains(entry.getKey()+"=")) {
-						entry.setValue(null);
-					}
-				}
+			condition = replaceStringFromSigma(currentSigma, condition);
+			if(!calculation(condition).equals("0.0")) {
+				currentSigma = setSigmaValuesNull(currentSigma, C1);
 				result += C1+";";
 			}			
 		}else {
 			//variable assignments
-			if(C1.startsWith("skip")){
-				result += C1+";";
-
-			}else {
+			if(!C1.startsWith("skip")){ 
 				String indexC = C1.substring(0,1);
-				String cutC = C1.substring(C.indexOf("=")+1);
-				for(Map.Entry<String, String> entry : currentSigma.entrySet()) {
-					if(entry.getValue()!=null) {
-						cutC = cutC.replace(entry.getKey(), entry.getValue());
-					}
-				}
-				cutC = calculation(cutC);
-				if(NumberUtils.isCreatable(cutC)) {
-					currentSigma.put(indexC, cutC);
-					result += indexC+"="+cutC+";";
+				String valueC = C1.substring(C1.indexOf("=")+1);
+				valueC = replaceStringFromSigma(currentSigma, valueC);
+				valueC = calculation(valueC);
+				if(NumberUtils.isCreatable(valueC)) {
+					currentSigma.put(indexC, valueC);
+					result += indexC+"="+valueC+";";
 				}else {
 					currentSigma.put(indexC, null);
 					result += C1+";";
@@ -286,7 +277,7 @@ private double iterationDelta;
 		}
 		if(!C1.equals(C)) {
 			String C2 = C.substring(C1.length()+1);
-			result += sigmaForwarding(C2,currentSigma);
+			result += sigmaForwarding(C2, currentSigma);
 		}
 		return result;
 	}

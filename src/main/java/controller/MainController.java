@@ -1,10 +1,10 @@
 package controller;
 
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 
 import org.apache.commons.lang3.math.NumberUtils;
 
+import model.State;
 import model.WPCalculator;
 import view.WPCalculatorView;
 
@@ -36,7 +36,7 @@ public class MainController implements ControllerHandler {
 		String calcResult = "";
 		if(sigmaForwarding) {
 			output( "\n\n" + "Sigma-Forwarding activated.");
-			String sigmaForwardResult = mainCalculator.sigmaForwarding(C.replace(" ", ""), new LinkedHashMap<String,String>());
+			String sigmaForwardResult = mainCalculator.sigmaForwarding(C.replace(" ", ""), new State());
     		sigmaForwardResult = sigmaForwardResult.substring(0,sigmaForwardResult.length()-1);
 			output( "\n" + "Sigma-Forwarding Result: wp["+ sigmaForwardResult+"]("+f+")");
 			calcResult = mainCalculator.calculation(mainCalculator.wp(sigmaForwardResult,f)); 
@@ -52,11 +52,12 @@ public class MainController implements ControllerHandler {
 	    }   		
 	}
 	
+	//TODO description
 	@Override
 	public String createAllSigmaFixpoint(String currentWhileTerm, String usedVars) {
-		double start = System.currentTimeMillis();
 	    output("\n\n" + "Converting to allSigma fixpoint notation...");
 		String currentLFP = mainCalculator.getFixpointCache().get(currentWhileTerm);
+		double start = System.currentTimeMillis();
 		String result = mainCalculator.createAllSigmaFixpoint(currentLFP, usedVars);
 		mainCalculator.getFixpointCache().replace(currentWhileTerm, result);
 		double end = System.currentTimeMillis();
@@ -67,8 +68,18 @@ public class MainController implements ControllerHandler {
 
 		return result;
 	}
-	
 
+	//TODO description
+	@Override
+	public boolean isConverted(String currentWhileTerm) {
+		String currentLFP = mainCalculator.getFixpointCache().get(currentWhileTerm);
+		if(currentLFP.startsWith("iff")) {
+			return true;
+		}else {
+			return false;
+		}
+	}
+	
 	/*
 	 * Prepares model with all needed inputs from the view in order to perform a fixpoint evaluation on a given witness
 	 */

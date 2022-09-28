@@ -63,6 +63,7 @@ private JScrollPane whileLoopScroll;
 private JPanel whileLoopPanel;
 
 private JPanel evaluationPanel;
+private JPanel convertPanel;
 private JButton lfpButton;
 private JTextField witnessInput;
 private JButton fixpointEvalButton;
@@ -148,10 +149,8 @@ private JButton loadCache;
 	    
 	    convertDesc = new JLabel("Convert to allSigma format!");
 	    convertDesc.setBounds(500,120,400, 20);
-	    convertDesc.setVisible(false);
 	    convertButton = new JButton("Convert!");
 	    convertButton.setBounds(500,140,200, 20);
-	    convertButton.setVisible(false);
 	    
 	    allSigmaIteration = new JCheckBox("Enable all-sigma fixpoint-iteration.");
 	    allSigmaIteration.setBounds(200,100,300, 50);
@@ -200,6 +199,13 @@ private JButton loadCache;
 	    evaluationPanel.add(fixpointEvalButton);
 	    evaluationPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 	    evaluationPanel.setVisible(false);
+	    convertPanel = new JPanel();
+	    convertPanel.setBounds(900,300,250, 250);
+	    convertPanel.setLayout(new BoxLayout(convertPanel, BoxLayout.PAGE_AXIS)); 
+	    convertPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+	    convertPanel.add(convertDesc);
+	    convertPanel.add(convertButton);
+	    convertPanel.setVisible(false);
 	    
 	    //cache panel
 	    cachePanel = new JPanel();
@@ -223,6 +229,7 @@ private JButton loadCache;
 	   
 	    frame.add(cachePanel);
 	    frame.add(evaluationPanel);
+	    frame.add(convertPanel);
  
 	    frame.add(examineFixpointButton);
 	    frame.add(allSigmaIteration); 
@@ -239,8 +246,6 @@ private JButton loadCache;
 	    frame.add(usedVarsDesc);
 	    frame.add(deltaDesc);
 	    frame.add(deltaInput);
-	    frame.add(convertDesc);
-	    frame.add(convertButton);
 		frame.add(whileLoopScroll);
 	    frame.add(calcButton);
 
@@ -283,8 +288,6 @@ private JButton loadCache;
 	    	    	deltaInput.setVisible(true);
 	    	    	deltaDesc.setVisible(true);
 	    	    }else {
-	    	    	// usedVars.setVisible(false);
-	    	    	// usedVarsDesc.setVisible(false);
 	    	    	deltaInput.setVisible(false);
 	    	    	deltaDesc.setVisible(false);
 	    	    }
@@ -298,6 +301,7 @@ private JButton loadCache;
                 } else {
 	    			whileLoopScroll.setVisible(false);
 	    			evaluationPanel.setVisible(false);
+	    	    	convertPanel.setVisible(false);
 	    			for(JToggleButton whileButton : whileLoops) {
 	            		whileButton.setSelected(false);
 	            	}
@@ -318,19 +322,9 @@ private JButton loadCache;
 	    
 	    convertButton.addActionListener(new ActionListener(){  
 	    	public void actionPerformed(ActionEvent e){
-	    		String currentProgram = cInput.getText() + " (" + fInput.getText() + ")";
-	    		for(JToggleButton tempButton: whileLoops) {
-		    		if(currentProgram.equals(tempButton.getText())) {
-		    			break;
-		    		}else {
-		    			//TODO throw exception
-		    			return;
-		    		}
-	    		}
-	    		mainController.createAllSigmaFixpoint(currentProgram, usedVars.getText());   
-	    		convertButton.setVisible(false);
-	    		convertDesc.setVisible(false);
-	    		examineFixpointButton.setVisible(true);
+	    		mainController.createAllSigmaFixpoint(currentWhileTerm, usedVars.getText());   
+    	    	convertPanel.setVisible(false);
+	    		evaluationPanel.setVisible(true);
 	    		}  
 	    });
 	    
@@ -368,11 +362,21 @@ private JButton loadCache;
             			whileButton.setSelected(false);
             		}
             	}
-            	evaluationPanel.setVisible(true);
     		    currentWhileTerm = selectedWhileButton.getText();
+            	if(allSigmaIteration.isSelected()) {
+            		evaluationPanel.setVisible(true);
+            	}else {
+            		if(mainController.isConverted(currentWhileTerm)) {
+                		evaluationPanel.setVisible(true);
+            		}else {
+            			convertPanel.setVisible(true);
+            		}
+            	}
+            	
             } else {
             	currentWhileTerm = "";
             	evaluationPanel.setVisible(false);
+    	    	convertPanel.setVisible(false);
             }
         }
     };
@@ -392,13 +396,13 @@ private JButton loadCache;
     }*/
 	
     public void prepareEvaluationView(ArrayList<String> modelLoops) {
-		if(allSigmaIteration.isSelected()) {
+		//if(allSigmaIteration.isSelected()) {
     		examineFixpointButton.setVisible(true);
-		}else {
+		/*}else {
 			convertButton.setVisible(true);
 		    convertDesc.setVisible(true);
 
-		}
+		}*/ //TODO old way convert
 	    int counter = 0;
 		for (String loop: modelLoops) {	
 			JToggleButton tempButton = new JToggleButton(loop);
@@ -418,8 +422,7 @@ private JButton loadCache;
 		examineFixpointButton.setSelected(false);
 		whileLoopPanel.removeAll();
 		whileLoops.clear();
-		convertButton.setVisible(false);
-		convertDesc.setVisible(false);
+    	convertPanel.setVisible(false);
 		updateFrame();
 		
 	}

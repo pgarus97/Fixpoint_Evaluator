@@ -4,7 +4,6 @@ package mainClass;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 
 import org.junit.jupiter.api.Disabled;
@@ -201,12 +200,12 @@ class MainTest {
 	
 	@Test
 	void testSigmaForwarding() {
-		assertEquals("x=1.0;x=2.0;{x=x+1}[1/2]{c=0};if{x=2}{x=0}else{c=0};",mainCalculator.sigmaForwarding("x=1;x=x+1;{x=x+1}[1/2]{c=0};if{x=2}{x=0}else{c=0}",new LinkedHashMap<String,String>()));
-		assertEquals("x=1.0;x=2.0;x=0;",mainCalculator.sigmaForwarding("x=1;x=x+1;if{x=2}{x=0}else{c=0}",new LinkedHashMap<String,String>()));
-		assertEquals("x=1.0;c=0.0;c=0;",mainCalculator.sigmaForwarding("x=1;c=0;if{c=1}{x=0}else{c=0}",new LinkedHashMap<String,String>()));
-		assertEquals("x=1.0;c=0.0;skip;",mainCalculator.sigmaForwarding("x=1;c=0;while(c=1){{x=x+1}[1/2]{c=0}}",new LinkedHashMap<String,String>()));
-		assertEquals("x=0.0;c=0.0;{y=x+1}[1/2]{c=x+2};skip;",mainCalculator.sigmaForwarding("x=0;c=0;{y=x+1}[1/2]{c=x+2};while(x=1){{x=x+1}[1/2]{c=0}}",new LinkedHashMap<String,String>()));
-		assertEquals("x=0.0;c=0.0;min{y=x+1}{c=c+1};skip;",mainCalculator.sigmaForwarding("x=0;c=0;min{y=x+1}{c=c+1};while(x=1){{x=x+1}[1/2]{c=0}}",new LinkedHashMap<String,String>()));
+		assertEquals("x=1.0;x=2.0;{x=x+1}[1/2]{c=0};if{x=2}{x=0}else{c=0};",mainCalculator.sigmaForwarding("x=1;x=x+1;{x=x+1}[1/2]{c=0};if{x=2}{x=0}else{c=0}",new State()));
+		assertEquals("x=1.0;x=2.0;x=0;",mainCalculator.sigmaForwarding("x=1;x=x+1;if{x=2}{x=0}else{c=0}",new State()));
+		assertEquals("x=1.0;c=0.0;c=0;",mainCalculator.sigmaForwarding("x=1;c=0;if{c=1}{x=0}else{c=0}",new State()));
+		assertEquals("x=1.0;c=0.0;",mainCalculator.sigmaForwarding("x=1;c=0;while(c=1){{x=x+1}[1/2]{c=0}}",new State()));
+		assertEquals("x=0.0;c=0.0;{y=x+1}[1/2]{c=x+2};",mainCalculator.sigmaForwarding("x=0;c=0;{y=x+1}[1/2]{c=x+2};while(x=1){{x=x+1}[1/2]{c=0}}",new State()));
+		assertEquals("x=0.0;c=0.0;min{y=x+1}{c=c+1};",mainCalculator.sigmaForwarding("x=0;c=0;min{y=x+1}{c=c+1};while(x=1){{x=x+1}[1/2]{c=0}};skip",new State()));
 	}
 	
 	@Test

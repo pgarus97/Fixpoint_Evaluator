@@ -17,5 +17,6 @@ public interface ControllerHandler {
 	String getLFP(String currentWhileTerm);
 	void evaluateFixpoint(String currentWhileTerm, String text, String text2);
 	String createAllSigmaFixpoint(String currentWhileTerm, String usedVars);
+	boolean isConverted(String currentWhileTerm);
 
 }
