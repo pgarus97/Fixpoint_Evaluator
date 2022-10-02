@@ -63,39 +63,39 @@ class MainTest {
 	@Test
 	void testAssignments() {
 		
-		assertEquals("25.0",mainCalculator.calculation(mainCalculator.wp("x=5", "x^2")));
-		assertEquals("100.0",mainCalculator.calculation(mainCalculator.wp("x=5;x=10", "x^2")));	
-		assertEquals("100.0",mainCalculator.calculation(mainCalculator.wp("x=5;x=10;y=2", "x^2")));	
-		assertEquals("25.0",mainCalculator.calculation(mainCalculator.wp("x=5;y=10", "x^2")));
-		assertEquals("100.0", mainCalculator.calculation(mainCalculator.wp("x=5;y=10", "y^2")));
-		assertEquals("15.0", mainCalculator.calculation(mainCalculator.wp("x=5;y=10", "x+y")));
+		assertEquals("25.0",mainCalculator.calculation(mainCalculator.wp("x=5", "x^2",0)));
+		assertEquals("100.0",mainCalculator.calculation(mainCalculator.wp("x=5;x=10", "x^2",0)));	
+		assertEquals("100.0",mainCalculator.calculation(mainCalculator.wp("x=5;x=10;y=2", "x^2",0)));	
+		assertEquals("25.0",mainCalculator.calculation(mainCalculator.wp("x=5;y=10", "x^2",0)));
+		assertEquals("100.0", mainCalculator.calculation(mainCalculator.wp("x=5;y=10", "y^2",0)));
+		assertEquals("15.0", mainCalculator.calculation(mainCalculator.wp("x=5;y=10", "x+y",0)));
 	}
 	
 	@Test
 	void testProbability() {
 		
-		assert mainCalculator.calculation(mainCalculator.wp("{x=5}[4/5]{x=10}","x^2")).equals("40.0");
-		assert mainCalculator.calculation(mainCalculator.wp("{x=5}[1/2]{x=10};{x=3}[1/2]{x=4}","x")).equals("3.5");
-		assert mainCalculator.calculation(mainCalculator.wp("x=0;y=0;{skip}[1/2]{x=x+2}","x")).equals("1.0");
-		assert mainCalculator.calculation(mainCalculator.wp("x=5;{skip}[1/2]{x=x+2}","x")).equals("6.0");
-		assert mainCalculator.calculation(mainCalculator.wp("{x=5}[1/2]{x=10};{x=3}[1/2]{x=4};x=6","x")).equals("6.0");
+		assert mainCalculator.calculation(mainCalculator.wp("{x=5}[4/5]{x=10}","x^2",0)).equals("40.0");
+		assert mainCalculator.calculation(mainCalculator.wp("{x=5}[1/2]{x=10};{x=3}[1/2]{x=4}","x",0)).equals("3.5");
+		assert mainCalculator.calculation(mainCalculator.wp("x=0;y=0;{skip}[1/2]{x=x+2}","x",0)).equals("1.0");
+		assert mainCalculator.calculation(mainCalculator.wp("x=5;{skip}[1/2]{x=x+2}","x",0)).equals("6.0");
+		assert mainCalculator.calculation(mainCalculator.wp("{x=5}[1/2]{x=10};{x=3}[1/2]{x=4};x=6","x",0)).equals("6.0");
 	}
 	
 	@Test
 	void testConditional() {
 
-		assert mainCalculator.calculation(mainCalculator.wp("x=5;if{x<5}{x=x+1}else{x=x-1}", "x^2")).equals("16.0");
-		assert mainCalculator.calculation(mainCalculator.wp("x=5;if{x<5}{x=x+1}else{x=x-1};x=8", "x^2")).equals("64.0");
-		assert mainCalculator.calculation(mainCalculator.wp("x=5;{x=3}[1/2]{x=10};if{x<5}{x=x+1}else{x=x-1}", "x")).equals("6.5");
-		assert mainCalculator.calculation(mainCalculator.wp("x=5;if{x<5}{x=x+1}else{if{x=5}{x=3}else{x=8}}", "x")).equals("3.0");
-		assert mainCalculator.calculation(mainCalculator.wp("x=5;if{x<5}{x=x+1}else{min{x=x+1}{x=3}", "x")).equals("3.0");
+		assert mainCalculator.calculation(mainCalculator.wp("x=5;if{x<5}{x=x+1}else{x=x-1}", "x^2",0)).equals("16.0");
+		assert mainCalculator.calculation(mainCalculator.wp("x=5;if{x<5}{x=x+1}else{x=x-1};x=8", "x^2",0)).equals("64.0");
+		assert mainCalculator.calculation(mainCalculator.wp("x=5;{x=3}[1/2]{x=10};if{x<5}{x=x+1}else{x=x-1}", "x",0)).equals("6.5");
+		assert mainCalculator.calculation(mainCalculator.wp("x=5;if{x<5}{x=x+1}else{if{x=5}{x=3}else{x=8}}", "x",0)).equals("3.0");
+		assert mainCalculator.calculation(mainCalculator.wp("x=5;if{x<5}{x=x+1}else{min{x=x+1}{x=3}", "x",0)).equals("3.0");
 	}
 	
 	@Test
 	void testDemonicChoice() {
 
-		assert mainCalculator.calculation(mainCalculator.wp("x=1;min{x=x+1}{x=3}","x")).equals("2.0");
-		assert mainCalculator.calculation(mainCalculator.wp("x=3;min{x=x+1}{x=3}","x")).equals("3.0");
+		assert mainCalculator.calculation(mainCalculator.wp("x=1;min{x=x+1}{x=3}","x",0)).equals("2.0");
+		assert mainCalculator.calculation(mainCalculator.wp("x=3;min{x=x+1}{x=3}","x",0)).equals("3.0");
 	}
 	
 	@Test
@@ -104,9 +104,9 @@ class MainTest {
 		mainCalculator.setAllSigmaSelection(false);
 
 
-		assertEquals("1.0", mainCalculator.calculation(mainCalculator.wp("c=0;x=1;while(c=1){{x=x+1}[1/2]{c=0}}", "x")));
-		assertEquals("1.978515625", mainCalculator.calculation(mainCalculator.wp("c=1;x=1;while(c=1){{x=x+1}[1/2]{c=0}}", "x"))); 
-		assertEquals("4.0",mainCalculator.calculation(mainCalculator.wp("x=1;c=0;while(c=1){{x=x+1}[1/2]{c=0}};while(c=0){x=4;c=1}","x")));
+		assertEquals("1.0", mainCalculator.calculation(mainCalculator.wp("c=0;x=1;while(c=1){{x=x+1}[1/2]{c=0}}", "x",0)));
+		assertEquals("1.978515625", mainCalculator.calculation(mainCalculator.wp("c=1;x=1;while(c=1){{x=x+1}[1/2]{c=0}}", "x",0))); 
+		assertEquals("4.0",mainCalculator.calculation(mainCalculator.wp("x=1;c=0;while(c=1){{x=x+1}[1/2]{c=0}};while(c=0){x=4;c=1}","x",0)));
 		
 	}
 	
@@ -116,8 +116,8 @@ class MainTest {
 		mainCalculator.setRestriction(2);
 		mainCalculator.fillAllSigma("xc");
 
-		assertEquals("1.0", mainCalculator.calculation(mainCalculator.wp("c=0;x=1;while(c=1){{x=x+1}[1/2]{c=0}}", "x")));
-		assertEquals("1.5", mainCalculator.calculation(mainCalculator.wp("c=1;x=1;while(c=1){{x=x+1}[1/2]{c=0}}", "x"))); 
+		assertEquals("1.0", mainCalculator.calculation(mainCalculator.wp("c=0;x=1;while(c=1){{x=x+1}[1/2]{c=0}}", "x",0)));
+		assertEquals("1.5", mainCalculator.calculation(mainCalculator.wp("c=1;x=1;while(c=1){{x=x+1}[1/2]{c=0}}", "x",0))); 
 	}
 	
 	@Test
@@ -189,12 +189,12 @@ class MainTest {
 		
 		assertEquals(null,mainController.getLFP("while(c=1){{x=x+1}[1/2]{c=0}} (x)"));
 		mainController.wp("while(c=1){{x=x+1}[1/2]{c=0}}", "x",false);
-		assertEquals("iff((x=0)&(c=0),0.0;(x=0)&(c=1),0.5;(x=1)&(c=0),1.0;(x=1)&(c=1),1.0)",mainController.getLFP("while(c=1){{x=x+1}[1/2]{c=0}} (x)"));
+		assertEquals("iff((c=0)&(x=0),0.0;(c=0)&(x=1),1.0;(c=1)&(x=0),0.5;(c=1)&(x=1),1.0)",mainController.getLFP("while(c=1){{x=x+1}[1/2]{c=0}} (x)"));
 		mainController.saveFixpointCache();
 		mainController.clearFixpointCache();
 		assertEquals(null,mainCalculator.getFixpointCache().get("while(c=1){{x=x+1}[1/2]{c=0}} (x)"));
 		mainController.loadFixpointCache();
-		assertEquals("iff((x=0)&(c=0),0.0;(x=0)&(c=1),0.5;(x=1)&(c=0),1.0;(x=1)&(c=1),1.0)",mainController.getLFP("while(c=1){{x=x+1}[1/2]{c=0}} (x)"));
+		assertEquals("iff((c=0)&(x=0),0.0;(c=0)&(x=1),1.0;(c=1)&(x=0),0.5;(c=1)&(x=1),1.0)",mainController.getLFP("while(c=1){{x=x+1}[1/2]{c=0}} (x)"));
 	}
 	
 	@Test
@@ -214,6 +214,11 @@ class MainTest {
 		mainController.clearFixpointCache();
 		mainCalculator.setAllSigmaSelection(false);
 		mainController.wp("while(c=1){{x=x+1}[1/2]{c=0}}", "x",false);
-		assertEquals("iff((x=0)&(c=0),0.0;(x=0)&(c=1),0.5;(x=1)&(c=0),1.0;(x=1)&(c=1),1.0)",mainController.createAllSigmaFixpoint("while(c=1){{x=x+1}[1/2]{c=0}} (x)", "xc"));
+		assertEquals("iff((c=0)&(x=0),0.0;(c=0)&(x=1),1.0;(c=1)&(x=0),0.5;(c=1)&(x=1),1.0)",mainController.createAllSigmaFixpoint("while(c=1){{x=x+1}[1/2]{c=0}} (x)"));
+	}
+	
+	@Test
+	void testGetUsedVars() {
+		assertEquals("xc", mainController.getUsedVars("x=1;c=0;while(c=1){{x=x+1}[1/2]{c=0}}"));
 	}
 }

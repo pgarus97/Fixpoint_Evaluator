@@ -35,16 +35,19 @@ public class MainController implements ControllerHandler {
 	@Override
 	public void wp(String C, String f, boolean sigmaForwarding) {
 		double start = System.currentTimeMillis();
+		if(mainView.getAllSigmaIteration().isSelected()) {
+			mainCalculator.fillAllSigma(getUsedVars(C));
+		}
 		output("\n" + "Calculating: wp["+C+"]("+f+")",1);
 		String calcResult = "";
 		if(sigmaForwarding) {
-			output( "\n" + "Sigma-Forwarding activated.",1);
-			String sigmaForwardResult = mainCalculator.sigmaForwarding(C.replace(" ", ""), new State());
+			output("\n" + "Sigma-Forwarding activated.",1);
+			String sigmaForwardResult = mainCalculator.sigmaForwarding(prepareProgram(C), new State());
     		sigmaForwardResult = sigmaForwardResult.substring(0,sigmaForwardResult.length()-1);
-			output( "Sigma-Forwarding Result: wp["+ sigmaForwardResult+"]("+f+")",1);
+			output("Sigma-Forwarding Result: wp[" + C + "]("+f+") = "+ sigmaForwardResult,1);
 			calcResult = mainCalculator.calculation(mainCalculator.wp(sigmaForwardResult,f,0)); 
 		}else {
-    		calcResult = mainCalculator.calculation(mainCalculator.wp(C.replace(" ", ""),f,0)); 
+    		calcResult = mainCalculator.calculation(mainCalculator.wp(prepareProgram(C),f,0)); 
 		}
 		double end = System.currentTimeMillis();
 		
@@ -59,17 +62,20 @@ public class MainController implements ControllerHandler {
 	 * Prepares and executes the createAllSigmaFixpoint function of the model
 	 */
 	@Override
-	public String createAllSigmaFixpoint(String currentWhileTerm, String usedVars) {
+	public String createAllSigmaFixpoint(String currentWhileTerm) {
+		output("\n" + "*************************",1);
 	    output("\n" + "Converting to allSigma fixpoint notation...",1);
 		String currentLFP = mainCalculator.getFixpointCache().get(currentWhileTerm);
 		double start = System.currentTimeMillis();
-		String result = mainCalculator.createAllSigmaFixpoint(currentLFP, usedVars);
+		String result = mainCalculator.createAllSigmaFixpoint(currentLFP, getUsedVars(currentWhileTerm));
 		mainCalculator.getFixpointCache().replace(currentWhileTerm, result);
 		double end = System.currentTimeMillis();
 		
 		output("Success! Calculation Time: " + (end - start)/1000 + "s",1);
 		output("Converted fixpoint:",1);
 	    output(result,1);
+		output("\n" + "*************************",1);
+
 
 		return result;
 	}
@@ -93,8 +99,8 @@ public class MainController implements ControllerHandler {
 	@Override
 	public void evaluateFixpoint(String currentWhileTerm, String witness, String fixpointDelta) {
 	    double start = System.currentTimeMillis();
-		output("\n" + "*************************",1);
-		output("\n" + "Starting fixpoint evaluation. Information: ",1);
+		output("\n" +"*************************",1);
+		output("\n" +"Starting fixpoint evaluation. Information: ",1);
 		output("Selected While-Term: " + currentWhileTerm,1);
 	    output("LFP: " + getLFP(currentWhileTerm),1);
 	    if(fixpointDelta != "" && NumberUtils.isCreatable(fixpointDelta)) {
@@ -103,19 +109,20 @@ public class MainController implements ControllerHandler {
     	    output("The inputted delta: '" + fixpointDelta + "' is not a number!",1);
     	    return;
 	    }
-	    output("Witness: " + witness ,1);
+	    output("Witness: " + witness,1);
+		output("\n" + "*************************",1);
 
 	    mainCalculator.evaluateFixpoint(currentWhileTerm, witness, fixpointDelta, 1, new LinkedHashSet<String>());
 	    double end = System.currentTimeMillis();
 		
-		output("\n" + "Calculation Time: " + (end - start)/1000 + "s",1);
+		output("Calculation Time: " + (end - start)/1000 + "s",1);
 	}
 	
 	/*
 	 * Prepares the model for calculating and fills it with all necessary inputs from the view
 	 */
 	@Override
-	public boolean prepareCalculationModel(String restriction,String iterationCount, boolean allSigma, String usedVars, String deltaInput) {
+	public boolean prepareCalculationModel(String restriction,String iterationCount, boolean allSigma, String deltaInput) {
 		mainView.clearResult();
 		mainCalculator.flushWhileLoops();
 		mainCalculator.setAllSigmaSelection(allSigma);
@@ -152,12 +159,6 @@ public class MainController implements ControllerHandler {
 	    	}
 	    }
 		if (allSigma) {
-			if(usedVars.isEmpty()) {
-    			output("\n" + "No used variables inputted! You need to input all variables in C!",1);
-    			return false;
-			}else {
-				mainCalculator.fillAllSigma(usedVars); //TODO this also needs to hold for conversion? direct iteration
-			}
 			if(deltaInput.isEmpty()) {
     			output("No delta for the iteration inputted. Taking default delta = 0.001",1);
     			mainCalculator.setIterationDelta(0.001);
@@ -165,11 +166,12 @@ public class MainController implements ControllerHandler {
 				mainCalculator.setIterationDelta(Double.parseDouble(deltaInput));
 			}
 		}
+		output("-----------------------------------",1);
 		return true;
 	}
 	
 	/*
-	 * Helper function for outputting a string to the view
+	 * Helper function for outputting a string to the view (considering recursionDepth)
 	 */
 	public void output(String text, int logLevel, int recursionDepth) {
 		String depthBuffer ="";
@@ -206,6 +208,31 @@ public class MainController implements ControllerHandler {
 		} 
 	}
 	
+	/*
+	 * Helper function that prepares the inputed program for calculation
+	 */
+	public String prepareProgram(String C) {
+		C = C.replace(" ", "");
+		C = C.replace(":=", "=");
+		return C;
+	}
+	
+	/*
+	 * Helper function that extracts the used variables from a given program
+	 */
+	public String getUsedVars(String C) {
+		String usedVars = C.replaceAll("[^A-Za-z]", "");
+		usedVars = usedVars.replaceAll("[!^whilepfmnr]", "");
+		String result="";
+		for(int i = 0; i < usedVars.length(); i++) {
+			String temp = ""+usedVars.charAt(i);
+			if(!result.contains(temp)){
+				result = result.concat(temp);
+			}
+		}
+		return result;
+	}
+
 	/*
 	 * Returns the least fixpoint of a given while term if it exists in the models cache
 	 */

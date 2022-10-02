@@ -126,7 +126,7 @@ private double iterationDelta;
 				if(!fixpointCache.containsKey(C+" ("+f+")")) {
 					String fixpoint="";
 					if (allSigmaSelection) {		 
-						fixpoint = fixpointIterationAllSigma(condition, whileC, f);
+						fixpoint = fixpointIterationAllSigma(condition, whileC, f, recursionDepth+1);
 					} else {
 						fixpoint = directFixpointIteration(condition, whileC, f, recursionDepth+1); 
 					}
@@ -145,29 +145,30 @@ private double iterationDelta;
 			}else {
 				//variable assignments
 				if(C.startsWith("skip")){
-					mainController.output( "Enter skip process:",2,recursionDepth); 
+					mainController.output("Enter skip process:",2,recursionDepth); 
 					String skipResult = C.replace("skip", f);
 					//mainController.output( "Skip process." + skipResult,2);
 					return calculation(skipResult);
 				}else {
-					mainController.output( "Enter assignment process:",2,recursionDepth); 
+					mainController.output("Enter assignment process:",2,recursionDepth); 
 					String indexC = C.substring(0,1);
 					String cutC = C.substring(C.indexOf("=")+1);
 					String assignResult = f.replace(indexC, "r(" + cutC + ")");
 					
 					//preemptive if-clause resolution optimization
 					if(assignResult.startsWith("if") && !assignResult.startsWith("iff")) {
-						mainController.output( "Found possible if-assignment optimization!",2,recursionDepth); 
 						String condition = getInsideIf(assignResult.substring(3));
 						String assignifC1 = assignResult.substring(condition.length()+4);	
-						assignifC1 =  getInsideIf(assignifC1);
-						String assignifC2 = assignResult.substring(condition.length()+4+assignifC1.length()+1);
-						assignifC2 = assignifC2.substring(0,assignifC2.length()-1);
+						assignifC1 =  getInsideIf(assignifC1);					
 						if(calculation(condition).equals("1.0")) {
-							mainController.output("If-Condition true, therefore wp[" + C + "]("+f+") = " + assignifC2,2, recursionDepth); 
+							mainController.output( "Found possible if-assignment optimization!",2,recursionDepth); 
+							mainController.output("If-Condition true, therefore wp[" + C + "]("+f+") = " + assignifC1,2, recursionDepth); 
 							return calculation(assignifC1);
 						}
 						if(calculation(condition).equals("0.0")) {
+							String assignifC2 = assignResult.substring(condition.length()+4+assignifC1.length()+1);
+							assignifC2 = assignifC2.substring(0,assignifC2.length()-1);
+							mainController.output( "Found possible if-assignment optimization!",2,recursionDepth); 
 							mainController.output("If-Condition false, therefore wp[" + C + "]("+f+") = " + assignifC2,2, recursionDepth); 
 							return calculation(assignifC2);
 						}
@@ -308,7 +309,7 @@ private double iterationDelta;
 			result = "if("+condition+","+X+","+f+")";
 		}
 		mainController.output("-----------------------------------",2,recursionDepth);
-		mainController.output("Finished fixpoint iteration.",2,recursionDepth);
+		mainController.output("Finished fixpoint iteration." + "\n" ,2,recursionDepth);
 
 
 		return result;
@@ -319,7 +320,8 @@ private double iterationDelta;
 	 * It takes the while condition (condition), the program (C) and the post-expectation (f) as input.
 	 * The output is a term that represents the least fixpoint of the given input.
 	 */
-	public String fixpointIterationAllSigma(String condition, String C, String f) {		
+	public String fixpointIterationAllSigma(String condition, String C, String f, int recursionDepth) {		
+		mainController.output("All-Sigma Fixpoint Iteration start. ", 2, recursionDepth);
 		Fixpoint leastFixpoint = new Fixpoint();
 		for(State sigma : allSigma) {
 			double sigmaResult = 0.0;
@@ -332,17 +334,17 @@ private double iterationDelta;
 				sigmaCondition = sigmaCondition.replace(entry.getKey(), entry.getValue());
 			}	
 			identifier = identifier.replaceFirst("&","");
-			mainController.output("\n" + "***********************************",2);
-			mainController.output( "Current program state: " + identifier ,2);
-			mainController.output("\n" + "***********************************",2);
+			mainController.output("***********************************",2,recursionDepth);
+			mainController.output( "Current program state: " + identifier ,2,recursionDepth);
+			mainController.output("***********************************",2,recursionDepth);
 			Expression e = new Expression(sigmaCondition);
 			if(e.calculate() == 0.0) {
 				sigmaResult = calculateConcreteSigma(f,sigma);
-				mainController.output("\n" + "Skip iteration since loop condition is wrong." , 2);
+				mainController.output("Skip iteration since loop condition is wrong." , 2,recursionDepth);
 			}else {
 				for(int i=0; i<iterationCount; i++) {
-					mainController.output("\n" + "Iteration " + (i+1) + "\n",2);
-					String X = wp(C, caseF,0);
+					mainController.output("Iteration " + (i+1) + "\n",2,recursionDepth);
+					String X = wp(C, caseF,recursionDepth);
 					caseF = "if("+condition+","+X+","+f+")";
 					//TODO future improvement: directly input sigma through assignment = f.replace x with sigma x and keep dependency somehow
 					sigmaResult = calculateConcreteSigma(caseF,sigma);
@@ -355,11 +357,12 @@ private double iterationDelta;
 							previousResult = sigmaResult;
 						}
 					}
-					mainController.output("\n" + "-----------------------------------",2);
+					mainController.output("-----------------------------------",2,recursionDepth);
 				}
 			}
+			mainController.output("Finished fixpoint iteration.",2,recursionDepth);
 			double roundResult = Math.round(sigmaResult * 100.0) / 100.0;
-			mainController.output( "Fixpoint iteration result: " + "wp[" + C + "]("+f+") = " + sigmaResult ,2);
+			mainController.output("Fixpoint iteration result: " + "wp[" + C + "]("+f+") with "+ identifier +" = " + roundResult + "\n",2,recursionDepth);
 			leastFixpoint.addContentFromMap(identifier, Double.toString(roundResult));	
 			
 		}
@@ -427,25 +430,25 @@ private double iterationDelta;
 		
 		//outputting the result
 		mainController.output("\n" + "-----------------------------------",1);
-		mainController.output("\n" + "Hash-Function Results: (Iteration " + iterationCount + ")",1);
+		mainController.output("\n" + "Iteration " + iterationCount,1);
 		mainController.output("\n" + "X: " + X.getContentMap(),1);
 		mainController.output( "X': " + Xslash.getContentMap(),1);
 		mainController.output( "Phi-Hash (X): " + phihashX.getContentMap(),1);
 		mainController.output( "Phi-Hash (X'): " + phihashXslash.getContentMap(),1);
 
 		if(sigmaSet.isEmpty()) {
-			mainController.output("\n" + "The hash-function's result is an empty set. This means the witness is already the least fixpoint." ,1);
+			mainController.output("\n" + "The hash-function's result is an empty set. This means the witness is already the least fixpoint." + "\n",1);
 		}else {
 			mainController.output("\n" + "The hash-function's result is not an empty set. This means the witness is above the least fixpoint." ,1);
-			mainController.output( "Following states are still in the result set: " ,1);
+			mainController.output("Following states are still in the result set: " ,1);
 			for(String state : sigmaSet) {
 				mainController.output(state + ", ",1);
 			}
 			if(!previousSigmaSet.toString().equals(sigmaSet.toString())) {
-				mainController.output("therefore continuing iteration.",1);
+				mainController.output("therefore continuing iteration." + "\n",1);
 				sigmaSet = evaluateFixpoint(currentWhile, witness, delta, (iterationCount+1), sigmaSet);
 			}else {
-				mainController.output("but since no change in the set has been detected, the iteration stops now.",1);
+				mainController.output("but since no change in the set has been detected, the iteration stops now." + "\n",1);
 			}
 		}
 		return sigmaSet;
@@ -532,7 +535,6 @@ private double iterationDelta;
 
 		if(result.isNaN()) {
 			//throw exception and break + log
-			System.out.println("There are unknown variables in the formula!");
 			mainController.output("\n" + "There are unknown variables in the formula!",1);
 			return null;
 		}else {
@@ -568,7 +570,6 @@ private double iterationDelta;
 			}
 			allSigma.add(tempState);
 		}
-		System.out.println(allSigma);
 		return allSigma;
 	}		
 	

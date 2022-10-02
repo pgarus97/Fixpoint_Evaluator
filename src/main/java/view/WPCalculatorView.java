@@ -41,8 +41,7 @@ private JPanel cPanel;
 private JPanel fPanel;
 private JLabel fDesc;
 private JTextField fInput;
-private JTextField usedVars;
-private JLabel usedVarsDesc;
+
 private JLabel restrictionDesc;
 private JTextField restrictionField;
 private JLabel iterationDesc;
@@ -62,7 +61,6 @@ private JPanel logPanel;
 private JCheckBox fileLog;
 private JCheckBox minimalLog;
 private JCheckBox detailedLog;
-private JCheckBox fullLog;
 
 private ArrayList<JToggleButton> whileLoops; 
 private JScrollPane whileLoopScroll;
@@ -140,15 +138,10 @@ private JButton loadCache;
 	    iterationField = new JTextField("");
 	    iterationField.setBounds(430,60,200, 20);
 	    
-	    usedVarsDesc = new JLabel("Enter all used variables (e.g. xyz) ");
-	    usedVarsDesc.setBounds(500,80,200, 20);
-	    usedVars = new JTextField("xc");
-	    usedVars.setBounds(500,100,200, 20);
-	    
 	    deltaDesc = new JLabel("Input delta (fixpoint iteration stop) here:");
-	    deltaDesc.setBounds(500,120,400, 20);
+	    deltaDesc.setBounds(500,80,200, 20);
 		deltaInput = new JTextField("0.001");
-		deltaInput.setBounds(500,140,200, 20);
+		deltaInput.setBounds(500,100,200, 20);
 
 	    calcButton = new JButton("Calculate!");
 	    calcButton.setBounds(5,100,150, 40);
@@ -175,16 +168,13 @@ private JButton loadCache;
 	    minimalLog.setSelected(true);
 	    
 	    detailedLog = new JCheckBox("Detailed Log");
-	    
-	    fullLog = new JCheckBox("Full Log");
-	    
+	    	    
 	    logPanel.add(fileLog);
 	    logPanel.add(Box.createRigidArea(new Dimension(10, 0)));
 	    logPanel.add(new JLabel("|"));
 	    logPanel.add(Box.createRigidArea(new Dimension(10, 0)));
 	    logPanel.add(minimalLog);
 	    logPanel.add(detailedLog);
-	    logPanel.add(fullLog);
 	    logPanel.setVisible(true);
 	    
 	    examineFixpointButton = new JToggleButton("Examine Fixpoints");
@@ -271,8 +261,6 @@ private JButton loadCache;
 	    frame.add(restrictionField);
 	    frame.add(iterationDesc);
 	    frame.add(iterationField);
-	    frame.add(usedVars);
-	    frame.add(usedVarsDesc);
 	    frame.add(deltaDesc);
 	    frame.add(deltaInput);
 		frame.add(whileLoopScroll);
@@ -294,20 +282,11 @@ private JButton loadCache;
 	    detailedLog.addActionListener(new ActionListener() {
 	    	public void actionPerformed(ActionEvent e){ 
 	    		minimalLog.setSelected(false);
-	    		fullLog.setSelected(false);
     	   }
 	    });
 	    
 	    minimalLog.addActionListener(new ActionListener() {
 	    	public void actionPerformed(ActionEvent e){ 
-	    		detailedLog.setSelected(false);
-	    		fullLog.setSelected(false);
-    	   }
-	    });
-	    
-	    fullLog.addActionListener(new ActionListener() {
-	    	public void actionPerformed(ActionEvent e){ 
-	    		minimalLog.setSelected(false);
 	    		detailedLog.setSelected(false);
     	   }
 	    });
@@ -315,6 +294,7 @@ private JButton loadCache;
 	    resetCache.addActionListener(new ActionListener(){  
 	    	public void actionPerformed(ActionEvent e){ 
 	    		mainController.clearFixpointCache();
+	    		prepareCalculationView();
     	   }  
 	    });  
 	    
@@ -327,14 +307,13 @@ private JButton loadCache;
 	    loadCache.addActionListener(new ActionListener(){  
 	    	public void actionPerformed(ActionEvent e){ 
 	    		mainController.loadFixpointCache();
+	    		prepareCalculationView();
     	   }  
 	    });
 
 	    allSigmaIteration.addActionListener(new ActionListener(){  
 	    	public void actionPerformed(ActionEvent e){ 
 	    		if (allSigmaIteration.isSelected()) {
-	    	    	usedVars.setVisible(true);
-	    	    	usedVarsDesc.setVisible(true);
 	    	    	deltaInput.setVisible(true);
 	    	    	deltaDesc.setVisible(true);
 	    	    }else {
@@ -362,7 +341,7 @@ private JButton loadCache;
 	    calcButton.addActionListener(new ActionListener(){  
 	    	//TODO log in real time somehow => https://docs.oracle.com/javase/tutorial/uiswing/concurrency/index.html#:~:text=Careful%20use%20of%20concurrency%20is%20particularly%20important%20to,must%20learn%20how%20the%20Swing%20framework%20employs%20threads.
 	    	public void actionPerformed(ActionEvent e){
-	    		if(mainController.prepareCalculationModel(restrictionField.getText(),iterationField.getText(),allSigmaIteration.isSelected(),usedVars.getText(),deltaInput.getText()) == false) {
+	    		if(mainController.prepareCalculationModel(restrictionField.getText(),iterationField.getText(),allSigmaIteration.isSelected(),deltaInput.getText()) == false) {
 	    			return;
 	    		}
 	    		prepareCalculationView();
@@ -372,10 +351,11 @@ private JButton loadCache;
 	    
 	    convertButton.addActionListener(new ActionListener(){  
 	    	public void actionPerformed(ActionEvent e){
-	    		mainController.createAllSigmaFixpoint(currentWhileTerm, usedVars.getText());   
-    	    	convertPanel.setVisible(false);
-	    		evaluationPanel.setVisible(true);
-	    		}  
+	    		if(!mainController.createAllSigmaFixpoint(currentWhileTerm).isEmpty()) {
+	    	    	convertPanel.setVisible(false);
+		    		evaluationPanel.setVisible(true);
+	    		}
+	    	}  
 	    });
 	    
 	    lfpButton.addActionListener(new ActionListener(){
@@ -430,29 +410,9 @@ private JButton loadCache;
             }
         }
     };
-	
-   /* public MouseAdapter fullWhileHover = new MouseAdapter() {
-        @Override
-        public void mouseEntered(MouseEvent e) {
-            System.out.println("entered");
-            label.setVisible(true);
-        }
 
-        @Override
-        public void mouseExited(MouseEvent e) {
-            System.out.println("exited");
-            label.setVisible(false);
-        }
-    }*/
-	
     public void prepareEvaluationView(ArrayList<String> modelLoops) {
-		//if(allSigmaIteration.isSelected()) {
-    		examineFixpointButton.setVisible(true);
-		/*}else {
-			convertButton.setVisible(true);
-		    convertDesc.setVisible(true);
-
-		}*/ //TODO old way convert
+    	examineFixpointButton.setVisible(true);
 	    int counter = 0;
 		for (String loop: modelLoops) {	
 			JToggleButton tempButton = new JToggleButton(loop);
@@ -510,8 +470,6 @@ private JButton loadCache;
 			return 1;
 		}else if(detailedLog.isSelected()){
 			return 2;
-		}else if(fullLog.isSelected()) {
-			return 3;
 		}
 		return 1; //default case
 	}
