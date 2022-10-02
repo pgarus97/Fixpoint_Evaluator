@@ -34,69 +34,73 @@ private double iterationCount;
 private boolean allSigmaSelection;
 private double iterationDelta;
 
+
+//TODO add recursive level to input, use it to create output tabs in a loop to see depth in output
 	/*
-	 * Main method that represents the weakest precondition transformer function (wp)
+	 * Main method that represents the weakest pre-expectation transformer function (wp)
 	 * Takes a program (C) and a post expectation (f) as input and recursively calculates the result of the formula wp[C](f) for any sigma (variable assignment).
 	 */
 	public String wp(String C, String f) {
 		//sequential process
-		//TODO detailed log: mainView.getResult().setText(mainView.getResult().getText() + "\n" + "wp["+C+"]("+f+")"); 
+		mainController.output("\n" + "Now computing: wp["+C+"]("+f+")",2); 
 		String C1 = getSequentialCut(C);
 		System.out.println("C1: " + C1);
 		if(!C1.equals(C)) {
 			String C2 = C.substring(C1.length()+1);
-			//TODO detailed log: mainView.getResult().setText(mainView.getResult().getText() + "\n" + "Sequential process. Breaking down into: wp["+C1+"](wp["+C2+"]("+f+"))"); 
+			mainController.output("\n" + "Sequential process. Breaking down into: wp["+C1+"](wp["+C2+"]("+f+"))",2); 
 			return wp(C1,(wp(C2,f)));
 		}else {
 			if(C.startsWith("min{")) {
 				//demonic choice process
+				mainController.output("\n" + "Enter Demonic Choice process:",2);
 				String demC1 = getInsideBracket(C.substring(C.indexOf("{")+1));	
 				String demC2 = C.substring(C.indexOf(demC1));
 				demC2 = getInsideBracket(demC2.substring(demC2.indexOf("{")+1));
-				
+				mainController.output("\n" + "Demonic Choice process. Breaking down into: min(" + "wp[" + demC1 + "]("+f+")" + "," + "wp[" + demC2 + "]("+f+")" + ")",2); 
+
 				System.out.println("demC1= "+demC1); 
 				System.out.println("demC2= "+demC2);
 				String resultC1 = wp(demC1,f);
 				String resultC2 = wp(demC2,f);
 
-				//TODO detailed log: mainView.getResult().setText(mainView.getResult().getText() + "\n" + "Demonic Choice process. Breaking down into: min(" + resultC1 + "," + resultC2 + ")"); 
-
+				mainController.output("\n" + "Demonic Choice process result: wp[" + C + "]("+f+") = min(" + resultC1 + "," + resultC2 + ")",2); 
 				return calculation("min(" + resultC1 + "," + resultC2 + ")");
 
 			}
 			
 			else if(C.startsWith("if") && !C.startsWith("iff")) {
 				//conditional process
-				System.out.println("Enter conditional process"); 
+				mainController.output("\n" + "Enter conditional process:",2); 
 				String condition = getInsideBracket(C.substring(C.indexOf("{")+1));
 				System.out.println("Conditional: "+condition); 
 				String ifC1 = C.substring(condition.length()+4);
 				ifC1 = getInsideBracket(ifC1.substring(ifC1.indexOf("{")+1));
 				String ifC2 = C.substring(C.indexOf(ifC1));
 				ifC2 = getInsideBracket(ifC2.substring(ifC2.indexOf("{")+1));
-				
-				System.out.println("C1= "+ifC1); 
-				System.out.println("C2= "+ifC2);
-				
-				//TODO detailed log: mainView.getResult().setText(mainView.getResult().getText() + "\n" + "Conditional process. Breaking down into: if("+condition+") then "+ resultC1 +" else "+ resultC2); 
+				mainController.output("\n" + "Breaking down into: if("+condition+") then wp["+ ifC1 +"]("+f+") else wp["+ ifC2+ "]("+f+")",2); 
+
 				String condResult = calculation(condition);
 				if(condResult.equals("1.0")) {
+					mainController.output("\n" + "If-Condition true, only continue with wp[" + ifC1 + "]("+f+")",2); 
 					String resultC1 = wp(ifC1,f);
 					return calculation(resultC1);
 				}
 				if(condResult.equals("0.0")) {
+					mainController.output("\n" + "If-Condition false, only continue with wp[" + ifC2 + "]("+f+")",2); 
 					String resultC2 = wp(ifC2,f);
 					return calculation(resultC2);
 				}
 				String resultC1 = wp(ifC1,f);
 				String resultC2 = wp(ifC2,f);
+				mainController.output("\n" + "Conditional process result: wp[" + C + "]("+f+") = if("+condition+") then "+ resultC1 +" else "+ resultC2,2); 
+
 				return calculation("if(" + condition + "," + resultC1 + "," + resultC2 + ")");
 
 			}
 			
 			else if(C.startsWith("{")){
 				//probability process
-				System.out.println("Enter probability process"); 
+				mainController.output("\n" + "Enter probability process:",2); 
 				String probC1 = getInsideBracket(C.substring(C.indexOf("{")+1));
 
 				String probC2 = C.substring(probC1.length());
@@ -107,15 +111,17 @@ private double iterationDelta;
 				System.out.println("C2= "+probC2);
 				System.out.println("Probability:" + probability);
 				Expression negProbability = new Expression ("1-"+probability);
+				mainController.output("\n" + "Breaking down into: " + probability + " * " + "wp[" + probC1 + "]("+f+")" +" + "+ negProbability.calculate() + " * " + "wp[" + probC2 + "]("+f+")",2); 
+
 				String resultC1 = wp(probC1,f);
 				String resultC2 = wp(probC2,f);
-				//TODO detailed log: mainView.getResult().setText(mainView.getResult().getText() + "\n" + "Probability process. Breaking down into: " + probability + " * " + resultC1 +" + "+ negProbability.calculate() + " * " + resultC2); 
+				mainController.output("\n" + "Probability process result: wp[" + C + "]("+f+") = " + probability + " * " + resultC1 +" + "+ negProbability.calculate() + " * " + resultC2,2); 
 				return calculation("(" + probability + " * "+ resultC1 +" + "+ negProbability.calculate() + " * " + resultC2+")");
 
 			}
 			else if(C.startsWith("while")){
 				//while process
-				System.out.println("Enter while process"); 
+				mainController.output("\n" + "Enter while process:",2); 
 				String condition = C.substring(C.indexOf("(")+1,C.indexOf("{")-1);
 				System.out.println("Condition: "+condition);
 				String whileC = C.substring(condition.length());
@@ -131,7 +137,7 @@ private double iterationDelta;
 					if (allSigmaSelection) {		 
 						fixpoint = fixpointIterationAllSigma(condition, whileC, f);
 					} else {
-						fixpoint = fixpointIterationIterativ(condition, whileC, f); 
+						fixpoint = directFixpointIteration(condition, whileC, f); 
 					}
 					fixpointCache.put(C+" ("+f+")", fixpoint);
 					System.out.println("Put into Cache: "+ C+"("+f+")" + " " + fixpoint);
@@ -148,12 +154,12 @@ private double iterationDelta;
 			}else {
 				//variable assignments
 				if(C.startsWith("skip")){
-					System.out.println("Enter skip process"); 
+					mainController.output("\n" + "Enter skip process:",2); 
 					String skipResult = C.replace("skip", f);
-					//TODO detailed log: mainView.getResult().setText(mainView.getResult().getText() + "\n" + "Assignment skip process." + skipResult);
+					//mainController.output("\n" + "Skip process." + skipResult,2);
 					return calculation(skipResult);
 				}else {
-					System.out.println("Enter assignment process"); 
+					mainController.output("\n" + "Enter assignment process:",2); 
 					String indexC = C.substring(0,1);
 					String cutC = C.substring(C.indexOf("=")+1);
 					String assignResult = f.replace(indexC, "r(" + cutC + ")");
@@ -161,7 +167,7 @@ private double iterationDelta;
 					
 					//if mid calculation optimization
 					if(assignResult.startsWith("if") && !assignResult.startsWith("iff")) {
-						System.out.println("Enter conditional process"); 
+						mainController.output("\n" + "Found possible if-assignment optimization!",2); 
 						String condition = getInsideIf(assignResult.substring(3));
 						System.out.println("Conditional: "+condition); 
 						String assignifC1 = assignResult.substring(condition.length()+4);	
@@ -173,14 +179,16 @@ private double iterationDelta;
 						System.out.println("assignifC1= "+assignifC1); 
 						System.out.println("assignifC2= "+assignifC2);
 						if(calculation(condition).equals("1.0")) {
+							mainController.output("\n" + "If-Condition true, therefore wp[" + C + "]("+f+") = " + assignifC2,2); 
 							return calculation(assignifC1);
 						}
 						if(calculation(condition).equals("0.0")) {
+							mainController.output("\n" + "If-Condition false, therefore wp[" + C + "]("+f+") = " + assignifC2,2); 
 							return calculation(assignifC2);
 						}
 					}
 					
-					//TODO detailed log: mainView.getResult().setText(mainView.getResult().getText() + "\n" + "Assignment process." + assignResult);
+					mainController.output("\n" + "Result: " + "wp[" + C + "]("+f+") = " + assignResult, 2);
 					return calculation(assignResult);
 				}
 					
@@ -191,7 +199,10 @@ private double iterationDelta;
 	
 	}
 
-	//TODO desc
+	/*
+	 * Helper Function that sets all occurrences of a variable in C to null in currentSigma.
+	 * Is used for sigmaForwarding.
+	 */
 	public State setSigmaValuesNull(State currentSigma, String C) {
 		for(Map.Entry<String, String> entry : currentSigma.getContentMap().entrySet()) {
 			if(C.contains(entry.getKey()+"=")) {
@@ -201,7 +212,10 @@ private double iterationDelta;
 		return currentSigma;
 	}
 	
-	//TODO desc
+	/*
+	 * Helper Function that replaces occurrences of a variable from currentSigma in input.
+	 * Is used for sigmaForwarding.
+	 */
 	public String replaceStringFromSigma(State currentSigma, String input) {
 		for(Map.Entry<String, String> entry : currentSigma.getContentMap().entrySet()) {
 			if(entry.getValue()!=null) {
@@ -293,26 +307,32 @@ private double iterationDelta;
 		System.out.println("Expression:" + term);
 		Double result = e.calculate();
 		if(!result.isNaN()) {
-			System.out.println("Calculation Result: " + result);
+			//mainController.output("Calculation Result: " + result,2);
 			return Double.toString(result);
 		}else {
-			System.out.println("Calculation Result: " + term);
+			//mainController.output("Calculation Result: " + term,2);
 			return term;
 		}
 	}
 	
 	/*
-	 * Function that calculates the iterative (up until iterationCount) approach of a fixpoint iteration for while loops.
+	 * Function that calculates the direct (up until iterationCount, open sigma) approach of a fixpoint iteration for while loops.
 	 * It takes the while condition (condition), the program (C) and the post-expectation (f) as input.
 	 * The output is a term that represents the fixpoint of the given input.
 	 */
-	public String fixpointIterationIterativ(String condition, String C, String f) {
-		String caseF = "0"; //X^0 initialization
+	public String directFixpointIteration(String condition, String C, String f) {
+		mainController.output("\n" + "Direct Fixpoint Iteration start. ", 2);
+		String result = "0"; //X^0 initialization
 		for(int i=0; i<iterationCount; i++) {
-			String X = wp(C, caseF);
-			caseF = "if("+condition+","+X+","+f+")";
+			//TODO increase lines for each iteration to see depth on output
+			mainController.output("\n\n" + "-----------------------------------",2);
+			mainController.output("\n\n" + "Iteration " + (i+1) + "\n",2);
+			String X = wp(C, result);
+			result = "if("+condition+","+X+","+f+")";
 		}
-		return caseF;
+		mainController.output("\n\n" + "-----------------------------------",2);
+
+		return result;
 	}
 	
 	/*
@@ -333,11 +353,16 @@ private double iterationDelta;
 				sigmaCondition = sigmaCondition.replace(entry.getKey(), entry.getValue());
 			}	
 			identifier = identifier.replaceFirst("&","");
+			mainController.output("\n\n" + "***********************************",2);
+			mainController.output("\n" + "Current program state: " + identifier ,2);
+			mainController.output("\n\n" + "***********************************",2);
 			Expression e = new Expression(sigmaCondition);
 			if(e.calculate() == 0.0) {
 				sigmaResult = calculateConcreteSigma(f,sigma);
+				mainController.output("\n\n" + "Skip iteration since loop condition is wrong." , 2);
 			}else {
 				for(int i=0; i<iterationCount; i++) {
+					mainController.output("\n\n" + "Iteration " + (i+1) + "\n",2);
 					String X = wp(C, caseF);
 					caseF = "if("+condition+","+X+","+f+")";
 					//TODO future improvement: directly input sigma through assignment = f.replace x with sigma x and keep dependency somehow
@@ -351,9 +376,11 @@ private double iterationDelta;
 							previousResult = sigmaResult;
 						}
 					}
+					mainController.output("\n\n" + "-----------------------------------",2);
 				}
 			}
 			double roundResult = Math.round(sigmaResult * 100.0) / 100.0;
+			mainController.output("\n" + "Fixpoint iteration result: " + "wp[" + C + "]("+f+") = " + sigmaResult ,2);
 			leastFixpoint.addContentFromMap(identifier, Double.toString(roundResult));	
 			
 		}
@@ -361,7 +388,7 @@ private double iterationDelta;
 	}
 	
 	/*
-	 * evaluates a given fixpoint / witness based on the "Upside-Down" Theory and checks whether it is the least possible fixpoint already or 
+	 * Evaluates a given fixpoint / witness based on the "Upside-Down" Theory and checks whether it is the least possible fixpoint already or 
 	 * if there is still room to improve it.
 	 * It takes a program while loop (currentWhile), a witness (witness), the threshold (delta), the current iteration (interationCount), and 
 	 * a set of variable assignments Y' (sigmaSet) as input.
@@ -420,26 +447,26 @@ private double iterationDelta;
 		}
 		
 		//outputting the result
-		mainController.output("\n\n" + "-----------------------------------");
-		mainController.output("\n\n" + "Hash-Function Results: (Iteration " + iterationCount + ")");
-		mainController.output("\n\n" + "X: " + X.getContentMap());
-		mainController.output("\n" + "X': " + Xslash.getContentMap());
-		mainController.output("\n" + "Phi-Hash (X): " + phihashX.getContentMap());
-		mainController.output("\n" + "Phi-Hash (X'): " + phihashXslash.getContentMap());
+		mainController.output("\n\n" + "-----------------------------------",1);
+		mainController.output("\n\n" + "Hash-Function Results: (Iteration " + iterationCount + ")",1);
+		mainController.output("\n\n" + "X: " + X.getContentMap(),1);
+		mainController.output("\n" + "X': " + Xslash.getContentMap(),1);
+		mainController.output("\n" + "Phi-Hash (X): " + phihashX.getContentMap(),1);
+		mainController.output("\n" + "Phi-Hash (X'): " + phihashXslash.getContentMap(),1);
 
 		if(sigmaSet.isEmpty()) {
-			mainController.output("\n\n" + "The hash-function's result is an empty set. This means the witness is already the least fixpoint." );
+			mainController.output("\n\n" + "The hash-function's result is an empty set. This means the witness is already the least fixpoint." ,1);
 		}else {
-			mainController.output("\n\n" + "The hash-function's result is not an empty set. This means the witness is above the least fixpoint." );
-			mainController.output("\n" + "Following states are still in the result set: " );
+			mainController.output("\n\n" + "The hash-function's result is not an empty set. This means the witness is above the least fixpoint." ,1);
+			mainController.output("\n" + "Following states are still in the result set: " ,1);
 			for(String state : sigmaSet) {
-				mainController.output(state + ", ");
+				mainController.output(state + ", ",1);
 			}
 			if(!previousSigmaSet.toString().equals(sigmaSet.toString())) {
-				mainController.output("therefore continuing iteration.");
+				mainController.output("therefore continuing iteration.",1);
 				sigmaSet = evaluateFixpoint(currentWhile, witness, delta, (iterationCount+1), sigmaSet);
 			}else {
-				mainController.output("but since no change in the set has been detected, the iteration stops now.");
+				mainController.output("but since no change in the set has been detected, the iteration stops now.",1);
 			}
 		}
 		return sigmaSet;
@@ -483,9 +510,9 @@ private double iterationDelta;
 	}
 
 	/*
-	 * Function that represents the hash function from the "Upside-Down" theory applied to the Phi function from the wp-transformer. 
-	 * It takes a fixpoint as map (input), the analyzed while loop (currentWhile) and the fixpoint in the mathematical iff-term format (fixpointIf) as input
-	 * and outputs a new function as a map.
+	 * Function that converts a general fixpoint in if-clause notation including the post-expectation (currentWhileTerm) 
+	 * to an iff-clause notation. This is done by calculating the result for every possible program state on the given fixpoint.
+	 * usedVars is used to create the cartesian product of all possible variable combinations (fillAllSigma).
 	 */
 	public String createAllSigmaFixpoint(String currentWhileTerm, String usedVars){
 		Fixpoint leastFixpoint = new Fixpoint();
@@ -506,7 +533,6 @@ private double iterationDelta;
 		return leastFixpoint.setStringFromMap();
 	}
 	
-	//TODO add other possibility of calculating concrete sigma: wp("sigma=x=1;c=1";caseF,null); = Xi
 	/*
 	 * Function that calculates a concrete mathematical result for a variable term with given variable assignments.
 	 * It takes a post-expectation during the fixpoint-iteration (f) and a concrete variable assignment (sigma) as input and
@@ -528,7 +554,7 @@ private double iterationDelta;
 		if(result.isNaN()) {
 			//throw exception and break + log
 			System.out.println("There are unknown variables in the formula!");
-			mainController.output("\n\n" + "There are unknown variables in the formula!");
+			mainController.output("\n\n" + "There are unknown variables in the formula!",1);
 			return null;
 		}else {
 			return result;
@@ -668,9 +694,12 @@ private double iterationDelta;
 	 * fixpoint cache methods
 	 */
 	
+	/*
+	 * clears the fixpointCache in the model
+	 */
 	public void clearFixpointCache() {
 		fixpointCache.clear();
-		mainController.output("\n\n" + "Cache cleared.");
+		mainController.output("\n\n" + "Cache cleared.",1);
 
 	}
 	
@@ -685,10 +714,10 @@ private double iterationDelta;
 			fout = new FileOutputStream("Cache/fixpointCache");
 			try (ObjectOutputStream oos = new ObjectOutputStream(fout)) {
 				oos.writeObject(fixpointCache);
-				mainController.output("\n\n" + "Cache saved.");
+				mainController.output("\n\n" + "Cache saved.",1);
 			}
 		} catch (IOException e) {
-			mainController.output("\n\n" + "WARNING: failed to save Cache.");
+			mainController.output("\n\n" + "WARNING: failed to save Cache.",1);
 			e.printStackTrace();
 		}	
 	}
@@ -704,14 +733,55 @@ private double iterationDelta;
 			try (ObjectInputStream ois = new ObjectInputStream(fin)) {
 				LinkedHashMap<String, String> fileCache = (LinkedHashMap<String, String>) ois.readObject();
 				fixpointCache = fileCache;
-				mainController.output("\n\n" + "Cache loaded.");
+				mainController.output("\n\n" + "Cache loaded.",1);
 			}
 		} catch (IOException | ClassNotFoundException e) {
-			mainController.output("\n\n" + "WARNING: failed to load Cache.");
-			e.printStackTrace();
+			mainController.output("\n\n" + "WARNING: failed to load Cache." ,1);
 		}
 	}
 
+
+	/*
+	 * Deprecated function to calculate restrictions on variables without MathParser
+	 */
+	public String truncate(String input) {
+		String result ="";
+		for(int i = 0; i < input.length(); i++) {
+			char character = input.charAt(i);
+			if(character == '#') {
+				String inside = getInsideBracket(input.substring(i+2));
+				String insideCalc = calculation(inside);
+				if(NumberUtils.isCreatable(insideCalc)) {
+					double insideValue = Double.parseDouble(insideCalc);
+					if(insideValue <= 0) {
+						input = input.replace("#{"+inside+"}", "0");
+						i--;
+					}else {
+						String truncatedValue = Double.toString(NumberUtils.min(insideValue,restriction));							
+						input = input.replace("#{"+inside+"}", truncatedValue);
+						i--;
+					}
+				}else {
+					if(inside.contains("#")) {
+						String subterm = truncate(inside);
+						String replacedInput = input.replace("#{"+inside+"}", "#{"+subterm+"}");
+						if(!replacedInput.equals(input)) {
+							input = replacedInput;
+							i--;
+						}else {
+							result = result + "#";
+						}
+					}else {
+						result = result + "#";
+					}
+				}				
+			}else {
+				result = result + character;
+			}
+		}
+		return result;
+  	}
+	
 	/*
 	 * getter & setter methods
 	 */
@@ -771,46 +841,4 @@ private double iterationDelta;
 	public void setAllSigmaSelection(boolean allSigmaSelection) {
 		this.allSigmaSelection = allSigmaSelection;
 	}
-
-	/*
-	 * Deprecated function to calculate restrictions on variables without MathParser
-	 */
-	public String truncate(String input) {
-		String result ="";
-		for(int i = 0; i < input.length(); i++) {
-			char character = input.charAt(i);
-			if(character == '#') {
-				String inside = getInsideBracket(input.substring(i+2));
-				String insideCalc = calculation(inside);
-				if(NumberUtils.isCreatable(insideCalc)) {
-					double insideValue = Double.parseDouble(insideCalc);
-					if(insideValue <= 0) {
-						input = input.replace("#{"+inside+"}", "0");
-						i--;
-					}else {
-						String truncatedValue = Double.toString(NumberUtils.min(insideValue,restriction));							
-						input = input.replace("#{"+inside+"}", truncatedValue);
-						i--;
-					}
-				}else {
-					if(inside.contains("#")) {
-						String subterm = truncate(inside);
-						String replacedInput = input.replace("#{"+inside+"}", "#{"+subterm+"}");
-						if(!replacedInput.equals(input)) {
-							input = replacedInput;
-							i--;
-						}else {
-							result = result + "#";
-						}
-					}else {
-						result = result + "#";
-					}
-				}				
-			}else {
-				result = result + character;
-			}
-		}
-		return result;
-  	}
-	
 }

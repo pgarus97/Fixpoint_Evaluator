@@ -12,7 +12,7 @@ public interface ControllerHandler {
 	void loadFixpointCache();
 	boolean prepareCalculationModel(String restriction, String iterationCount, boolean allSigma, String usedVars,
 			String deltaInput);
-	void output(String string);
+	void output(String string, int logLevel);
 	void wp(String C, String f, boolean sigmaForwarding);
 	String getLFP(String currentWhileTerm);
 	void evaluateFixpoint(String currentWhileTerm, String text, String text2);

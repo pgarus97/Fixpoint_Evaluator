@@ -17,7 +17,8 @@ import view.WPCalculatorView;
 
 class MainTest {
 	
-	//TODO make systematic border tests etc.
+	//TODO make systematic invariant boundary tests => every possible operator inside while for example etc.
+	//TODO also test variable boundaries like restrictions etc.
 	//TODO make one big view test
 	
 	WPCalculator mainCalculator = new WPCalculator();
@@ -178,8 +179,6 @@ class MainTest {
 		assertEquals("[]",mainCalculator.evaluateFixpoint("while(c=1){{x=x+1}[1/2]{c=0}} (x)", "iff((x=0)&(c=0),0.0;(x=0)&(c=1),0.5;(x=1)&(c=0),1.0;(x=1)&(c=1),1.0)", "0.1", 1, new LinkedHashSet<String>()).toString());
 		//witness
 		assertEquals("[(x=0)&(c=1), (x=1)&(c=1)]",mainCalculator.evaluateFixpoint("while(c=1){x=x+1} (x)", "iff((x=0)&(c=0),0.0;(x=0)&(c=1),1.0;(x=1)&(c=0),1.0;(x=1)&(c=1),1.0)", "0.1", 1, new LinkedHashSet<String>()).toString());
-		//no fixpoint
-		//assertEquals("[(x=0)&(c=0), (x=0)&(c=1), (x=1)&(c=0), (x=1)&(c=1)]",mainCalculator.evaluateFixpoint("while(c=1){x=x+1} (x)", "iff((x=0)&(c=0),1.0;(x=0)&(c=1),0.5;(x=1)&(c=0),1.0;(x=1)&(c=1),1.0)", "0.1", 1, new LinkedHashSet<String>()).toString());
 	}
 	
 	@Test

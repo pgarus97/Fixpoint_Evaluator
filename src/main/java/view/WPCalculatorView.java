@@ -58,6 +58,12 @@ private JToggleButton examineFixpointButton;
 private JCheckBox allSigmaIteration;
 private JCheckBox sigmaForwarding;
 
+private JPanel logPanel;
+private JCheckBox fileLog;
+private JCheckBox minimalLog;
+private JCheckBox detailedLog;
+private JCheckBox fullLog;
+
 private ArrayList<JToggleButton> whileLoops; 
 private JScrollPane whileLoopScroll;
 private JPanel whileLoopPanel;
@@ -152,12 +158,34 @@ private JButton loadCache;
 	    convertButton = new JButton("Convert!");
 	    convertButton.setBounds(500,140,200, 20);
 	    
-	    allSigmaIteration = new JCheckBox("Enable all-sigma fixpoint-iteration.");
+	    allSigmaIteration = new JCheckBox("Enable all-sigma fixpoint iteration.");
 	    allSigmaIteration.setBounds(200,100,300, 50);
 	    allSigmaIteration.setSelected(true);
 	    
 	    sigmaForwarding = new JCheckBox("Enable sigma-forwarding.");
 	    sigmaForwarding.setBounds(200,135,300, 50);
+	    
+	    logPanel = new JPanel();
+	    logPanel.setBounds(500,810 ,400, 20);
+		logPanel.setLayout(new BoxLayout(logPanel, BoxLayout.LINE_AXIS));
+	    
+	    fileLog = new JCheckBox("Write Log to File");
+	    
+	    minimalLog = new JCheckBox("Minimal Log");
+	    minimalLog.setSelected(true);
+	    
+	    detailedLog = new JCheckBox("Detailed Log");
+	    
+	    fullLog = new JCheckBox("Full Log");
+	    
+	    logPanel.add(fileLog);
+	    logPanel.add(Box.createRigidArea(new Dimension(10, 0)));
+	    logPanel.add(new JLabel("|"));
+	    logPanel.add(Box.createRigidArea(new Dimension(10, 0)));
+	    logPanel.add(minimalLog);
+	    logPanel.add(detailedLog);
+	    logPanel.add(fullLog);
+	    logPanel.setVisible(true);
 	    
 	    examineFixpointButton = new JToggleButton("Examine Fixpoints");
 	    examineFixpointButton.setBounds(650,20,200, 40);
@@ -168,7 +196,7 @@ private JButton loadCache;
 	    whileLoopPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 	    whileLoops = new ArrayList<JToggleButton>();
 	    whileLoopScroll = new JScrollPane(whileLoopPanel);
-	    whileLoopScroll.setBounds(900,50,250, 250);
+	    whileLoopScroll.setBounds(1000,50,250, 250);
 	    whileLoopScroll.setVisible(false);
 	    
 	    //evaluation panel
@@ -185,7 +213,7 @@ private JButton loadCache;
 	    witnessInput.setMaximumSize(witnessInput.getPreferredSize());
 	    fixpointEvalButton = new JButton("Evaluate Fixpoint");
 	    evaluationPanel = new JPanel();
-	    evaluationPanel.setBounds(900,300,250, 250);
+	    evaluationPanel.setBounds(1000,300,250, 250);
 	    evaluationPanel.setLayout(new BoxLayout(evaluationPanel, BoxLayout.PAGE_AXIS));
 	    evaluationPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 	    evaluationPanel.add(fixpointDeltaDesc);
@@ -200,7 +228,7 @@ private JButton loadCache;
 	    evaluationPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 	    evaluationPanel.setVisible(false);
 	    convertPanel = new JPanel();
-	    convertPanel.setBounds(900,300,250, 250);
+	    convertPanel.setBounds(1000,300,250, 250);
 	    convertPanel.setLayout(new BoxLayout(convertPanel, BoxLayout.PAGE_AXIS)); 
 	    convertPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 	    convertPanel.add(convertDesc);
@@ -220,7 +248,7 @@ private JButton loadCache;
 	    
 	    result = new JTextArea();
 	    scroll = new JScrollPane(result);
-	    scroll.setBounds(10,200 ,800, 600); 
+	    scroll.setBounds(10,200 ,950, 600); 
 	    result.setEditable(false);
 	    
 	    /*
@@ -230,7 +258,8 @@ private JButton loadCache;
 	    frame.add(cachePanel);
 	    frame.add(evaluationPanel);
 	    frame.add(convertPanel);
- 
+	    frame.add(logPanel);
+	    
 	    frame.add(examineFixpointButton);
 	    frame.add(allSigmaIteration); 
 	    frame.add(sigmaForwarding); 
@@ -261,6 +290,27 @@ private JButton loadCache;
 	    /*
 	     * button listeners
 	     */
+	    
+	    detailedLog.addActionListener(new ActionListener() {
+	    	public void actionPerformed(ActionEvent e){ 
+	    		minimalLog.setSelected(false);
+	    		fullLog.setSelected(false);
+    	   }
+	    });
+	    
+	    minimalLog.addActionListener(new ActionListener() {
+	    	public void actionPerformed(ActionEvent e){ 
+	    		detailedLog.setSelected(false);
+	    		fullLog.setSelected(false);
+    	   }
+	    });
+	    
+	    fullLog.addActionListener(new ActionListener() {
+	    	public void actionPerformed(ActionEvent e){ 
+	    		minimalLog.setSelected(false);
+	    		detailedLog.setSelected(false);
+    	   }
+	    });
 	    
 	    resetCache.addActionListener(new ActionListener(){  
 	    	public void actionPerformed(ActionEvent e){ 
@@ -445,6 +495,25 @@ private JButton loadCache;
 	
 	public JCheckBox getAllSigmaIteration() {
 		return allSigmaIteration;
+	}
+	
+	public boolean getLogToFile() {
+		if(fileLog.isSelected()) {
+			return true;
+		}else {
+			return false;
+		}
+	}
+	
+	public int getLogLevel() {
+		if(minimalLog.isSelected()) {
+			return 1;
+		}else if(detailedLog.isSelected()){
+			return 2;
+		}else if(fullLog.isSelected()) {
+			return 3;
+		}
+		return 1; //default case
 	}
 
 	public void setAllSigmaIteration(JCheckBox allSigmaIteration) {
