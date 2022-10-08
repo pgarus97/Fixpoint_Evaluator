@@ -35,7 +35,7 @@ public class MainController implements ControllerHandler {
 	@Override
 	public void wp(String C, String f, boolean sigmaForwarding) {
 		double start = System.currentTimeMillis();
-		if(mainView.getAllSigmaIteration().isSelected()) {
+		if(mainView.getIterationSelection() != 2 ) {
 			mainCalculator.fillAllSigma(getUsedVars(C+f));
 		}
 		output("\n" + "Calculating: wp["+C+"]("+f+")",1);
@@ -122,20 +122,26 @@ public class MainController implements ControllerHandler {
 	 * Prepares the model for calculating and fills it with all necessary inputs from the view
 	 */
 	@Override
-	public boolean prepareCalculationModel(String restriction,String iterationCount, boolean allSigma, String deltaInput) {
+	public boolean prepareCalculationModel(String restriction,String iterationCount, int iterationSelection, String deltaInput) {
 		mainView.clearResult();
 		mainCalculator.flushWhileLoops();
-		mainCalculator.setAllSigmaSelection(allSigma);
+		mainCalculator.setIterationSelection(iterationSelection);
 		output("Information:",1);
 		
 		output("Output detail level: " + mainView.getLogLevel(),1);
 		if(mainView.getLogToFile()) {
 			output("Writing result to file in logs/app.log",1);
 		}
-		if(allSigma) {
-			output("Chosen iteration method: all-sigma fixpoint iteration",1);
-		}else {
-			output("Chosen iteration method: direct fixpoint iteration",1);
+		switch(iterationSelection) {
+			case 0: 
+				output("Chosen iteration method: combo fixpoint iteration",1);
+				break;
+			case 1:
+				output("Chosen iteration method: all-sigma fixpoint iteration",1);
+				break;
+			case 2: 
+				output("Chosen iteration method: direct fixpoint iteration",1);
+				break;
 		}
 		if(!restriction.isEmpty()) {
 			output("Variable restriction set to {0,...," + restriction + "}.",1);
@@ -149,16 +155,16 @@ public class MainController implements ControllerHandler {
 			output("Iteration count set to " + iterationCount,1);
 			mainCalculator.setIterationCount(Double.parseDouble(iterationCount));
 	    }else {
-	    	if (allSigma) {
-    			output("No iteration count inputted. Taking all-sigma default: infinite iteration",1);
-    			mainCalculator.setIterationCount(Double.POSITIVE_INFINITY);
-	    	}else {
+	    	if(iterationSelection == 2){
 	    		//default case 
-    			output("No iteration count inputted. Taking default count = 10",1);
+    			output("No iteration count inputted. Taking direct default = 10",1);
     			mainCalculator.setIterationCount(10);
+	    	} else {
+    			output("No iteration count inputted. Taking default: infinite iteration",1);
+    			mainCalculator.setIterationCount(Double.POSITIVE_INFINITY);
 	    	}
 	    }
-		if (allSigma) {
+		if (iterationSelection == 1) {
 			if(deltaInput.isEmpty()) {
     			output("No delta for the iteration inputted. Taking default delta = 0.001",1);
     			mainCalculator.setIterationDelta(0.001);

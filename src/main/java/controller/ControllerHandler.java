@@ -10,7 +10,7 @@ public interface ControllerHandler {
 	void clearFixpointCache();
 	void saveFixpointCache();
 	void loadFixpointCache();
-	boolean prepareCalculationModel(String restriction, String iterationCount, boolean allSigma, String deltaInput);
+	boolean prepareCalculationModel(String restriction, String iterationCount, int iterationSelection, String deltaInput);
 	void output(String string, int logLevel, int recursionDepth);
 	void output(String string, int logLevel);
 	void wp(String C, String f, boolean sigmaForwarding);

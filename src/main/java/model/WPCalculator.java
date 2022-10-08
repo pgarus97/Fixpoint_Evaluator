@@ -31,11 +31,9 @@ private ArrayList<String> whileLoops = new ArrayList<String>();
 private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,String>();
 private double restriction;
 private double iterationCount;
-private boolean allSigmaSelection;
+private int iterationSelection; // 0 = combo ; 1 = all-sigma ; 2 = direct
 private double iterationDelta;
-//TODO recursionDepth as global variable
 
-//TODO add recursive level to input, use it to create output tabs in a loop to see depth in output
 	/*
 	 * Main method that represents the weakest pre-expectation transformer function (wp)
 	 * Takes a program (C) and a post expectation (f) as input and recursively calculates the result of the formula wp[C](f) for any sigma (variable assignment).
@@ -125,10 +123,16 @@ private double iterationDelta;
 				//TODO while in while cache 
 				if(!fixpointCache.containsKey(C+" ("+f+")")) {
 					String fixpoint="";
-					if (allSigmaSelection) {		 
-						fixpoint = comboFixpointIteration(condition, whileC, f, recursionDepth+1);
-					} else {
-						fixpoint = directFixpointIteration(condition, whileC, f, recursionDepth+1); 
+					switch(iterationSelection) {
+						case 0: 
+							fixpoint = comboFixpointIteration(condition, whileC, f, recursionDepth+1);
+							break;
+						case 1: 
+							fixpoint = allSigmaFixpointIteration(condition, whileC, f, recursionDepth+1);
+							break;
+						case 2:	
+							fixpoint = directFixpointIteration(condition, whileC, f, recursionDepth+1); 
+							break;
 					}
 					fixpointCache.put(C+" ("+f+")", fixpoint);
 					mainController.output("Put into Cache: "+ C+"("+f+")" + " " + fixpoint,2,recursionDepth); 
@@ -331,7 +335,7 @@ private double iterationDelta;
 		boolean stopCondition = false;;
 		String result = "0"; //X^0 initialization
 		Fixpoint previousFixpoint = new Fixpoint();
-		for(int i=0; true; i++) {
+		for(int i=0; i < iterationCount; i++) {
 			if(stopCondition) {
 				break;
 			}
@@ -368,7 +372,7 @@ private double iterationDelta;
 	 * It takes the while condition (condition), the program (C) and the post-expectation (f) as input.
 	 * The output is an iff term that represents the least fixpoint of the given input.
 	 */
-	public String fixpointIterationAllSigma(String condition, String C, String f, int recursionDepth) {		
+	public String allSigmaFixpointIteration(String condition, String C, String f, int recursionDepth) {		
 		mainController.output("All-Sigma Fixpoint Iteration start. ", 2, recursionDepth);
 		Fixpoint leastFixpoint = new Fixpoint();
 		for(State sigma : allSigma) {
@@ -865,11 +869,11 @@ private double iterationDelta;
 		this.iterationDelta = iterationDelta;
 	}
 
-	public boolean isAllSigmaSelection() {
-		return allSigmaSelection;
+	public int getIterationSelection() {
+		return iterationSelection;
 	}
 
-	public void setAllSigmaSelection(boolean allSigmaSelection) {
-		this.allSigmaSelection = allSigmaSelection;
+	public void setIterationSelection(int iterationSelection) {
+		this.iterationSelection = iterationSelection;
 	}
 }

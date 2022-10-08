@@ -54,6 +54,10 @@ private JLabel convertDesc;
 private JScrollPane scroll;
 private JTextArea result;
 private JToggleButton examineFixpointButton;
+
+private JPanel iterationPanel;
+private JCheckBox comboIteration;
+private JCheckBox directIteration;
 private JCheckBox allSigmaIteration;
 private JCheckBox sigmaForwarding;
 
@@ -82,7 +86,6 @@ private JButton loadCache;
 
 //TODO implement tips from https://stackoverflow.com/questions/62875613/cannot-refer-to-the-non-final-local-variable-display-defined-in-an-enclosing-sco
 //TODO make better input descriptions on hover
-//TODO full log checkbox and shorten normal output
 
 	public WPCalculatorView() {
 		
@@ -134,14 +137,16 @@ private JButton loadCache;
 	    restrictionField.setBounds(430,20,200, 20);
 	    
 	    iterationDesc = new JLabel("Input the iteration count here:");
-	    iterationDesc.setBounds(430,40,200, 20);
+	    iterationDesc.setBounds(450,40,200, 20);
 	    iterationField = new JTextField("");
-	    iterationField.setBounds(430,60,200, 20);
+	    iterationField.setBounds(450,60,200, 20);
 	    
 	    deltaDesc = new JLabel("Input delta (fixpoint iteration stop) here:");
-	    deltaDesc.setBounds(500,80,200, 20);
+	    deltaDesc.setBounds(450,80,200, 20);
 		deltaInput = new JTextField("0.001");
-		deltaInput.setBounds(500,100,200, 20);
+		deltaInput.setBounds(450,100,200, 20);
+		deltaDesc.setVisible(false);
+		deltaInput.setVisible(false);
 
 	    calcButton = new JButton("Calculate!");
 	    calcButton.setBounds(5,100,150, 40);
@@ -151,12 +156,24 @@ private JButton loadCache;
 	    convertButton = new JButton("Convert!");
 	    convertButton.setBounds(500,140,200, 20);
 	    
+	    iterationPanel = new JPanel();
+	    iterationPanel.setBounds(190,70,220, 100);
+		iterationPanel.setLayout(new BoxLayout(iterationPanel, BoxLayout.PAGE_AXIS));
+	    
 	    allSigmaIteration = new JCheckBox("Enable all-sigma fixpoint iteration.");
-	    allSigmaIteration.setBounds(200,100,300, 50);
-	    allSigmaIteration.setSelected(true);
+
+	    directIteration = new JCheckBox("Enable direct fixpoint iteration.");
+	    
+	    comboIteration = new JCheckBox("Enable combo fixpoint iteration.");
+	    comboIteration.setSelected(true);
 	    
 	    sigmaForwarding = new JCheckBox("Enable sigma-forwarding.");
-	    sigmaForwarding.setBounds(200,135,300, 50);
+	    
+	    iterationPanel.add(comboIteration);
+	    iterationPanel.add(allSigmaIteration);
+	    iterationPanel.add(directIteration);
+	    iterationPanel.add(sigmaForwarding);
+	    iterationPanel.setVisible(true);
 	    
 	    logPanel = new JPanel();
 	    logPanel.setBounds(500,810 ,400, 20);
@@ -178,7 +195,7 @@ private JButton loadCache;
 	    logPanel.setVisible(true);
 	    
 	    examineFixpointButton = new JToggleButton("Examine Fixpoints");
-	    examineFixpointButton.setBounds(650,20,200, 40);
+	    examineFixpointButton.setBounds(675,20,200, 40);
 	    examineFixpointButton.setVisible(false);
 	    
 	    whileLoopPanel = new JPanel();
@@ -248,11 +265,10 @@ private JButton loadCache;
 	    frame.add(cachePanel);
 	    frame.add(evaluationPanel);
 	    frame.add(convertPanel);
+	    frame.add(iterationPanel);
 	    frame.add(logPanel);
 	    
 	    frame.add(examineFixpointButton);
-	    frame.add(allSigmaIteration); 
-	    frame.add(sigmaForwarding); 
 	    frame.add(cDesc);
 	    frame.add(cInput);
 	    frame.add(fDesc);
@@ -278,7 +294,6 @@ private JButton loadCache;
 	    /*
 	     * button listeners
 	     */
-	    //TODO fix buttons
 	    detailedLog.addActionListener(new ActionListener() {
 	    	public void actionPerformed(ActionEvent e){ 
 	    		minimalLog.setSelected(false);
@@ -316,9 +331,37 @@ private JButton loadCache;
 	    		if (allSigmaIteration.isSelected()) {
 	    	    	deltaInput.setVisible(true);
 	    	    	deltaDesc.setVisible(true);
+	    	    	iterationDesc.setVisible(true);
+	    	    	iterationField.setVisible(true);
+	    	    	directIteration.setSelected(false);
+	    	    	comboIteration.setSelected(false);
 	    	    }else {
 	    	    	deltaInput.setVisible(false);
 	    	    	deltaDesc.setVisible(false);
+	    	    }
+    	   }  
+	    });
+	    
+	    comboIteration.addActionListener(new ActionListener(){  
+	    	public void actionPerformed(ActionEvent e){ 
+	    		if (comboIteration.isSelected()) {
+	    	    	deltaInput.setVisible(false);
+	    	    	deltaDesc.setVisible(false);
+	    	    	directIteration.setSelected(false);
+	    	    	allSigmaIteration.setSelected(false);
+	    	    }
+    	   }  
+	    });
+	    
+	    directIteration.addActionListener(new ActionListener(){  
+	    	public void actionPerformed(ActionEvent e){ 
+	    		if (directIteration.isSelected()) {
+	    	    	deltaInput.setVisible(false);
+	    	    	deltaDesc.setVisible(false);
+	    	    	iterationDesc.setVisible(true);
+	    	    	iterationField.setVisible(true);
+	    	    	comboIteration.setSelected(false);
+	    	    	allSigmaIteration.setSelected(false);
 	    	    }
     	   }  
 	    });
@@ -341,7 +384,7 @@ private JButton loadCache;
 	    calcButton.addActionListener(new ActionListener(){  
 	    	//TODO log in real time somehow => https://docs.oracle.com/javase/tutorial/uiswing/concurrency/index.html#:~:text=Careful%20use%20of%20concurrency%20is%20particularly%20important%20to,must%20learn%20how%20the%20Swing%20framework%20employs%20threads.
 	    	public void actionPerformed(ActionEvent e){
-	    		if(mainController.prepareCalculationModel(restrictionField.getText(),iterationField.getText(),allSigmaIteration.isSelected(),deltaInput.getText()) == false) {
+	    		if(mainController.prepareCalculationModel(restrictionField.getText(),iterationField.getText(),getIterationSelection(),deltaInput.getText()) == false) {
 	    			return;
 	    		}
 	    		prepareCalculationView();
@@ -474,6 +517,18 @@ private JButton loadCache;
 		return 1; //default case
 	}
 
+	public int getIterationSelection() {
+		if(comboIteration.isSelected()) {
+			return 0;
+		} else if(allSigmaIteration.isSelected()) {
+			return 1;
+		}else if(directIteration.isSelected()) {
+			return 2;
+		}
+		//default case
+		return 0;
+	}
+	
 	public void setAllSigmaIteration(JCheckBox allSigmaIteration) {
 		this.allSigmaIteration = allSigmaIteration;
 	}

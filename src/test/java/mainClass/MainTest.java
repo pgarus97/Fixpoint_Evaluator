@@ -30,7 +30,7 @@ class MainTest {
 	MainTest(){
 		mainController.link(mainView, mainCalculator);
 		mainCalculator.setRestriction(10); //default test case
-		mainCalculator.setAllSigmaSelection(true); //default case
+		mainCalculator.setIterationSelection(1); //default case = all-sigma
 		mainCalculator.setIterationDelta(0.001); //default case
 		mainCalculator.setIterationCount(Double.POSITIVE_INFINITY); //default case
 	}
@@ -103,7 +103,7 @@ class MainTest {
 	@Test
 	void testWhile() {	
 		mainCalculator.setIterationCount(10);
-		mainCalculator.setAllSigmaSelection(false);
+		mainCalculator.setIterationSelection(2);
 
 
 		assertEquals("1.0", mainCalculator.calculation(mainCalculator.wp("c=0;x=1;while(c=1){{x=x+1}[1/2]{c=0}}", "x",0)));
@@ -118,6 +118,18 @@ class MainTest {
 		mainCalculator.setRestriction(2);
 		mainCalculator.fillAllSigma("xc");
 
+		assertEquals("1.0", mainCalculator.calculation(mainCalculator.wp("c=0;x=1;while(c=1){{x=x+1}[1/2]{c=0}}", "x",0)));
+		assertEquals("1.5", mainCalculator.calculation(mainCalculator.wp("c=1;x=1;while(c=1){{x=x+1}[1/2]{c=0}}", "x",0))); 
+	}
+	
+	@Test
+	void testComboWhile() {	
+		
+		mainCalculator.setIterationSelection(0);
+		mainCalculator.setRestriction(2);
+		mainCalculator.fillAllSigma("xc");
+
+		
 		assertEquals("1.0", mainCalculator.calculation(mainCalculator.wp("c=0;x=1;while(c=1){{x=x+1}[1/2]{c=0}}", "x",0)));
 		assertEquals("1.5", mainCalculator.calculation(mainCalculator.wp("c=1;x=1;while(c=1){{x=x+1}[1/2]{c=0}}", "x",0))); 
 	}
@@ -214,8 +226,8 @@ class MainTest {
 		mainCalculator.setRestriction(1);
 		mainCalculator.setIterationCount(10);
 		mainController.clearFixpointCache();
-		mainCalculator.setAllSigmaSelection(false);
-		mainController.wp("while(c=1){{x=x+1}[1/2]{c=0}}", "x",false);
+		mainCalculator.setIterationSelection(2);
+		mainController.wp("while(c=1){{x=x+1}[1/2]{c=0}}","x",false);
 		assertEquals("iff((c=0)&(x=0),0.0;(c=0)&(x=1),1.0;(c=1)&(x=0),0.5;(c=1)&(x=1),1.0)",mainController.createAllSigmaFixpoint("while(c=1){{x=x+1}[1/2]{c=0}} (x)"));
 	}
 	
