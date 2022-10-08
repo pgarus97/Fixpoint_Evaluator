@@ -126,7 +126,7 @@ private double iterationDelta;
 				if(!fixpointCache.containsKey(C+" ("+f+")")) {
 					String fixpoint="";
 					if (allSigmaSelection) {		 
-						fixpoint = fixpointIterationAllSigma(condition, whileC, f, recursionDepth+1);
+						fixpoint = comboFixpointIteration(condition, whileC, f, recursionDepth+1);
 					} else {
 						fixpoint = directFixpointIteration(condition, whileC, f, recursionDepth+1); 
 					}
@@ -158,10 +158,16 @@ private double iterationDelta;
 					//preemptive if-clause resolution optimization
 					if(assignResult.startsWith("if") && !assignResult.startsWith("iff")) {
 						String condition = getInsideIf(assignResult.substring(3));
-						String assignifC1 = assignResult.substring(condition.length()+4);	
-						assignifC1 =  getInsideIf(assignifC1);					
+						String assignifC1 = assignResult.substring(condition.length()+4);
+						System.out.println("condition=" +condition);
+						System.out.println("assignifC1n=" +assignifC1);
+						System.out.println("assignResult" +assignResult);
+
+
+						assignifC1 =  getInsideIf(assignifC1);	
+						System.out.println("assignifC1=" +assignifC1);
 						if(calculation(condition).equals("1.0")) {
-							mainController.output( "Found possible if-assignment optimization!",2,recursionDepth); 
+							mainController.output("Found possible if-assignment optimization!",2,recursionDepth); 
 							mainController.output("If-Condition true, therefore wp[" + C + "]("+f+") = " + assignifC1,2, recursionDepth); 
 							return calculation(assignifC1);
 						}
@@ -315,10 +321,52 @@ private double iterationDelta;
 		return result;
 	}
 	
+	/* 
+	 * Function that calculates the combination approach of a fixpoint iteration for while loops.
+	 * It takes the while condition (condition), the program (C) and the post-expectation (f) as input.
+	 * The output is an iff term that represents the fixpoint of the given input.
+	 */
+	public String comboFixpointIteration(String condition, String C, String f, int recursionDepth) {
+		mainController.output("DirectCombo Fixpoint Iteration start. ", 2, recursionDepth);
+		boolean stopCondition = false;;
+		String result = "0"; //X^0 initialization
+		Fixpoint previousFixpoint = new Fixpoint();
+		for(int i=0; true; i++) {
+			if(stopCondition) {
+				break;
+			}
+			mainController.output("-----------------------------------",2,recursionDepth);
+			mainController.output("Iteration " + (i+1) + "\n",2,recursionDepth);
+			String X = wp(C, result,recursionDepth);
+			result = "if("+condition+","+X+","+f+")";
+			Fixpoint currentFixpoint = new Fixpoint();
+			for(State sigma : allSigma) {
+				String identifier = "";
+				Double sigmaResult = calculateSigma(result, sigma);
+				double roundResult = Math.round(sigmaResult * 100.0) / 100.0;
+				System.out.println("This is the value:" + sigmaResult);
+				for(Map.Entry<String, String> entry : sigma.getContentMap().entrySet()) {
+					identifier += "&("+entry.getKey()+"="+entry.getValue()+")"; //creates identifier based on variables and values
+					System.out.println("This is the id:" + identifier);
+				}	
+				identifier = identifier.replaceFirst("&","");
+				currentFixpoint.addContentFromMap(identifier, Double.toString(roundResult));				
+			}
+			currentFixpoint.setStringFromMap();
+			if(!previousFixpoint.getContentString().equals(currentFixpoint.getContentString())) {
+				previousFixpoint.setContentString(currentFixpoint.getContentString());
+			}else {
+				stopCondition = true;
+			}
+			result = currentFixpoint.getContentString();
+		}
+		return result;
+	}
+	
 	/*
 	 * Function that calculates the all-sigma approach of a fixpoint iteration for while loops.
 	 * It takes the while condition (condition), the program (C) and the post-expectation (f) as input.
-	 * The output is a term that represents the least fixpoint of the given input.
+	 * The output is an iff term that represents the least fixpoint of the given input.
 	 */
 	public String fixpointIterationAllSigma(String condition, String C, String f, int recursionDepth) {		
 		mainController.output("All-Sigma Fixpoint Iteration start. ", 2, recursionDepth);
@@ -335,11 +383,11 @@ private double iterationDelta;
 			}	
 			identifier = identifier.replaceFirst("&","");
 			mainController.output("***********************************",2,recursionDepth);
-			mainController.output( "Current program state: " + identifier ,2,recursionDepth);
+			mainController.output("Current program state: " + identifier ,2,recursionDepth);
 			mainController.output("***********************************",2,recursionDepth);
 			Expression e = new Expression(sigmaCondition);
 			if(e.calculate() == 0.0) {
-				sigmaResult = calculateConcreteSigma(f,sigma);
+				sigmaResult = calculateSigma(f,sigma);
 				mainController.output("Skip iteration since loop condition is wrong." , 2,recursionDepth);
 			}else {
 				for(int i=0; i<iterationCount; i++) {
@@ -347,8 +395,8 @@ private double iterationDelta;
 					String X = wp(C, caseF,recursionDepth);
 					caseF = "if("+condition+","+X+","+f+")";
 					//TODO future improvement: directly input sigma through assignment = f.replace x with sigma x and keep dependency somehow
-					sigmaResult = calculateConcreteSigma(caseF,sigma);
-					
+					sigmaResult = calculateSigma(caseF,sigma);
+					mainController.output("Iteration Result: " + sigmaResult,2,recursionDepth);
 					//checks if the distance between the iterations has reached the delta threshold and stops the iteration if it is the case
 					if(i > 2) {
 						if(sigmaResult-previousResult < iterationDelta) {
@@ -496,23 +544,23 @@ private double iterationDelta;
 	 * to an iff-clause notation. This is done by calculating the result for every possible program state on the given fixpoint.
 	 * usedVars is used to create the cartesian product of all possible variable combinations (fillAllSigma).
 	 */
-	public String createAllSigmaFixpoint(String currentWhileTerm, String usedVars){
+	public Fixpoint convertFixpoint(String fixpointIfFormat, String usedVars){
 		Fixpoint leastFixpoint = new Fixpoint();
 		ArrayList<State> allSigma = fillAllSigma(usedVars);
 		for(State sigma : allSigma) {
 			String identifier = "";
-			Double value = calculateConcreteSigma(currentWhileTerm, sigma);
-			System.out.println("This is the value:" + value);
+			Double sigmaResult = calculateSigma(fixpointIfFormat, sigma);
+			System.out.println("This is the value:" + sigmaResult);
 			for(Map.Entry<String, String> entry : sigma.getContentMap().entrySet()) {
 				identifier += "&("+entry.getKey()+"="+entry.getValue()+")"; //creates identifier based on variables and values
 				System.out.println("This is the id:" + identifier);
 			}	
 			identifier = identifier.replaceFirst("&","");
-			double roundResult = Math.round(value * 100.0) / 100.0;
+			double roundResult = Math.round(sigmaResult * 100.0) / 100.0;
 			leastFixpoint.addContentFromMap(identifier, Double.toString(roundResult));	
 		}
-		
-		return leastFixpoint.setStringFromMap();
+		leastFixpoint.setStringFromMap();
+		return leastFixpoint;
 	}
 	
 	/*
@@ -520,7 +568,7 @@ private double iterationDelta;
 	 * It takes a post-expectation during the fixpoint-iteration (f) and a concrete variable assignment (sigma) as input and
 	 * outputs a numerical value or throws an exception in case it cannot be calculated.
 	 */
-	public Double calculateConcreteSigma(String f, State sigma) {
+	public Double calculateSigma(String f, State sigma) {
 		System.out.println("Concrete Sigma f : " + f);
 		for(Map.Entry<String, String> entry : sigma.getContentMap().entrySet()) {
 			f = f.replace(entry.getKey(), entry.getValue());
@@ -531,7 +579,7 @@ private double iterationDelta;
 		Expression e = new Expression(f,restrictValue);
 
 		Double result = e.calculate();
-		System.out.println("Result: " + result);
+		System.out.println("Concrete Sigma Result: " + result);
 
 		if(result.isNaN()) {
 			//throw exception and break + log
@@ -637,6 +685,9 @@ private double iterationDelta;
 			//min inside if case
 			if(character == 'm') {
 				commaCount += 1;
+			}
+			if(character =='n') {
+				commaCount -= 2;
 			}
 			if(character == ',') {
 				commaCount--;

@@ -36,7 +36,7 @@ public class MainController implements ControllerHandler {
 	public void wp(String C, String f, boolean sigmaForwarding) {
 		double start = System.currentTimeMillis();
 		if(mainView.getAllSigmaIteration().isSelected()) {
-			mainCalculator.fillAllSigma(getUsedVars(C));
+			mainCalculator.fillAllSigma(getUsedVars(C+f));
 		}
 		output("\n" + "Calculating: wp["+C+"]("+f+")",1);
 		String calcResult = "";
@@ -67,17 +67,17 @@ public class MainController implements ControllerHandler {
 	    output("\n" + "Converting to allSigma fixpoint notation...",1);
 		String currentLFP = mainCalculator.getFixpointCache().get(currentWhileTerm);
 		double start = System.currentTimeMillis();
-		String result = mainCalculator.createAllSigmaFixpoint(currentLFP, getUsedVars(currentWhileTerm));
-		mainCalculator.getFixpointCache().replace(currentWhileTerm, result);
+		String newLFP = mainCalculator.convertFixpoint(currentLFP, getUsedVars(currentWhileTerm)).getContentString();
+		mainCalculator.getFixpointCache().replace(currentWhileTerm, newLFP);
 		double end = System.currentTimeMillis();
 		
 		output("Success! Calculation Time: " + (end - start)/1000 + "s",1);
 		output("Converted fixpoint:",1);
-	    output(result,1);
+	    output(newLFP,1);
 		output("\n" + "*************************",1);
 
 
-		return result;
+		return newLFP;
 	}
 
 	/*
@@ -222,7 +222,7 @@ public class MainController implements ControllerHandler {
 	 */
 	public String getUsedVars(String C) {
 		String usedVars = C.replaceAll("[^A-Za-z]", "");
-		usedVars = usedVars.replaceAll("[!^whilepfmnr]", "");
+		usedVars = usedVars.replaceAll("[!^whilepfmnrs]", "");
 		String result="";
 		for(int i = 0; i < usedVars.length(); i++) {
 			String temp = ""+usedVars.charAt(i);

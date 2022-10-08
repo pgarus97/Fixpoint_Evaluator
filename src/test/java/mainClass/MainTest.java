@@ -19,7 +19,9 @@ class MainTest {
 	
 	//TODO make systematic invariant boundary tests => every possible operator inside while for example etc.
 	//TODO also test variable boundaries like restrictions etc.
-	//TODO make one big view test
+	//TODO make one big view test, separate class
+	//TODO separate controller view and model
+	//TODO test coverage%
 	
 	WPCalculator mainCalculator = new WPCalculator();
 	WPCalculatorView mainView = new WPCalculatorView();
@@ -145,11 +147,11 @@ class MainTest {
 		mainCalculator.setRestriction(1); //var from {0,1}
 		ArrayList<State> allSigma = mainCalculator.fillAllSigma("xy");
 
-		assertEquals(1.0,mainCalculator.calculateConcreteSigma("if(x=0,1,y)", allSigma.get(0)));
-		assertEquals(1.0,mainCalculator.calculateConcreteSigma("if(x=0,1,y)", allSigma.get(1)));
-		assertEquals(0.0,mainCalculator.calculateConcreteSigma("if(x=0,1,y)", allSigma.get(2)));
-		assertEquals(1.0,mainCalculator.calculateConcreteSigma("if(x=0,1,y)", allSigma.get(3)));
-		assertEquals(null,mainCalculator.calculateConcreteSigma("if(x=0,1,z)", allSigma.get(3)));
+		assertEquals(1.0,mainCalculator.calculateSigma("if(x=0,1,y)", allSigma.get(0)));
+		assertEquals(1.0,mainCalculator.calculateSigma("if(x=0,1,y)", allSigma.get(1)));
+		assertEquals(0.0,mainCalculator.calculateSigma("if(x=0,1,y)", allSigma.get(2)));
+		assertEquals(1.0,mainCalculator.calculateSigma("if(x=0,1,y)", allSigma.get(3)));
+		assertEquals(null,mainCalculator.calculateSigma("if(x=0,1,z)", allSigma.get(3)));
 	}
 	
 	@Test

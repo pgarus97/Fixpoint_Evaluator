@@ -90,7 +90,7 @@ private JButton loadCache;
 		 * GUI implementation
 		 */
 		
-		frame = new JFrame("WP-Calculator");	
+		frame = new JFrame("Fixpoint-Evaluator");	
 	    
 		panel = new JPanel();
 		panel.setLayout(new BoxLayout(panel, BoxLayout.LINE_AXIS));
@@ -278,17 +278,17 @@ private JButton loadCache;
 	    /*
 	     * button listeners
 	     */
-	    
+	    //TODO fix buttons
 	    detailedLog.addActionListener(new ActionListener() {
 	    	public void actionPerformed(ActionEvent e){ 
 	    		minimalLog.setSelected(false);
-    	   }
+ 		    }
 	    });
 	    
 	    minimalLog.addActionListener(new ActionListener() {
-	    	public void actionPerformed(ActionEvent e){ 
-	    		detailedLog.setSelected(false);
-    	   }
+	    	public void actionPerformed(ActionEvent e){   		
+	    			detailedLog.setSelected(false);
+	    	}
 	    });
 	    
 	    resetCache.addActionListener(new ActionListener(){  
