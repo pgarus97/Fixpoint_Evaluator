@@ -332,7 +332,7 @@ private double iterationDelta;
 	 */
 	public String comboFixpointIteration(String condition, String C, String f, int recursionDepth) {
 		mainController.output("DirectCombo Fixpoint Iteration start. ", 2, recursionDepth);
-		boolean stopCondition = false;;
+		boolean stopCondition = false;
 		String result = "0"; //X^0 initialization
 		Fixpoint previousFixpoint = new Fixpoint();
 		for(int i=0; i < iterationCount; i++) {
@@ -343,24 +343,11 @@ private double iterationDelta;
 			mainController.output("Iteration " + (i+1) + "\n",2,recursionDepth);
 			String X = wp(C, result,recursionDepth);
 			result = "if("+condition+","+X+","+f+")";
-			Fixpoint currentFixpoint = new Fixpoint();
-			for(State sigma : allSigma) {
-				String identifier = "";
-				Double sigmaResult = calculateSigma(result, sigma);
-				double roundResult = Math.round(sigmaResult * 100.0) / 100.0;
-				System.out.println("This is the value:" + sigmaResult);
-				for(Map.Entry<String, String> entry : sigma.getContentMap().entrySet()) {
-					identifier += "&("+entry.getKey()+"="+entry.getValue()+")"; //creates identifier based on variables and values
-					System.out.println("This is the id:" + identifier);
-				}	
-				identifier = identifier.replaceFirst("&","");
-				currentFixpoint.addContentFromMap(identifier, Double.toString(roundResult));				
-			}
-			currentFixpoint.setStringFromMap();
-			if(!previousFixpoint.getContentString().equals(currentFixpoint.getContentString())) {
-				previousFixpoint.setContentString(currentFixpoint.getContentString());
-			}else {
+			Fixpoint currentFixpoint = convertFixpoint(result);
+			if(previousFixpoint.getContentString().equals(currentFixpoint.getContentString())) {
 				stopCondition = true;
+			}else {
+				previousFixpoint.setContentString(currentFixpoint.getContentString());
 			}
 			result = currentFixpoint.getContentString();
 		}
@@ -548,9 +535,8 @@ private double iterationDelta;
 	 * to an iff-clause notation. This is done by calculating the result for every possible program state on the given fixpoint.
 	 * usedVars is used to create the cartesian product of all possible variable combinations (fillAllSigma).
 	 */
-	public Fixpoint convertFixpoint(String fixpointIfFormat, String usedVars){
+	public Fixpoint convertFixpoint(String fixpointIfFormat){
 		Fixpoint leastFixpoint = new Fixpoint();
-		ArrayList<State> allSigma = fillAllSigma(usedVars);
 		for(State sigma : allSigma) {
 			String identifier = "";
 			Double sigmaResult = calculateSigma(fixpointIfFormat, sigma);

@@ -145,8 +145,6 @@ private JButton loadCache;
 	    deltaDesc.setBounds(450,80,200, 20);
 		deltaInput = new JTextField("0.001");
 		deltaInput.setBounds(450,100,200, 20);
-		deltaDesc.setVisible(false);
-		deltaInput.setVisible(false);
 
 	    calcButton = new JButton("Calculate!");
 	    calcButton.setBounds(5,100,150, 40);
@@ -161,17 +159,17 @@ private JButton loadCache;
 		iterationPanel.setLayout(new BoxLayout(iterationPanel, BoxLayout.PAGE_AXIS));
 	    
 	    allSigmaIteration = new JCheckBox("Enable all-sigma fixpoint iteration.");
+	    allSigmaIteration.setSelected(true);
 
 	    directIteration = new JCheckBox("Enable direct fixpoint iteration.");
 	    
 	    comboIteration = new JCheckBox("Enable combo fixpoint iteration.");
-	    comboIteration.setSelected(true);
 	    
 	    sigmaForwarding = new JCheckBox("Enable sigma-forwarding.");
 	    
-	    iterationPanel.add(comboIteration);
 	    iterationPanel.add(allSigmaIteration);
 	    iterationPanel.add(directIteration);
+	    iterationPanel.add(comboIteration);
 	    iterationPanel.add(sigmaForwarding);
 	    iterationPanel.setVisible(true);
 	    
@@ -526,7 +524,7 @@ private JButton loadCache;
 			return 2;
 		}
 		//default case
-		return 0;
+		return 1;
 	}
 	
 	public void setAllSigmaIteration(JCheckBox allSigmaIteration) {

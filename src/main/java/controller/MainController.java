@@ -35,9 +35,7 @@ public class MainController implements ControllerHandler {
 	@Override
 	public void wp(String C, String f, boolean sigmaForwarding) {
 		double start = System.currentTimeMillis();
-		if(mainView.getIterationSelection() != 2 ) {
-			mainCalculator.fillAllSigma(getUsedVars(C+f));
-		}
+		mainCalculator.fillAllSigma(getUsedVars(C+f));
 		output("\n" + "Calculating: wp["+C+"]("+f+")",1);
 		String calcResult = "";
 		if(sigmaForwarding) {
@@ -67,7 +65,7 @@ public class MainController implements ControllerHandler {
 	    output("\n" + "Converting to allSigma fixpoint notation...",1);
 		String currentLFP = mainCalculator.getFixpointCache().get(currentWhileTerm);
 		double start = System.currentTimeMillis();
-		String newLFP = mainCalculator.convertFixpoint(currentLFP, getUsedVars(currentWhileTerm)).getContentString();
+		String newLFP = mainCalculator.convertFixpoint(currentLFP).getContentString();
 		mainCalculator.getFixpointCache().replace(currentWhileTerm, newLFP);
 		double end = System.currentTimeMillis();
 		
