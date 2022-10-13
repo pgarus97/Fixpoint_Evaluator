@@ -830,6 +830,10 @@ private double iterationDelta;
 	public void setHandler(ControllerHandler controller) {
 		mainController = controller;
 	}
+	
+	public ControllerHandler getHandler() {
+		return mainController;
+	}
 
 	public double getRestriction() {
 		return restriction;

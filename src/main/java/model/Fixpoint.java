@@ -23,11 +23,11 @@ public class Fixpoint {
 	}
 	
 	//constructor from given fixpoint map
-		public Fixpoint(LinkedHashMap<String,String> contentMap) {
-			this.contentMap = contentMap;
-			setContentString(contentString);
-			setStringFromMap();
-		}
+	public Fixpoint(LinkedHashMap<String,String> contentMap) {
+		this.contentMap = contentMap;
+		setContentString(contentString);
+		setStringFromMap();
+	}
 	
 	
 	/*

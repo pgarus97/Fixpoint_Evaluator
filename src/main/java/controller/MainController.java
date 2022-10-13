@@ -33,7 +33,7 @@ public class MainController implements ControllerHandler {
 	 * Prepares and executes the wp transformer function of the model
 	 */
 	@Override
-	public void wp(String C, String f, boolean sigmaForwarding) {
+	public String wp(String C, String f, boolean sigmaForwarding) {
 		double start = System.currentTimeMillis();
 		mainCalculator.fillAllSigma(getUsedVars(C+f));
 		output("\n" + "Calculating: wp["+C+"]("+f+")",1);
@@ -53,7 +53,8 @@ public class MainController implements ControllerHandler {
 	    output("Result: " + calcResult,1);
 	    if(C.contains("while(")) {
 	    	mainView.prepareEvaluationView(mainCalculator.getWhileLoops());
-	    }   		
+	    }
+	    return calcResult;
 	}
 	
 	/*
@@ -84,7 +85,9 @@ public class MainController implements ControllerHandler {
 	@Override
 	public boolean isConverted(String currentWhileTerm) {
 		String currentLFP = mainCalculator.getFixpointCache().get(currentWhileTerm);
-		if(currentLFP.startsWith("iff")) {
+		if(currentLFP == null) {
+			return false;
+		}else if(currentLFP.startsWith("iff")) {
 			return true;
 		}else {
 			return false;
@@ -95,7 +98,7 @@ public class MainController implements ControllerHandler {
 	 * Prepares model with all needed inputs from the view in order to perform a fixpoint evaluation on a given witness
 	 */
 	@Override
-	public void evaluateFixpoint(String currentWhileTerm, String witness, String fixpointDelta) {
+	public LinkedHashSet<String> evaluateFixpoint(String currentWhileTerm, String witness, String fixpointDelta) {
 	    double start = System.currentTimeMillis();
 		output("\n" +"*************************",1);
 		output("\n" +"Starting fixpoint evaluation. Information: ",1);
@@ -105,15 +108,16 @@ public class MainController implements ControllerHandler {
     	    output("Delta: " + fixpointDelta ,1);
 	    }else {
     	    output("The inputted delta: '" + fixpointDelta + "' is not a number!",1);
-    	    return;
+    	    return null;
 	    }
 	    output("Witness: " + witness,1);
 		output("\n" + "*************************",1);
 
-	    mainCalculator.evaluateFixpoint(currentWhileTerm, witness, fixpointDelta, 1, new LinkedHashSet<String>());
+	    LinkedHashSet<String> result = mainCalculator.evaluateFixpoint(currentWhileTerm, witness, fixpointDelta, 1, new LinkedHashSet<String>());
 	    double end = System.currentTimeMillis();
 		
 		output("Calculation Time: " + (end - start)/1000 + "s",1);
+		return result;
 	}
 	
 	/*
@@ -263,5 +267,20 @@ public class MainController implements ControllerHandler {
 		mainCalculator.clearFixpointCache();				
 	}
 	
+	public WPCalculatorView getMainView() {
+		return mainView;
+	}
 
+	public void setMainView(WPCalculatorView mainView) {
+		this.mainView = mainView;
+	}
+
+	public WPCalculator getMainCalculator() {
+		return mainCalculator;
+	}
+
+	public void setMainCalculator(WPCalculator mainCalculator) {
+		this.mainCalculator = mainCalculator;
+	}
+	
 }

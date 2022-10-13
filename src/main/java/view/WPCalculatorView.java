@@ -67,6 +67,7 @@ private JCheckBox minimalLog;
 private JCheckBox detailedLog;
 
 private ArrayList<JToggleButton> whileLoops; 
+
 private JScrollPane whileLoopScroll;
 private JPanel whileLoopPanel;
 
@@ -498,6 +499,26 @@ private JButton loadCache;
 		return allSigmaIteration;
 	}
 	
+	public JCheckBox getComboIteration() {
+		return comboIteration;
+	}
+	
+	public JCheckBox getDirectIteration() {
+		return directIteration;
+	}
+	
+	public JCheckBox getMinimalLog() {
+		return minimalLog;
+	}
+	
+	public JCheckBox getDetailedLog() {
+		return detailedLog;
+	}
+	
+	public JCheckBox getFileLog() {
+		return fileLog;
+	}
+	
 	public boolean getLogToFile() {
 		if(fileLog.isSelected()) {
 			return true;
@@ -549,6 +570,18 @@ private JButton loadCache;
 	
 	public void setHandler(ControllerHandler controller) {
 		mainController = controller;
+	}
+
+	public ControllerHandler getHandler() {
+		return mainController;
+	}
+	
+	public ArrayList<JToggleButton> getWhileLoops() {
+		return whileLoops;
+	}
+	
+	public void setWhileLoops(ArrayList<JToggleButton> whileLoops) {
+		this.whileLoops = whileLoops;
 	}
 	
 	public void clearResult() {

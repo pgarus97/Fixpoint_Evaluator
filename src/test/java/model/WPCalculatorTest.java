@@ -1,33 +1,22 @@
-package mainClass;
+package model;
 
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import controller.MainController;
-import model.Fixpoint;
-import model.State;
-import model.WPCalculator;
 import view.WPCalculatorView;
 
-class MainTest {
-	
-	//TODO make systematic invariant boundary tests => every possible operator inside while for example etc.
-	//TODO also test variable boundaries like restrictions etc.
-	//TODO make one big view test, separate class
-	//TODO separate controller view and model
-	//TODO test coverage%
-	
+class WPCalculatorTest {
+
 	WPCalculator mainCalculator = new WPCalculator();
 	WPCalculatorView mainView = new WPCalculatorView();
 	MainController mainController= new MainController();
 	
-	MainTest(){
+	WPCalculatorTest(){
 		mainController.link(mainView, mainCalculator);
 		mainCalculator.setRestriction(10); //default test case
 		mainCalculator.setIterationSelection(1); //default case = all-sigma
@@ -42,26 +31,21 @@ class MainTest {
 		assertEquals("if(1=1,x+1,x)", mainCalculator.calculation("if(1=1,x+1,x)"));
 		assertEquals("20.0", mainCalculator.calculation("if(r(11)=10,20,30)"));
 		assertEquals("20.0", mainCalculator.calculation("if(r(-1)=0,20,30)"));
-		assertEquals("30.0", mainCalculator.calculation("if(r(4)=10,20,30)"));
-		
+		assertEquals("30.0", mainCalculator.calculation("if(r(4)=10,20,30)"));		
 		assertEquals("x=3;x=4",mainCalculator.getInsideIf("x=3;x=4,x=2)"));
 		assertEquals("x=3;iff(x=3,3;x=2,4)",mainCalculator.getInsideIf("x=3;iff(x=3,3;x=2,4),x=2)"));
 
 	}
-
 	
-	@Disabled
-	void testTruncate() {
-		assertEquals("1.0",mainCalculator.truncate("#{1}"));
-		assertEquals("0",mainCalculator.truncate("#{-1}"));
-		assertEquals("10.0",mainCalculator.truncate("#{11}"));
-		assertEquals("#{x+1}",mainCalculator.truncate("#{x+1}"));
-		assertEquals("2.0",mainCalculator.truncate("#{1+1}"));
-		assertEquals("#{x+4.0}",mainCalculator.truncate("#{x+#{1+3}}"));
-		assertEquals("6.0",mainCalculator.truncate("#{2+#{1+3}}"));
-		assertEquals("#{x+#{y+3}}",mainCalculator.truncate("#{x+#{y+3}}"));
+	@Test
+	void testSigmaForwarding() {
+		assertEquals("x=1.0;x=2.0;{x=x+1}[1/2]{c=0};if{x=2}{x=0}else{c=0};",mainCalculator.sigmaForwarding("x=1;x=x+1;{x=x+1}[1/2]{c=0};if{x=2}{x=0}else{c=0}",new State()));
+		assertEquals("x=1.0;x=2.0;x=0;",mainCalculator.sigmaForwarding("x=1;x=x+1;if{x=2}{x=0}else{c=0}",new State()));
+		assertEquals("x=1.0;c=0.0;c=0;",mainCalculator.sigmaForwarding("x=1;c=0;if{c=1}{x=0}else{c=0}",new State()));
+		assertEquals("x=1.0;c=0.0;",mainCalculator.sigmaForwarding("x=1;c=0;while(c=1){{x=x+1}[1/2]{c=0}}",new State()));
+		assertEquals("x=0.0;c=0.0;{y=x+1}[1/2]{c=x+2};",mainCalculator.sigmaForwarding("x=0;c=0;{y=x+1}[1/2]{c=x+2};while(x=1){{x=x+1}[1/2]{c=0}}",new State()));
+		assertEquals("x=0.0;c=0.0;min{y=x+1}{c=c+1};",mainCalculator.sigmaForwarding("x=0;c=0;min{y=x+1}{c=c+1};while(x=1){{x=x+1}[1/2]{c=0}};skip",new State()));
 	}
-	
 	@Test
 	void testAssignments() {
 		
@@ -106,9 +90,20 @@ class MainTest {
 		mainCalculator.setIterationSelection(2);
 
 
+		//assignment
+		assertEquals("1.0",mainCalculator.calculation(mainCalculator.wp("c=0;x=1;while(c=1){x=x+1}","x",0)));
+		//probabilistic
 		assertEquals("1.0", mainCalculator.calculation(mainCalculator.wp("c=0;x=1;while(c=1){{x=x+1}[1/2]{c=0}}", "x",0)));
-		assertEquals("1.978515625", mainCalculator.calculation(mainCalculator.wp("c=1;x=1;while(c=1){{x=x+1}[1/2]{c=0}}", "x",0))); 
-		assertEquals("4.0",mainCalculator.calculation(mainCalculator.wp("x=1;c=0;while(c=1){{x=x+1}[1/2]{c=0}};while(c=0){x=4;c=1}","x",0)));
+		mainCalculator.setRestriction(2);
+		//if-clause
+		assertEquals("2.0",mainCalculator.calculation(mainCalculator.wp("x=0;c=0;while(c<2){if{x<2}{x=x+1}{c=3}}","x",0)));
+		//demonic
+		assertEquals("1.0",mainCalculator.calculation(mainCalculator.wp("x=2;c=1;while(c=1){min{x=x+1;c=0}{x=x-1;c=0}}","x",0)));
+		//while in while
+		mainCalculator.setRestriction(3);
+		mainCalculator.setIterationCount(3);
+		assertEquals("2.0",mainCalculator.calculation(mainCalculator.wp("x=0;c=0;while(x<2){while(c<2){c=c+1;x=x+1}}","x",0)));
+
 		
 	}
 	
@@ -118,8 +113,19 @@ class MainTest {
 		mainCalculator.setRestriction(2);
 		mainCalculator.fillAllSigma("xc");
 
+		//assignment
+		assertEquals("1.0",mainCalculator.calculation(mainCalculator.wp("c=0;x=1;while(c=1){x=x+1}","x",0)));
+		//probabilistic
 		assertEquals("1.0", mainCalculator.calculation(mainCalculator.wp("c=0;x=1;while(c=1){{x=x+1}[1/2]{c=0}}", "x",0)));
-		assertEquals("1.5", mainCalculator.calculation(mainCalculator.wp("c=1;x=1;while(c=1){{x=x+1}[1/2]{c=0}}", "x",0))); 
+		//if-clause
+		assertEquals("2.0",mainCalculator.calculation(mainCalculator.wp("x=0;c=0;while(c<2){if{x<2}{x=x+1}{c=3}}","x",0)));
+		//demonic
+		assertEquals("1.0",mainCalculator.calculation(mainCalculator.wp("x=2;c=1;while(c=1){min{x=x+1;c=0}{x=x-1;c=0}}","x",0)));
+		//while in while
+		mainCalculator.setRestriction(3);
+		mainCalculator.fillAllSigma("xc");
+		mainCalculator.setIterationCount(3);
+		assertEquals("2.0",mainCalculator.calculation(mainCalculator.wp("x=0;c=0;while(x<2){while(c<2){c=c+1;x=x+1}}","x",0)));
 	}
 	
 	@Test
@@ -129,9 +135,19 @@ class MainTest {
 		mainCalculator.setRestriction(2);
 		mainCalculator.fillAllSigma("xc");
 
-		
+		//assignment
+		assertEquals("1.0",mainCalculator.calculation(mainCalculator.wp("c=0;x=1;while(c=1){x=x+1}","x",0)));
+		//probabilistic
 		assertEquals("1.0", mainCalculator.calculation(mainCalculator.wp("c=0;x=1;while(c=1){{x=x+1}[1/2]{c=0}}", "x",0)));
-		assertEquals("1.5", mainCalculator.calculation(mainCalculator.wp("c=1;x=1;while(c=1){{x=x+1}[1/2]{c=0}}", "x",0))); 
+		//if-clause
+		assertEquals("2.0",mainCalculator.calculation(mainCalculator.wp("x=0;c=0;while(c<2){if{x<2}{x=x+1}{c=3}}","x",0)));
+		//demonic
+		assertEquals("1.0",mainCalculator.calculation(mainCalculator.wp("x=2;c=1;while(c=1){min{x=x+1;c=0}{x=x-1;c=0}}","x",0)));
+		//while in while
+		mainCalculator.setRestriction(3);
+		mainCalculator.fillAllSigma("xc");
+		mainCalculator.setIterationCount(3);
+		assertEquals("2.0",mainCalculator.calculation(mainCalculator.wp("x=0;c=0;while(x<2){while(c<2){c=c+1;x=x+1}}","x",0)));
 	}
 	
 	@Test
@@ -196,43 +212,14 @@ class MainTest {
 	}
 	
 	@Test
-	void testCacheMethods() {
-		mainCalculator.setRestriction(1);
-		mainCalculator.fillAllSigma("xc");
-		mainController.clearFixpointCache();
-		
-		assertEquals(null,mainController.getLFP("while(c=1){{x=x+1}[1/2]{c=0}} (x)"));
-		mainController.wp("while(c=1){{x=x+1}[1/2]{c=0}}", "x",false);
-		assertEquals("iff((c=0)&(x=0),0.0;(c=0)&(x=1),1.0;(c=1)&(x=0),0.5;(c=1)&(x=1),1.0)",mainController.getLFP("while(c=1){{x=x+1}[1/2]{c=0}} (x)"));
-		mainController.saveFixpointCache();
-		mainController.clearFixpointCache();
-		assertEquals(null,mainCalculator.getFixpointCache().get("while(c=1){{x=x+1}[1/2]{c=0}} (x)"));
-		mainController.loadFixpointCache();
-		assertEquals("iff((c=0)&(x=0),0.0;(c=0)&(x=1),1.0;(c=1)&(x=0),0.5;(c=1)&(x=1),1.0)",mainController.getLFP("while(c=1){{x=x+1}[1/2]{c=0}} (x)"));
-	}
-	
-	@Test
-	void testSigmaForwarding() {
-		assertEquals("x=1.0;x=2.0;{x=x+1}[1/2]{c=0};if{x=2}{x=0}else{c=0};",mainCalculator.sigmaForwarding("x=1;x=x+1;{x=x+1}[1/2]{c=0};if{x=2}{x=0}else{c=0}",new State()));
-		assertEquals("x=1.0;x=2.0;x=0;",mainCalculator.sigmaForwarding("x=1;x=x+1;if{x=2}{x=0}else{c=0}",new State()));
-		assertEquals("x=1.0;c=0.0;c=0;",mainCalculator.sigmaForwarding("x=1;c=0;if{c=1}{x=0}else{c=0}",new State()));
-		assertEquals("x=1.0;c=0.0;",mainCalculator.sigmaForwarding("x=1;c=0;while(c=1){{x=x+1}[1/2]{c=0}}",new State()));
-		assertEquals("x=0.0;c=0.0;{y=x+1}[1/2]{c=x+2};",mainCalculator.sigmaForwarding("x=0;c=0;{y=x+1}[1/2]{c=x+2};while(x=1){{x=x+1}[1/2]{c=0}}",new State()));
-		assertEquals("x=0.0;c=0.0;min{y=x+1}{c=c+1};",mainCalculator.sigmaForwarding("x=0;c=0;min{y=x+1}{c=c+1};while(x=1){{x=x+1}[1/2]{c=0}};skip",new State()));
-	}
-	
-	@Test
-	void testCreateAllSigmaFixpoint() {
-		mainCalculator.setRestriction(1);
-		mainCalculator.setIterationCount(10);
-		mainController.clearFixpointCache();
-		mainCalculator.setIterationSelection(2);
-		mainController.wp("while(c=1){{x=x+1}[1/2]{c=0}}","x",false);
-		assertEquals("iff((c=0)&(x=0),0.0;(c=0)&(x=1),1.0;(c=1)&(x=0),0.5;(c=1)&(x=1),1.0)",mainController.createAllSigmaFixpoint("while(c=1){{x=x+1}[1/2]{c=0}} (x)"));
-	}
-	
-	@Test
-	void testGetUsedVars() {
-		assertEquals("xc", mainController.getUsedVars("x=1;c=0;while(c=1){{x=x+1}[1/2]{c=0}}"));
+	void testTruncate() {
+		assertEquals("1.0",mainCalculator.truncate("#{1}"));
+		assertEquals("0",mainCalculator.truncate("#{-1}"));
+		assertEquals("10.0",mainCalculator.truncate("#{11}"));
+		assertEquals("#{x+1}",mainCalculator.truncate("#{x+1}"));
+		assertEquals("2.0",mainCalculator.truncate("#{1+1}"));
+		assertEquals("#{x+4.0}",mainCalculator.truncate("#{x+#{1+3}}"));
+		assertEquals("6.0",mainCalculator.truncate("#{2+#{1+3}}"));
+		assertEquals("#{x+#{y+3}}",mainCalculator.truncate("#{x+#{y+3}}"));
 	}
 }
