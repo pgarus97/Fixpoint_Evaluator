@@ -1,9 +1,9 @@
 # A Tool for Computing Probabilistic Program Expectations
 
-This is a lightweight Java-Tool which can calculate expectations in probabilistic programs. The theory behind
+This is a lightweight Java tool which can compute weakest pre-expectations in certain probabilistic programs. The theory behind
 this calculator can be found in the following papers:
-- A new Proof Rule for Almost-Sure Termination
-- Fixpoint-Theory: Upside-Down
+- [A new Proof Rule for Almost-Sure Termination](https://dblp.org/rec/journals/pacmpl/McIverMKK18)
+- [Fixpoint-Theory: Upside-Down](https://dblp.org/rec/conf/fossacs/BaldanE0P21)
 
 ## Usage
 
@@ -19,7 +19,7 @@ The program requires multiple user inputs. Examples are listed here:
 - **Demonic Choice**: min{x=x+1}{x=x-1}
 - **While-Loop**: while(c=1){{x=x+1}[1/2]{c=0}}
 
-Multiple subprograms are to be separated with a colon ';' e.g. x=x+1;{x=x+1}[1/2]{x=x-1}
+Important: Multiple subprograms are to be separated with a colon ';' e.g. x=x+1;{x=x+1}[1/2]{x=x-1}
 
 **Post-Expectation F:** Here you need to input the postexpectation e.g. 'x^2'.
 

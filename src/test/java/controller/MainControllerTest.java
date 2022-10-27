@@ -14,11 +14,11 @@ class MainControllerTest {
 	MainController mainController= new MainController();
 	
 	MainControllerTest(){
-		mainController.link(mainView, mainCalculator);
 		mainCalculator.setRestriction(1); //default test case
 		mainCalculator.setIterationSelection(1); //default case = all-sigma
 		mainCalculator.setIterationDelta(0.001); //default case
-		mainCalculator.setIterationCount(Double.POSITIVE_INFINITY); //default case
+		mainCalculator.setIterationCount(5); //default case
+		mainController.link(mainView, mainCalculator);
 	}
 	
 	@Test
@@ -98,7 +98,7 @@ class MainControllerTest {
 		assertEquals("iff((c=0)&(x=0),0.0;(c=0)&(x=1),1.0;(c=1)&(x=0),0.5;(c=1)&(x=1),1.0)",mainController.getLFP("while(c=1){{x=x+1}[1/2]{c=0}} (x)"));
 		mainController.saveFixpointCache();
 		mainController.clearFixpointCache();
-		assertEquals(null,mainCalculator.getFixpointCache().get("while(c=1){{x=x+1}[1/2]{c=0}} (x)"));
+		assertEquals(null,mainCalculator.getWPCache().get("while(c=1){{x=x+1}[1/2]{c=0}} (x)"));
 		mainController.loadFixpointCache();
 		assertEquals("iff((c=0)&(x=0),0.0;(c=0)&(x=1),1.0;(c=1)&(x=0),0.5;(c=1)&(x=1),1.0)",mainController.getLFP("while(c=1){{x=x+1}[1/2]{c=0}} (x)"));
 	}

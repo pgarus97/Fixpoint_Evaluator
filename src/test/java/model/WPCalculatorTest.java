@@ -21,7 +21,7 @@ class WPCalculatorTest {
 		mainCalculator.setRestriction(10); //default test case
 		mainCalculator.setIterationSelection(1); //default case = all-sigma
 		mainCalculator.setIterationDelta(0.001); //default case
-		mainCalculator.setIterationCount(Double.POSITIVE_INFINITY); //default case
+		mainCalculator.setIterationCount(5); //default case
 	}
 	
 	@Test

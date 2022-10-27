@@ -64,10 +64,10 @@ public class MainController implements ControllerHandler {
 	public String createAllSigmaFixpoint(String currentWhileTerm) {
 		output("\n" + "*************************",1);
 	    output("\n" + "Converting to allSigma fixpoint notation...",1);
-		String currentLFP = mainCalculator.getFixpointCache().get(currentWhileTerm);
+		String currentLFP = mainCalculator.getWPCache().get(currentWhileTerm);
 		double start = System.currentTimeMillis();
 		String newLFP = mainCalculator.convertFixpoint(currentLFP).getContentString();
-		mainCalculator.getFixpointCache().replace(currentWhileTerm, newLFP);
+		mainCalculator.getWPCache().replace(currentWhileTerm, newLFP);
 		double end = System.currentTimeMillis();
 		
 		output("Success! Calculation Time: " + (end - start)/1000 + "s",1);
@@ -84,7 +84,7 @@ public class MainController implements ControllerHandler {
 	 */
 	@Override
 	public boolean isConverted(String currentWhileTerm) {
-		String currentLFP = mainCalculator.getFixpointCache().get(currentWhileTerm);
+		String currentLFP = mainCalculator.getWPCache().get(currentWhileTerm);
 		if(currentLFP == null) {
 			return false;
 		}else if(currentLFP.startsWith("iff")) {
@@ -157,13 +157,13 @@ public class MainController implements ControllerHandler {
 			output("Iteration count set to " + iterationCount,1);
 			mainCalculator.setIterationCount(Double.parseDouble(iterationCount));
 	    }else {
-	    	if(iterationSelection == 2){
-	    		//default case 
-    			output("No iteration count inputted. Taking direct default = 10",1);
-    			mainCalculator.setIterationCount(10);
+	    	if(iterationSelection != 2){
+    			output("No minimum iteration count inputted. Taking all-sigma default: 5",1);
+    			mainCalculator.setIterationCount(5);
 	    	} else {
-    			output("No iteration count inputted. Taking default: infinite iteration",1);
-    			mainCalculator.setIterationCount(Double.POSITIVE_INFINITY);
+	    		//default case 
+    			output("No maximum iteration count inputted. Taking default: 10",1);
+    			mainCalculator.setIterationCount(10);
 	    	}
 	    }
 		if (iterationSelection == 1) {
@@ -246,7 +246,7 @@ public class MainController implements ControllerHandler {
 	 */
 	@Override
 	public String getLFP(String currentWhileTerm) {
-		return mainCalculator.getFixpointCache().get(currentWhileTerm);
+		return mainCalculator.getWPCache().get(currentWhileTerm);
 	}
 	
 	/*
@@ -254,17 +254,17 @@ public class MainController implements ControllerHandler {
 	 */
 	@Override
 	public void saveFixpointCache() {
-		mainCalculator.saveFixpointCache();
+		mainCalculator.saveWPCache();
 	}
 
 	@Override
 	public void loadFixpointCache() {
-		mainCalculator.loadFixpointCache();		
+		mainCalculator.loadWPCache();		
 	}
 	
 	@Override
 	public void clearFixpointCache() {
-		mainCalculator.clearFixpointCache();				
+		mainCalculator.clearWPCache();				
 	}
 	
 	public WPCalculatorView getMainView() {

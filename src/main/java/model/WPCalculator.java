@@ -28,7 +28,7 @@ public class WPCalculator {
 private ControllerHandler mainController;
 private ArrayList<State> allSigma = new ArrayList<State>();
 private ArrayList<String> whileLoops = new ArrayList<String>();
-private LinkedHashMap<String,String> fixpointCache = new LinkedHashMap<String,String>();
+private LinkedHashMap<String,String> wpCache = new LinkedHashMap<String,String>();
 private double restriction;
 private double iterationCount;
 private int iterationSelection; // 0 = combo ; 1 = all-sigma ; 2 = direct
@@ -39,16 +39,27 @@ private double iterationDelta;
 	 * Takes a program (C) and a post expectation (f) as input and recursively calculates the result of the formula wp[C](f) for any sigma (variable assignment).
 	 */
 	public String wp(String C, String f, int recursionDepth) {
-		//sequential process
+		//sequential process	
+		if(!whileLoops.contains(C+" ("+f+")") && C.startsWith("while")) {
+			whileLoops.add(C+" ("+f+")");
+		}
+	
+		String result = "";
 		mainController.output( "Now computing: wp["+C+"]("+f+")",2,recursionDepth); 
 		recursionDepth +=1;
 		String C1 = getSequentialCut(C);
 		if(!C1.equals(C)) {
 			String C2 = C.substring(C1.length()+1);
 			mainController.output( "Sequential process. Breaking down into: wp["+C1+"](wp["+C2+"]("+f+"))",2,recursionDepth); 
-			return wp(C1,(wp(C2,f,recursionDepth)),recursionDepth);
+			result = wp(C1,(wp(C2,f,recursionDepth)),recursionDepth);
 		}else {
-			if(C.startsWith("min{")) {
+			if(wpCache.containsKey(C+" ("+f+")")) {
+				mainController.output("Skipped because value has been found in WP-Cache.",2,recursionDepth);
+				mainController.output("Cached WP-Result: "+ wpCache.get(C+" ("+f+")"),2,recursionDepth);
+				return wpCache.get(C+" ("+f+")");
+			}
+			
+			else if(C.startsWith("min{")) {
 				//demonic choice process
 				mainController.output( "Enter Demonic Choice process:",2,recursionDepth);
 				String demC1 = getInsideBracket(C.substring(C.indexOf("{")+1));	
@@ -59,10 +70,9 @@ private double iterationDelta;
 				String resultC2 = wp(demC2,f,recursionDepth+1);
 
 				mainController.output( "Demonic Choice process result: wp[" + C + "]("+f+") = min(" + resultC1 + "," + resultC2 + ")",2,recursionDepth); 
-				return calculation("min(" + resultC1 + "," + resultC2 + ")");
-
+				result = calculation("min(" + resultC1 + "," + resultC2 + ")");
 			}
-			
+	
 			else if(C.startsWith("if") && !C.startsWith("iff")) {
 				//conditional process
 				mainController.output( "Enter conditional process:",2,recursionDepth); 
@@ -77,19 +87,18 @@ private double iterationDelta;
 				if(condResult.equals("1.0")) {
 					mainController.output( "If-Condition true, only continue with wp[" + ifC1 + "]("+f+")",2,recursionDepth); 
 					String resultC1 = wp(ifC1,f,recursionDepth+1);
-					return calculation(resultC1);
-				}
-				if(condResult.equals("0.0")) {
+					result = calculation(resultC1);
+				}else if(condResult.equals("0.0")) {
 					mainController.output( "If-Condition false, only continue with wp[" + ifC2 + "]("+f+")",2,recursionDepth); 
 					String resultC2 = wp(ifC2,f,recursionDepth+1);
-					return calculation(resultC2);
-				}
+					result = calculation(resultC2);
+				} else {
 				String resultC1 = wp(ifC1,f,recursionDepth+1);
 				String resultC2 = wp(ifC2,f,recursionDepth+1);
 				mainController.output( "Conditional process result: wp[" + C + "]("+f+") = if("+condition+") then "+ resultC1 +" else "+ resultC2,2,recursionDepth); 
 
-				return calculation("if(" + condition + "," + resultC1 + "," + resultC2 + ")");
-
+				result = calculation("if(" + condition + "," + resultC1 + "," + resultC2 + ")");
+				}
 			}
 			
 			else if(C.startsWith("{")){
@@ -107,52 +116,35 @@ private double iterationDelta;
 				String resultC1 = wp(probC1,f,recursionDepth+1);
 				String resultC2 = wp(probC2,f,recursionDepth+1);
 				mainController.output( "Probability process result: wp[" + C + "]("+f+") = " + probability + " * " + resultC1 +" + "+ negProbability.calculate() + " * " + resultC2,2,recursionDepth); 
-				return calculation("(" + probability + " * "+ resultC1 +" + "+ negProbability.calculate() + " * " + resultC2+")");
+				result = calculation("(" + probability + " * "+ resultC1 +" + "+ negProbability.calculate() + " * " + resultC2+")");
 
 			}
+			
 			else if(C.startsWith("while")){
 				//while process
 				mainController.output("Enter while process:",2,recursionDepth); 
 				String condition = C.substring(C.indexOf("(")+1,C.indexOf("{")-1);
 				String whileC = C.substring(condition.length());
 				whileC = getInsideBracket(whileC.substring(whileC.indexOf("{")+1));
-				
-				if(!whileLoops.contains(C+" ("+f+")")) {
-					whileLoops.add(C+" ("+f+")");
+
+				switch(iterationSelection) {
+					case 0: 
+						result = comboFixpointIteration(condition, whileC, f, recursionDepth+1);
+						break;
+					case 1: 
+						result = allSigmaFixpointIteration(condition, whileC, f, recursionDepth+1);
+						break;
+					case 2:	
+						result = directFixpointIteration(condition, whileC, f, recursionDepth+1); 
+						break;
 				}
-				//TODO while in while cache 
-				if(!fixpointCache.containsKey(C+" ("+f+")")) {
-					String fixpoint="";
-					switch(iterationSelection) {
-						case 0: 
-							fixpoint = comboFixpointIteration(condition, whileC, f, recursionDepth+1);
-							break;
-						case 1: 
-							fixpoint = allSigmaFixpointIteration(condition, whileC, f, recursionDepth+1);
-							break;
-						case 2:	
-							fixpoint = directFixpointIteration(condition, whileC, f, recursionDepth+1); 
-							break;
-					}
-					fixpointCache.put(C+" ("+f+")", fixpoint);
-					mainController.output("Put into Cache: "+ C+"("+f+")" + " " + fixpoint,2,recursionDepth); 
-					
-					return fixpoint;
-						
-				}else {
-					mainController.output("Skipped because value has been found in fixpoint cache.",2,recursionDepth);
-					mainController.output("Cached LFP: "+ fixpointCache.get(C+" ("+f+")"),2,recursionDepth);
-					return fixpointCache.get(C+" ("+f+")");
-				}
-				
 				
 			}else {
 				//variable assignments
 				if(C.startsWith("skip")){
 					mainController.output("Enter skip process:",2,recursionDepth); 
 					String skipResult = C.replace("skip", f);
-					//mainController.output( "Skip process." + skipResult,2);
-					return calculation(skipResult);
+					result = calculation(skipResult);
 				}else {
 					mainController.output("Enter assignment process:",2,recursionDepth); 
 					String indexC = C.substring(0,1);
@@ -164,30 +156,31 @@ private double iterationDelta;
 						String condition = getInsideIf(assignResult.substring(3));
 						String assignifC1 = assignResult.substring(condition.length()+4);
 						System.out.println("condition=" +condition);
-						System.out.println("assignifC1n=" +assignifC1);
+						System.out.println("assignifC1=" +assignifC1);
 						System.out.println("assignResult" +assignResult);
-
-
 						assignifC1 =  getInsideIf(assignifC1);	
+						String assignifC2 = assignResult.substring(condition.length()+4+assignifC1.length()+1);
+
 						System.out.println("assignifC1=" +assignifC1);
 						if(calculation(condition).equals("1.0")) {
 							mainController.output("Found possible if-assignment optimization!",2,recursionDepth); 
 							mainController.output("If-Condition true, therefore wp[" + C + "]("+f+") = " + assignifC1,2, recursionDepth); 
-							return calculation(assignifC1);
-						}
-						if(calculation(condition).equals("0.0")) {
-							String assignifC2 = assignResult.substring(condition.length()+4+assignifC1.length()+1);
+							assignResult = calculation(assignifC1);
+						}else if(calculation(condition).equals("0.0")) {
 							assignifC2 = assignifC2.substring(0,assignifC2.length()-1);
-							mainController.output( "Found possible if-assignment optimization!",2,recursionDepth); 
+							mainController.output("Found possible if-assignment optimization!",2,recursionDepth); 
 							mainController.output("If-Condition false, therefore wp[" + C + "]("+f+") = " + assignifC2,2, recursionDepth); 
-							return calculation(assignifC2);
+							assignResult = calculation(assignifC2);
 						}
 					}
 					mainController.output("Result: " + "wp[" + C + "]("+f+") = " + assignResult, 2, recursionDepth);
-					return calculation(assignResult);
-				}	
-			}
+					result = calculation(assignResult);
+				}
+			}	
 		}
+		wpCache.put(C+" ("+f+")", result);
+		mainController.output("Put into Cache: "+ C+"("+f+")" + " " + result,2,recursionDepth); 
+		return result;	
 	}
 
 	/*
@@ -381,18 +374,19 @@ private double iterationDelta;
 				sigmaResult = calculateSigma(f,sigma);
 				mainController.output("Skip iteration since loop condition is wrong." , 2,recursionDepth);
 			}else {
-				for(int i=0; i<iterationCount; i++) {
+				for(int i=0; true; i++) {
 					mainController.output("Iteration " + (i+1) + "\n",2,recursionDepth);
 					String X = wp(C, caseF,recursionDepth);
 					caseF = "if("+condition+","+X+","+f+")";
-					//TODO future improvement: directly input sigma through assignment = f.replace x with sigma x and keep dependency somehow
 					sigmaResult = calculateSigma(caseF,sigma);
-					mainController.output("Iteration Result: " + sigmaResult,2,recursionDepth);
+
 					//checks if the distance between the iterations has reached the delta threshold and stops the iteration if it is the case
-					if(i > 2) {
+					if(i > iterationCount) {
+						mainController.output((sigmaResult-previousResult < iterationDelta) +" Test",2,recursionDepth);
 						if(sigmaResult-previousResult < iterationDelta) {
+							mainController.output("Stop iteration asg threshold has been reached.",2,recursionDepth);
 							break;
-						}else {
+						}else {	
 							previousResult = sigmaResult;
 						}
 					}
@@ -712,14 +706,14 @@ private double iterationDelta;
 	}
 	
 	/*
-	 * fixpoint cache methods
+	 * wp cache methods
 	 */
 	
 	/*
-	 * clears the fixpointCache in the model
+	 * clears the wpCache in the model
 	 */
-	public void clearFixpointCache() {
-		fixpointCache.clear();
+	public void clearWPCache() {
+		wpCache.clear();
 		mainController.output("\n" + "Cache cleared.",1);
 
 	}
@@ -727,18 +721,18 @@ private double iterationDelta;
 	/*
 	 * writes a fixpointCache to file
 	 */
-	public void saveFixpointCache() {
+	public void saveWPCache() {
 		new File("Cache").mkdir(); 
 	    //boolean res = directory.mkdir();
 		FileOutputStream fout;
 		try {
 			fout = new FileOutputStream("Cache/fixpointCache");
 			try (ObjectOutputStream oos = new ObjectOutputStream(fout)) {
-				oos.writeObject(fixpointCache);
+				oos.writeObject(wpCache);
 				mainController.output("\n" + "Cache saved.",1);
 			}
 		} catch (IOException e) {
-			mainController.output("\n" + "WARNING: failed to save Cache.",1);
+			mainController.output("\n" + "WARNING: failed to save cache.",1);
 			e.printStackTrace();
 		}	
 	}
@@ -747,17 +741,17 @@ private double iterationDelta;
 	 * reads a saved fixpointCache from file
 	 */
 	@SuppressWarnings("unchecked")
-	public void loadFixpointCache() {
+	public void loadWPCache() {
 		FileInputStream fin;
 		try {
-			fin = new FileInputStream("Cache/fixpointCache");
+			fin = new FileInputStream("Cache/wpCache");
 			try (ObjectInputStream ois = new ObjectInputStream(fin)) {
 				LinkedHashMap<String, String> fileCache = (LinkedHashMap<String, String>) ois.readObject();
-				fixpointCache = fileCache;
+				wpCache = fileCache;
 				mainController.output("\n" + "Cache loaded.",1);
 			}
 		} catch (IOException | ClassNotFoundException e) {
-			mainController.output("\n" + "WARNING: failed to load Cache." ,1);
+			mainController.output("\n" + "WARNING: failed to load cache." ,1);
 		}
 	}
 
@@ -815,12 +809,12 @@ private double iterationDelta;
 		this.whileLoops = whileLoops;
 	}
 	
-	public LinkedHashMap<String, String> getFixpointCache() {
-		return fixpointCache;
+	public LinkedHashMap<String, String> getWPCache() {
+		return wpCache;
 	}
 	
-	public void setFixpointCache(LinkedHashMap<String, String> fixpointCache) {
-		this.fixpointCache = fixpointCache;
+	public void setWPCache(LinkedHashMap<String, String> wpCache) {
+		this.wpCache = wpCache;
 	}
 	
 	public void flushWhileLoops() {
