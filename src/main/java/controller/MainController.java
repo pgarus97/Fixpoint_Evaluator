@@ -57,6 +57,12 @@ public class MainController implements ControllerHandler {
 	    return calcResult;
 	}
 	
+	public String startWitnessProcess(String C, String information) {
+		String witness = mainView.createWitnessDialogue(C, information);
+		System.out.println(witness);
+		return witness;
+	}
+	
 	/*
 	 * Prepares and executes the createAllSigmaFixpoint function of the model
 	 */
@@ -110,7 +116,7 @@ public class MainController implements ControllerHandler {
     	    output("The inputted delta: '" + fixpointDelta + "' is not a number!",1);
     	    return null;
 	    }
-	    output("Witness: " + witness,1);
+	    output("Inputted Witness: " + witness,1);
 		output("\n" + "*************************",1);
 
 	    LinkedHashSet<String> result = mainCalculator.evaluateFixpoint(currentWhileTerm, witness, fixpointDelta, 1, new LinkedHashSet<String>());
@@ -140,9 +146,24 @@ public class MainController implements ControllerHandler {
 				break;
 			case 1:
 				output("Chosen iteration method: all-sigma fixpoint iteration",1);
+				if(deltaInput.isEmpty()) {
+	    			output("No delta for the iteration stop inputted. Taking default delta = 0.001",1);
+	    			mainCalculator.setIterationDelta(0.001);
+				}else {
+					mainCalculator.setIterationDelta(Double.parseDouble(deltaInput));
+				}
 				break;
 			case 2: 
 				output("Chosen iteration method: direct fixpoint iteration",1);
+				break;
+			case 3:
+				output("Chosen computation method: Upside-Down",1);
+				if(deltaInput.isEmpty()) {
+	    			output("No delta for state reduction inputted. Taking default delta = 0.1",1);
+	    			mainCalculator.setIterationDelta(0.1);
+				}else {
+					mainCalculator.setIterationDelta(Double.parseDouble(deltaInput));
+				}
 				break;
 		}
 		if(!restriction.isEmpty()) {
@@ -150,7 +171,7 @@ public class MainController implements ControllerHandler {
     		mainCalculator.setRestriction(Double.parseDouble(restriction));
 		}else {
 			//default case
-			output("No restriction inputted. Set to default {0,...,1}",1);
+			output("No restriction inputted. Set to default {0,1}",1);
 			mainCalculator.setRestriction(1);
 		}
 		if(!iterationCount.isEmpty()) {
@@ -168,14 +189,6 @@ public class MainController implements ControllerHandler {
     			break;
 	    	}
 	    }
-		if (iterationSelection == 1) {
-			if(deltaInput.isEmpty()) {
-    			output("No delta for the iteration inputted. Taking default delta = 0.001",1);
-    			mainCalculator.setIterationDelta(0.001);
-			}else {
-				mainCalculator.setIterationDelta(Double.parseDouble(deltaInput));
-			}
-		}
 		output("-----------------------------------",1);
 		return true;
 	}

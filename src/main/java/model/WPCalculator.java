@@ -31,7 +31,7 @@ private ArrayList<String> whileLoops = new ArrayList<String>();
 private LinkedHashMap<String,String> wpCache = new LinkedHashMap<String,String>();
 private double restriction;
 private double iterationCount;
-private int iterationSelection; // 0 = default ; 1 = all-sigma ; 2 = direct
+private int iterationSelection; // 0 = default ; 1 = all-sigma ; 2 = direct ; 3 = upsideDown
 private double iterationDelta;
 
 	/*
@@ -136,6 +136,10 @@ private double iterationDelta;
 						break;
 					case 2:	
 						result = directFixpointIteration(condition, whileC, f, recursionDepth+1); 
+						break;
+					case 3:
+						//TODO stop computation time for user input somehow
+						result = upsideDownEvaluation(C, f);
 						break;
 				}
 				
@@ -296,6 +300,36 @@ private double iterationDelta;
 		}
 	}
 	
+	public String upsideDownEvaluation(String C, String f) {
+		String witness = "";
+		String information = "";
+		while(true) {
+			witness = mainController.startWitnessProcess(C+"("+f+")",information);
+			System.out.println("wpwitness" + witness);
+			//case: not an iff clause => needs to be computable
+			//case: good but not lfp
+			//case: good and lfp
+			Expression e = new Expression(witness);
+			System.out.println("Syntax: " + e.checkLexSyntax() + e.checkSyntax());
+			if(witness.startsWith("iff") && e.checkLexSyntax()) {
+				System.out.println("inside syntax check");
+				LinkedHashSet<String> result = evaluateFixpoint(C+" ("+f+")", witness, Double.toString(iterationDelta) , 1, new LinkedHashSet<String>());
+				System.out.println(result.toString());
+
+				if(result.isEmpty()) {
+					mainController.output("Least Fixpoint found. Continue computation of wp", 1); //TODO fix outputs here
+					mainController.output("Least Fixpoint: " + witness, 1);
+					//TODO check if ACTUALLY LFP
+					return witness;
+				}else {
+					information = "Least Fixpoint not yet found. Try reducing following states: " + result.toString();
+				}
+			}else {
+				information ="The inputted witness was not in a correct format! Try again!";
+			}
+		}
+	}
+	
 	/*
 	 * Function that calculates the direct (up until iterationCount, open sigma) approach of a fixpoint iteration for while loops.
 	 * It takes the while condition (condition), the program (C) and the post-expectation (f) as input.
@@ -408,8 +442,11 @@ private double iterationDelta;
 	 * a set of variable assignments Y' (sigmaSet) as input.
 	 */
 	public LinkedHashSet<String> evaluateFixpoint(String currentWhile, String witness, String delta, int iterationCount, LinkedHashSet<String> sigmaSet) {
-		
-		Fixpoint X = new Fixpoint(witness);
+		Fixpoint X =  new Fixpoint(witness, restriction);
+		if(!X.getContentString().equals(witness)){
+			mainController.output( "Restricted inputted witness to: " + X.getContentString(),1);
+		}
+	
 		Fixpoint phihashX = calculatePhiHash(X, currentWhile);
 		Fixpoint Xslash = new Fixpoint();
 		Fixpoint phihashXslash = new Fixpoint();
@@ -429,12 +466,13 @@ private double iterationDelta;
 			previousSigmaSet.add(copiedSigma);
 		}
 
-		
+		//TODO check if ACTUALLY LFP at the end
+
 		//checks whether the witness is a fixpoint or not
 		/*System.out.println("LinkedHashMap to string: " +X.getContentString());
 		System.out.println("LinkedHashMap to string: " +phihashX.getContentString());
 
-		if(!X.getContentString().equals(phihashX.getContentString())) {
+		if(!X.getContentString().equals(phihashX.getContentString())) { //TODO could also check if prefixpoint
 			mainController.output("\n" + "-----------------------------------");
 			mainController.output("\n" + "The inputted witness is not a fixpoint! Cannot evaluate non-fixpoints!");
 			return sigmaSet;
@@ -469,7 +507,7 @@ private double iterationDelta;
 		mainController.output( "Phi-Hash (X'): " + phihashXslash.getContentMap(),1);
 
 		if(sigmaSet.isEmpty()) {
-			mainController.output("\n" + "The hash-function's result is an empty set. This means the witness is already the least fixpoint." + "\n",1);
+			mainController.output("\n" + "The hash-function's result is an empty set. This means "+phihashX.getContentString()+" is the least fixpoint." + "\n",1);
 		}else {
 			mainController.output("\n" + "The hash-function's result is not an empty set. This means the witness is above the least fixpoint." ,1);
 			mainController.output("Following states are still in the result set: " ,1);
@@ -478,7 +516,7 @@ private double iterationDelta;
 			}
 			if(!previousSigmaSet.toString().equals(sigmaSet.toString())) {
 				mainController.output("therefore continuing iteration." + "\n",1);
-				sigmaSet = evaluateFixpoint(currentWhile, witness, delta, (iterationCount+1), sigmaSet);
+				sigmaSet = evaluateFixpoint(currentWhile, X.getContentString(), delta, (iterationCount+1), sigmaSet);
 			}else {
 				mainController.output("but since no change in the set has been detected, the iteration stops now." + "\n",1);
 			}
@@ -488,7 +526,7 @@ private double iterationDelta;
 	
 	/*
 	 * Function that represents the hash function from the "Upside-Down" theory applied to the Phi function from the wp-transformer. 
-	 * It takes a fixpoint as map (input), the analyzed while loop (currentWhile) and the fixpoint in the mathematical iff-term format (fixpointIf) as input
+	 * It takes a fixpoint as map (input), the analyzed while loop (currentWhile) and the witness in the mathematical iff-term format (input) as input
 	 * and outputs a new function as a map.
 	 */
 	private Fixpoint calculatePhiHash(Fixpoint input, String currentWhile){

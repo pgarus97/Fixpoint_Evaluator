@@ -195,7 +195,7 @@ class WPCalculatorTest {
 	
 	@Test
 	void testFixpointToMap() {
-		Fixpoint fixpointMap = new Fixpoint("iff((x=0)&(c=0),0.0;(x=0)&(c=1),1.0;(x=1)&(c=0),1.0;(x=1)&(c=1),2.0)");
+		Fixpoint fixpointMap = new Fixpoint("iff((x=0)&(c=0),0.0;(x=0)&(c=1),1.0;(x=1)&(c=0),1.0;(x=1)&(c=1),2.0)",2);
 		assertEquals("0.0",fixpointMap.getContentMap().get("(x=0)&(c=0)"));
 		assertEquals("1.0",fixpointMap.getContentMap().get("(x=0)&(c=1)"));
 		assertEquals("1.0",fixpointMap.getContentMap().get("(x=1)&(c=0)"));

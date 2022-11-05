@@ -3,6 +3,8 @@ package model;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.mariuszgromada.math.mxparser.Expression;
+
 public class Fixpoint {
 	
 	private LinkedHashMap<String,String> contentMap;
@@ -15,20 +17,33 @@ public class Fixpoint {
 		contentString = "";
 	}
 	
-	//constructor from given fixpoint string
-	public Fixpoint(String contentString) {
+	//constructor from given fixpoint string and variable restriction
+	public Fixpoint(String contentString, double restriction) {
 		contentMap = new LinkedHashMap<String,String>();
 		this.contentString = contentString;
 		setMapFromString();
+		restrictFixpoint(restriction);
+		setStringFromMap();
+		
 	}
 	
-	//constructor from given fixpoint map
-	public Fixpoint(LinkedHashMap<String,String> contentMap) {
+	//constructor from given fixpoint map and variable restriction
+	public Fixpoint(LinkedHashMap<String,String> contentMap, double restriction) {
 		this.contentMap = contentMap;
+		restrictFixpoint(restriction);
 		setContentString(contentString);
 		setStringFromMap();
 	}
 	
+	/*
+	 * Function that restricts a fixpoint with the given restriction.
+	 */
+	public void restrictFixpoint(double restriction) {
+		for(Map.Entry<String, String> entry : contentMap.entrySet()) {
+			Expression e = new Expression("min(max(0,"+entry.getValue()+"),"+restriction+")");
+			entry.setValue(Double.toString(e.calculate()));
+		}
+	}
 	
 	/*
 	 * Function that transforms a fixpoint from a mathematical iff-term format into a map.

@@ -14,6 +14,7 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -57,6 +58,7 @@ private JToggleButton examineFixpointButton;
 
 private JPanel iterationPanel;
 private JCheckBox defaultIteration;
+private JCheckBox upsideDown;
 private JCheckBox directIteration;
 private JCheckBox allSigmaIteration;
 private JCheckBox sigmaForwarding;
@@ -171,13 +173,15 @@ private JButton loadCache;
 	    
 	    defaultIteration = new JCheckBox("Enable default fixpoint iteration.");
 	    defaultIteration.setSelected(true);
-
+	    
+	    upsideDown = new JCheckBox("Enable Upside-Down method.");
 	    
 	    sigmaForwarding = new JCheckBox("Enable sigma-forwarding.");
 	    
 	    iterationPanel.add(defaultIteration);
 	    iterationPanel.add(allSigmaIteration);
 	    iterationPanel.add(directIteration);
+	    iterationPanel.add(upsideDown);
 	    iterationPanel.add(sigmaForwarding);
 	    iterationPanel.setVisible(true);
 	    
@@ -335,12 +339,17 @@ private JButton loadCache;
 	    allSigmaIteration.addActionListener(new ActionListener(){  
 	    	public void actionPerformed(ActionEvent e){ 
 	    		if (allSigmaIteration.isSelected()) {
-	    	    	deltaInput.setVisible(true);
+	    			deltaInput.setText("0.001");
+	    			deltaInput.setVisible(true);
+	    	    	deltaDesc.setText("Enter delta for iteration stop.");
 	    	    	deltaDesc.setVisible(true);
+	    	    	iterationDesc.setText("Enter minimal iteration count.");
 	    	    	iterationDesc.setVisible(true);
+	    	    	iterationField.setText("5");
 	    	    	iterationField.setVisible(true);
 	    	    	directIteration.setSelected(false);
 	    	    	defaultIteration.setSelected(false);
+	    	    	upsideDown.setSelected(false);
 	    	    }else {
 	    	    	deltaInput.setVisible(false);
 	    	    	deltaDesc.setVisible(false);
@@ -359,7 +368,8 @@ private JButton loadCache;
 	    	    	iterationField.setVisible(false);
 	    	    	directIteration.setSelected(false);
 	    	    	allSigmaIteration.setSelected(false);
-	    	    }
+	    	    	upsideDown.setSelected(false);
+	    		}
     	   }  
 	    });
 	    
@@ -368,19 +378,42 @@ private JButton loadCache;
 	    		if (directIteration.isSelected()) {
 	    	    	deltaInput.setVisible(false);
 	    	    	deltaDesc.setVisible(false);
+	    	    	iterationDesc.setText("Enter maximal iteration count.");
 	    	    	iterationDesc.setVisible(true);
+	    	    	iterationField.setText("10");
 	    	    	iterationField.setVisible(true);
+	    	    	//TODO change iterationDesc on press
 	    	    	defaultIteration.setSelected(false);
 	    	    	allSigmaIteration.setSelected(false);
+	    	    	upsideDown.setSelected(false);
 	    	    }else {
 	    	    	iterationDesc.setVisible(false);
 	    	    	iterationField.setVisible(false);
 	    	    }
     	   }  
 	    });
-
+    
+	    upsideDown.addActionListener(new ActionListener(){  
+	    	public void actionPerformed(ActionEvent e){ 
+	    		if (upsideDown.isSelected()) {
+	    			deltaInput.setText("0.1");
+	    	    	deltaInput.setVisible(true);
+	    	    	deltaDesc.setText("Enter delta for reducing states.");
+	    	    	deltaDesc.setVisible(true);
+	    	    	iterationDesc.setVisible(false);
+	    	    	iterationField.setVisible(false);
+	    	    	defaultIteration.setSelected(false);
+	    	    	allSigmaIteration.setSelected(false);
+	    	    	directIteration.setSelected(false);
+	    	    }else {
+	    	    	deltaInput.setVisible(false);
+	    	    	deltaDesc.setVisible(false);
+	    	    }
+    	   }  
+	    });
+	    
 	    examineFixpointButton.addItemListener(new ItemListener() {
-	    	//TODO fill while loops independently from wp, simple parsing
+	    	//TODO fix filling of whileLoops
             public void itemStateChanged(ItemEvent event) {
                 if (event.getStateChange() == ItemEvent.SELECTED) {
 	    			whileLoopScroll.setVisible(true);	
@@ -416,7 +449,6 @@ private JButton loadCache;
 	    });
 	    
 	    lfpButton.addActionListener(new ActionListener(){
-	    	//TODO if exists, take it, else display warning
 	    	public void actionPerformed(ActionEvent e){
 	    			witnessInput.setText(mainController.getLFP(currentWhileTerm));
 	    	}
@@ -469,6 +501,24 @@ private JButton loadCache;
         }
     };
 
+    public String createWitnessDialogue(String C, String information) {
+    	    	
+    	String witness = (String)JOptionPane.showInputDialog(
+                frame,
+                "Currently evaluating: " + C + "\n" +
+                information + "\n" + 
+                "Input a witness: ",
+                "Witness Input",
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                null,
+                "iff((c=0)&(x=0),0.0;(c=0)&(x=1),1.0;(c=1)&(x=0),0.5;(c=1)&(x=1),1.0)");
+    	
+				return witness;
+				//Button for kleene iteration alternative //TODO needs more custom JOptionPane, maybe as variable and not only for the string
+				//Button for automatic reduction of states that still need to be reduced
+    }
+    
     public void prepareEvaluationView(ArrayList<String> modelLoops) {
     	examineFixpointButton.setVisible(true);
 	    int counter = 0;
@@ -559,9 +609,11 @@ private JButton loadCache;
 			return 1;
 		}else if(directIteration.isSelected()) {
 			return 2;
+		}else if(upsideDown.isSelected()) {
+			return 3;
 		}
 		//default case
-		return 1;
+		return 0;
 	}
 	
 	public void setAllSigmaIteration(JCheckBox allSigmaIteration) {
