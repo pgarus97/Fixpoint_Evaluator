@@ -58,6 +58,10 @@ class WPCalculatorViewTest {
 		mainView.getDirectIteration().setSelected(true);
 		assertEquals(2, mainView.getIterationSelection());
 		mainView.getDirectIteration().setSelected(false);
+		
+		mainView.getUpsideDown().setSelected(true);
+		assertEquals(3, mainView.getIterationSelection());
+		mainView.getUpsideDown().setSelected(false);
 	}
 
 	@Test

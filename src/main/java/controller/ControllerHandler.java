@@ -20,6 +20,7 @@ public interface ControllerHandler {
 	LinkedHashSet<String> evaluateFixpoint(String currentWhileTerm, String text, String text2);
 	String createAllSigmaFixpoint(String currentWhileTerms);
 	boolean isConverted(String currentWhileTerm);
-	String startWitnessProcess(String C, String information);
+	String startWitnessProcess(String C, String f, String information, String placeholder);
+	void setIterationSelection(int iterationSelection);
 
 }

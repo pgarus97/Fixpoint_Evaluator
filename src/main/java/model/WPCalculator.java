@@ -39,7 +39,11 @@ private double iterationDelta;
 	 * Takes a program (C) and a post expectation (f) as input and recursively calculates the result of the formula wp[C](f) for any sigma (variable assignment).
 	 */
 	public String wp(String C, String f, int recursionDepth) {
-		//sequential process	
+		//sequential process
+		if(f == null) {
+			return null;
+		}
+		
 		if(!whileLoops.contains(C+" ("+f+")") && C.startsWith("while")) {
 			whileLoops.add(C+" ("+f+")");
 		}
@@ -139,7 +143,11 @@ private double iterationDelta;
 						break;
 					case 3:
 						//TODO stop computation time for user input somehow
-						result = upsideDownEvaluation(C, f);
+
+						result = upsideDownEvaluation(C, f, recursionDepth+1);
+						if(result == null) {
+							mainController.output("Cancelled Computation.",1,recursionDepth); 
+						}
 						break;
 				}
 				
@@ -182,8 +190,10 @@ private double iterationDelta;
 				}
 			}	
 		}
-		wpCache.put(C+" ("+f+")", result);
-		mainController.output("Put into Cache: "+ C+"("+f+")" + " " + result,2,recursionDepth); 
+		if(result != null) {
+			wpCache.put(C+" ("+f+")", result);
+			mainController.output("Put into Cache: "+ C+"("+f+")" + " " + result,2,recursionDepth); 
+		}
 		return result;	
 	}
 
@@ -290,6 +300,9 @@ private double iterationDelta;
 	 * If no concrete result can be calculated (e.g. if there are still unresolved variables), the function returns the term as it is. 
 	 */
 	public String calculation(String term) {
+		if(term == null) {
+			return "";
+		}
 		Function restrictValue = new Function("r", "min(max(0,x),"+restriction+")", "x");
 		Expression e = new Expression(term,restrictValue);
 		Double result = e.calculate();
@@ -300,29 +313,31 @@ private double iterationDelta;
 		}
 	}
 	
-	public String upsideDownEvaluation(String C, String f) {
+	
+	/*
+	 * Function that calculates the least fixpoint via interactive witness input through the method described in the Upside-Down theory.
+	 */
+	public String upsideDownEvaluation(String C, String f, int recursionDepth) {
 		String witness = "";
 		String information = "";
+		String placeholder = convertFixpoint("0").getContentString();
 		while(true) {
-			witness = mainController.startWitnessProcess(C+"("+f+")",information);
-			System.out.println("wpwitness" + witness);
-			//case: not an iff clause => needs to be computable
-			//case: good but not lfp
-			//case: good and lfp
+			witness = mainController.startWitnessProcess(C,f,information,placeholder);
+			if(witness == null) {
+				return null;
+			}
 			Expression e = new Expression(witness);
-			System.out.println("Syntax: " + e.checkLexSyntax() + e.checkSyntax());
 			if(witness.startsWith("iff") && e.checkLexSyntax()) {
-				System.out.println("inside syntax check");
 				LinkedHashSet<String> result = evaluateFixpoint(C+" ("+f+")", witness, Double.toString(iterationDelta) , 1, new LinkedHashSet<String>());
-				System.out.println(result.toString());
-
-				if(result.isEmpty()) {
-					mainController.output("Least Fixpoint found. Continue computation of wp", 1); //TODO fix outputs here
-					mainController.output("Least Fixpoint: " + witness, 1);
-					//TODO check if ACTUALLY LFP
+				if(result == null) {
+					return null;
+				}else if(result.isEmpty()) {
+					mainController.output("Least Fixpoint found. Continue computation of wp", 1,recursionDepth);
+					mainController.output("Least Fixpoint: " + witness, 1, recursionDepth);
 					return witness;
 				}else {
 					information = "Least Fixpoint not yet found. Try reducing following states: " + result.toString();
+					placeholder = witness;
 				}
 			}else {
 				information ="The inputted witness was not in a correct format! Try again!";
@@ -466,19 +481,18 @@ private double iterationDelta;
 			previousSigmaSet.add(copiedSigma);
 		}
 
-		//TODO check if ACTUALLY LFP at the end
-
 		//checks whether the witness is a fixpoint or not
-		/*System.out.println("LinkedHashMap to string: " +X.getContentString());
+		System.out.println("LinkedHashMap to string: " +X.getContentString());
 		System.out.println("LinkedHashMap to string: " +phihashX.getContentString());
-
-		if(!X.getContentString().equals(phihashX.getContentString())) { //TODO could also check if prefixpoint
-			mainController.output("\n" + "-----------------------------------");
-			mainController.output("\n" + "The inputted witness is not a fixpoint! Cannot evaluate non-fixpoints!");
-			return sigmaSet;
-		} */
+		
 		
 		for(Map.Entry<String, String> entry : X.getContentMap().entrySet()) {
+			//test if fixpoint //TODO check if somehow postfixpoint can be implemented
+			if(Double.parseDouble(phihashX.getContentMap().get(entry.getKey())) != Double.parseDouble(entry.getValue())) {
+				mainController.output("\n" + "The inputted witness is not a fixpoint!",1);
+				return null;
+			}
+				
 			String XslashValue = "";
 			if(!sigmaSet.contains(entry.getKey())) {
 				XslashValue = entry.getValue();
@@ -507,7 +521,7 @@ private double iterationDelta;
 		mainController.output( "Phi-Hash (X'): " + phihashXslash.getContentMap(),1);
 
 		if(sigmaSet.isEmpty()) {
-			mainController.output("\n" + "The hash-function's result is an empty set. This means "+phihashX.getContentString()+" is the least fixpoint." + "\n",1);
+			mainController.output("\n" + "The hash-function's result is an empty set. This means " + phihashX.getContentString() + " is the least fixpoint." + "\n",1);
 		}else {
 			mainController.output("\n" + "The hash-function's result is not an empty set. This means the witness is above the least fixpoint." ,1);
 			mainController.output("Following states are still in the result set: " ,1);

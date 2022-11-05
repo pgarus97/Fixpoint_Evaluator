@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import controller.MainController;
@@ -127,6 +128,13 @@ class WPCalculatorTest {
 		mainCalculator.fillAllSigma("xc");
 		mainCalculator.setIterationCount(3);
 		assertEquals("2.0",mainCalculator.calculation(mainCalculator.wp("x=0;c=0;while(x<2){while(c<2){c=c+1;x=x+1}}","x",0)));
+	}
+	
+	@Disabled
+	void testUpsideDownEvaluation() {
+		mainCalculator.setIterationSelection(3);
+		mainCalculator.fillAllSigma("xc");
+		assertEquals("1.0",mainCalculator.calculation(mainCalculator.wp("c=0;x=1;while(c=1){x=x+1}","x",0)));
 	}
 	
 	@Test

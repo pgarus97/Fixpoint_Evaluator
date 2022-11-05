@@ -57,9 +57,8 @@ public class MainController implements ControllerHandler {
 	    return calcResult;
 	}
 	
-	public String startWitnessProcess(String C, String information) {
-		String witness = mainView.createWitnessDialogue(C, information);
-		System.out.println(witness);
+	public String startWitnessProcess(String C, String f, String information, String placeholder) {
+		String witness = mainView.createWitnessDialogue(C, f, information, placeholder);
 		return witness;
 	}
 	
@@ -296,6 +295,10 @@ public class MainController implements ControllerHandler {
 
 	public void setMainCalculator(WPCalculator mainCalculator) {
 		this.mainCalculator = mainCalculator;
+	}
+	
+	public void setIterationSelection(int iterationSelection) {
+		mainCalculator.setIterationSelection(iterationSelection);
 	}
 	
 }

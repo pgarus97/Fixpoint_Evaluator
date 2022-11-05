@@ -164,7 +164,7 @@ private JButton loadCache;
 	    convertButton.setBounds(500,140,200, 20);
 	    
 	    iterationPanel = new JPanel();
-	    iterationPanel.setBounds(190,70,220, 100);
+	    iterationPanel.setBounds(190,50,220, 120);
 		iterationPanel.setLayout(new BoxLayout(iterationPanel, BoxLayout.PAGE_AXIS));
 	    
 	    allSigmaIteration = new JCheckBox("Enable all-sigma fixpoint iteration.");
@@ -413,7 +413,6 @@ private JButton loadCache;
 	    });
 	    
 	    examineFixpointButton.addItemListener(new ItemListener() {
-	    	//TODO fix filling of whileLoops
             public void itemStateChanged(ItemEvent event) {
                 if (event.getStateChange() == ItemEvent.SELECTED) {
 	    			whileLoopScroll.setVisible(true);	
@@ -501,22 +500,57 @@ private JButton loadCache;
         }
     };
 
-    public String createWitnessDialogue(String C, String information) {
+    public String createWitnessDialogue(String C, String f, String information, String placeholder) {
     	    	
+    	Object[] options1 = { "Test This Witness", "Try Kleene Iteration", "Exit" };
+    	Object[] options2 = { "Test This Witness", "Try Kleene Iteration", "Try Automatic Reduction", "Exit" };
+
+		JPanel panel = new JPanel();
+		panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
+
+		panel.add(new JLabel("Currently Evaluating: " + C +" ("+f+")"));
+		panel.add(Box.createRigidArea(new Dimension(0, 5)));
+		panel.add(new JLabel(information));
+		panel.add(Box.createRigidArea(new Dimension(0, 5)));
+		panel.add(new JLabel("Input a Witness: "));
+		panel.add(Box.createRigidArea(new Dimension(0, 10)));
+		JTextField textField = new JTextField(placeholder);
+		panel.add(textField);
+		
+		int result = JOptionPane.showOptionDialog(null, panel, "Witness Input",
+		        JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE,
+		        null, options1, null);
+		switch(result) {
+			case 0:
+				return textField.getText();
+			case 1:
+				mainController.setIterationSelection(0);
+				String wpResult = mainController.wp(C, f, false);
+				mainController.setIterationSelection(3);
+				return wpResult;
+			case 2: 
+				return null;
+			default:
+				return null;
+		}
+		
+    	/*
     	String witness = (String)JOptionPane.showInputDialog(
                 frame,
-                "Currently evaluating: " + C + "\n" +
-                information + "\n" + 
+                "Currently evaluating: " + C +" ("+f+")" + "\n\n" +
+                information + "\n\n" + 
                 "Input a witness: ",
                 "Witness Input",
                 JOptionPane.PLAIN_MESSAGE,
                 null,
                 null,
-                "iff((c=0)&(x=0),0.0;(c=0)&(x=1),1.0;(c=1)&(x=0),0.5;(c=1)&(x=1),1.0)");
+                placeholder);
     	
 				return witness;
 				//Button for kleene iteration alternative //TODO needs more custom JOptionPane, maybe as variable and not only for the string
 				//Button for automatic reduction of states that still need to be reduced
+				 * */
+				 
     }
     
     public void prepareEvaluationView(ArrayList<String> modelLoops) {
@@ -571,6 +605,10 @@ private JButton loadCache;
 	
 	public JCheckBox getDirectIteration() {
 		return directIteration;
+	}
+	
+	public JCheckBox getUpsideDown() {
+		return upsideDown;
 	}
 	
 	public JCheckBox getMinimalLog() {
