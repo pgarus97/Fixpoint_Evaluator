@@ -9,9 +9,9 @@ import java.util.LinkedHashSet;
 
 public interface ControllerHandler {
 
-	void clearFixpointCache();
-	void saveFixpointCache();
-	void loadFixpointCache();
+	void clearWPCache();
+	void saveWPCache();
+	void loadWPCache();
 	boolean prepareCalculationModel(String restriction, String iterationCount, int iterationSelection, String deltaInput);
 	void output(String string, int logLevel, int recursionDepth);
 	void output(String string, int logLevel);

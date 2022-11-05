@@ -91,15 +91,15 @@ class MainControllerTest {
 	void testCacheMethods() {
 		mainCalculator.setRestriction(1);
 		mainCalculator.fillAllSigma("xc");
-		mainController.clearFixpointCache();
+		mainController.clearWPCache();
 		
 		assertEquals(null,mainController.getLFP("while(c=1){{x=x+1}[1/2]{c=0}} (x)"));
 		mainController.wp("while(c=1){{x=x+1}[1/2]{c=0}}", "x",false);
 		assertEquals("iff((c=0)&(x=0),0.0;(c=0)&(x=1),1.0;(c=1)&(x=0),0.5;(c=1)&(x=1),1.0)",mainController.getLFP("while(c=1){{x=x+1}[1/2]{c=0}} (x)"));
-		mainController.saveFixpointCache();
-		mainController.clearFixpointCache();
+		mainController.saveWPCache();
+		mainController.clearWPCache();
 		assertEquals(null,mainCalculator.getWPCache().get("while(c=1){{x=x+1}[1/2]{c=0}} (x)"));
-		mainController.loadFixpointCache();
+		mainController.loadWPCache();
 		assertEquals("iff((c=0)&(x=0),0.0;(c=0)&(x=1),1.0;(c=1)&(x=0),0.5;(c=1)&(x=1),1.0)",mainController.getLFP("while(c=1){{x=x+1}[1/2]{c=0}} (x)"));
 	}
 	

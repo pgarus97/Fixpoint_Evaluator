@@ -85,7 +85,7 @@ class WPCalculatorTest {
 	}
 	
 	@Test
-	void testWhile() {	
+	void testDirectWhile() {	
 		mainCalculator.setIterationCount(10);
 		mainCalculator.setIterationSelection(2);
 
@@ -110,6 +110,7 @@ class WPCalculatorTest {
 	@Test
 	void testAllSigmaWhile() {	
 		
+		mainCalculator.setIterationSelection(1);
 		mainCalculator.setRestriction(2);
 		mainCalculator.fillAllSigma("xc");
 
@@ -129,7 +130,7 @@ class WPCalculatorTest {
 	}
 	
 	@Test
-	void testComboWhile() {	
+	void testDefaultWhile() {	
 		
 		mainCalculator.setIterationSelection(0);
 		mainCalculator.setRestriction(2);
@@ -146,7 +147,6 @@ class WPCalculatorTest {
 		//while in while
 		mainCalculator.setRestriction(3);
 		mainCalculator.fillAllSigma("xc");
-		mainCalculator.setIterationCount(3);
 		assertEquals("2.0",mainCalculator.calculation(mainCalculator.wp("x=0;c=0;while(x<2){while(c<2){c=c+1;x=x+1}}","x",0)));
 	}
 	

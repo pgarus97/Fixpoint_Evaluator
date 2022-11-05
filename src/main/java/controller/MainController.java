@@ -103,7 +103,7 @@ public class MainController implements ControllerHandler {
 		output("\n" +"*************************",1);
 		output("\n" +"Starting fixpoint evaluation. Information: ",1);
 		output("Selected While-Term: " + currentWhileTerm,1);
-	    output("LFP: " + getLFP(currentWhileTerm),1);
+	    output("LFP: " + getLFP(currentWhileTerm),1); //TODO probably needs to be optional
 	    if(fixpointDelta != "" && NumberUtils.isCreatable(fixpointDelta)) {
     	    output("Delta: " + fixpointDelta ,1);
 	    }else {
@@ -136,7 +136,7 @@ public class MainController implements ControllerHandler {
 		}
 		switch(iterationSelection) {
 			case 0: 
-				output("Chosen iteration method: combo fixpoint iteration",1);
+				output("Chosen iteration method: default fixpoint iteration",1);
 				break;
 			case 1:
 				output("Chosen iteration method: all-sigma fixpoint iteration",1);
@@ -157,13 +157,15 @@ public class MainController implements ControllerHandler {
 			output("Iteration count set to " + iterationCount,1);
 			mainCalculator.setIterationCount(Double.parseDouble(iterationCount));
 	    }else {
-	    	if(iterationSelection != 2){
-    			output("No minimum iteration count inputted. Taking all-sigma default: 5",1);
+	    	switch(iterationSelection) {
+			case 1:
+				output("No minimum iteration count inputted. Taking all-sigma default: 5",1);
     			mainCalculator.setIterationCount(5);
-	    	} else {
-	    		//default case 
-    			output("No maximum iteration count inputted. Taking default: 10",1);
+    			break;
+			case 2: 
+				output("No maximum iteration count inputted. Taking direct default: 10",1);
     			mainCalculator.setIterationCount(10);
+    			break;
 	    	}
 	    }
 		if (iterationSelection == 1) {
@@ -253,17 +255,17 @@ public class MainController implements ControllerHandler {
 	 * Functions to delegate fixpoint cache tasks from view to model
 	 */
 	@Override
-	public void saveFixpointCache() {
+	public void saveWPCache() {
 		mainCalculator.saveWPCache();
 	}
 
 	@Override
-	public void loadFixpointCache() {
+	public void loadWPCache() {
 		mainCalculator.loadWPCache();		
 	}
 	
 	@Override
-	public void clearFixpointCache() {
+	public void clearWPCache() {
 		mainCalculator.clearWPCache();				
 	}
 	

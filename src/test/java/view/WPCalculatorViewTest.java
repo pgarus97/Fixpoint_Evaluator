@@ -47,13 +47,13 @@ class WPCalculatorViewTest {
 
 	@Test
 	void testGetIterationSelection() {
+		mainView.getDefaultIteration().setSelected(true);
+		assertEquals(0, mainView.getIterationSelection());
+		mainView.getDefaultIteration().setSelected(false);
+		
 		mainView.getAllSigmaIteration().setSelected(true);
 		assertEquals(1, mainView.getIterationSelection());
 		mainView.getAllSigmaIteration().setSelected(false);
-
-		mainView.getComboIteration().setSelected(true);
-		assertEquals(0, mainView.getIterationSelection());
-		mainView.getComboIteration().setSelected(false);
 
 		mainView.getDirectIteration().setSelected(true);
 		assertEquals(2, mainView.getIterationSelection());

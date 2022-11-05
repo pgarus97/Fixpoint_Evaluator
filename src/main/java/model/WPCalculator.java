@@ -31,7 +31,7 @@ private ArrayList<String> whileLoops = new ArrayList<String>();
 private LinkedHashMap<String,String> wpCache = new LinkedHashMap<String,String>();
 private double restriction;
 private double iterationCount;
-private int iterationSelection; // 0 = combo ; 1 = all-sigma ; 2 = direct
+private int iterationSelection; // 0 = default ; 1 = all-sigma ; 2 = direct
 private double iterationDelta;
 
 	/*
@@ -129,7 +129,7 @@ private double iterationDelta;
 
 				switch(iterationSelection) {
 					case 0: 
-						result = comboFixpointIteration(condition, whileC, f, recursionDepth+1);
+						result = fixpointIteration(condition, whileC, f, recursionDepth+1);
 						break;
 					case 1: 
 						result = allSigmaFixpointIteration(condition, whileC, f, recursionDepth+1);
@@ -319,30 +319,29 @@ private double iterationDelta;
 	}
 	
 	/* 
-	 * Function that calculates the combination approach of a fixpoint iteration for while loops.
+	 * Function that calculates the default approach of a fixpoint iteration for while loops.
 	 * It takes the while condition (condition), the program (C) and the post-expectation (f) as input.
 	 * The output is an iff term that represents the fixpoint of the given input.
 	 */
-	public String comboFixpointIteration(String condition, String C, String f, int recursionDepth) {
-		mainController.output("DirectCombo Fixpoint Iteration start. ", 2, recursionDepth);
-		boolean stopCondition = false;
+	public String fixpointIteration(String condition, String C, String f, int recursionDepth) {
+		mainController.output("Default fixpoint iteration start. ", 2, recursionDepth);
+		boolean loopCondition = true;
 		String result = "0"; //X^0 initialization
 		Fixpoint previousFixpoint = new Fixpoint();
-		for(int i=0; i < iterationCount; i++) {
-			if(stopCondition) {
-				break;
-			}
+		int i = 0;
+		while(loopCondition){
 			mainController.output("-----------------------------------",2,recursionDepth);
 			mainController.output("Iteration " + (i+1) + "\n",2,recursionDepth);
 			String X = wp(C, result,recursionDepth);
 			result = "if("+condition+","+X+","+f+")";
 			Fixpoint currentFixpoint = convertFixpoint(result);
 			if(previousFixpoint.getContentString().equals(currentFixpoint.getContentString())) {
-				stopCondition = true;
+				loopCondition = false;
 			}else {
 				previousFixpoint.setContentString(currentFixpoint.getContentString());
 			}
 			result = currentFixpoint.getContentString();
+			i++;
 		}
 		return result;
 	}
@@ -379,12 +378,12 @@ private double iterationDelta;
 					String X = wp(C, caseF,recursionDepth);
 					caseF = "if("+condition+","+X+","+f+")";
 					sigmaResult = calculateSigma(caseF,sigma);
+					mainController.output("Iteration result: " + sigmaResult ,2,recursionDepth);
 
 					//checks if the distance between the iterations has reached the delta threshold and stops the iteration if it is the case
 					if(i > iterationCount) {
-						mainController.output((sigmaResult-previousResult < iterationDelta) +" Test",2,recursionDepth);
 						if(sigmaResult-previousResult < iterationDelta) {
-							mainController.output("Stop iteration asg threshold has been reached.",2,recursionDepth);
+							mainController.output("Stop iteration as the threshold has been reached.",2,recursionDepth);
 							break;
 						}else {	
 							previousResult = sigmaResult;
@@ -726,7 +725,7 @@ private double iterationDelta;
 	    //boolean res = directory.mkdir();
 		FileOutputStream fout;
 		try {
-			fout = new FileOutputStream("Cache/fixpointCache");
+			fout = new FileOutputStream("Cache/wpCache");
 			try (ObjectOutputStream oos = new ObjectOutputStream(fout)) {
 				oos.writeObject(wpCache);
 				mainController.output("\n" + "Cache saved.",1);

@@ -56,7 +56,7 @@ private JTextArea result;
 private JToggleButton examineFixpointButton;
 
 private JPanel iterationPanel;
-private JCheckBox comboIteration;
+private JCheckBox defaultIteration;
 private JCheckBox directIteration;
 private JCheckBox allSigmaIteration;
 private JCheckBox sigmaForwarding;
@@ -139,13 +139,19 @@ private JButton loadCache;
 	    
 	    iterationDesc = new JLabel("Input the iteration count here:");
 	    iterationDesc.setBounds(450,40,200, 20);
+	    iterationDesc.setVisible(false);
 	    iterationField = new JTextField("");
 	    iterationField.setBounds(450,60,200, 20);
+	    iterationField.setVisible(false);
+
 	    
 	    deltaDesc = new JLabel("Input delta (fixpoint iteration stop) here:");
 	    deltaDesc.setBounds(450,80,200, 20);
+	    deltaDesc.setVisible(false);
 		deltaInput = new JTextField("0.001");
 		deltaInput.setBounds(450,100,200, 20);
+	    deltaInput.setVisible(false);
+
 
 	    calcButton = new JButton("Calculate!");
 	    calcButton.setBounds(5,100,150, 40);
@@ -160,17 +166,18 @@ private JButton loadCache;
 		iterationPanel.setLayout(new BoxLayout(iterationPanel, BoxLayout.PAGE_AXIS));
 	    
 	    allSigmaIteration = new JCheckBox("Enable all-sigma fixpoint iteration.");
-	    allSigmaIteration.setSelected(true);
 
 	    directIteration = new JCheckBox("Enable direct fixpoint iteration.");
 	    
-	    comboIteration = new JCheckBox("Enable combo fixpoint iteration.");
+	    defaultIteration = new JCheckBox("Enable default fixpoint iteration.");
+	    defaultIteration.setSelected(true);
+
 	    
 	    sigmaForwarding = new JCheckBox("Enable sigma-forwarding.");
 	    
+	    iterationPanel.add(defaultIteration);
 	    iterationPanel.add(allSigmaIteration);
 	    iterationPanel.add(directIteration);
-	    iterationPanel.add(comboIteration);
 	    iterationPanel.add(sigmaForwarding);
 	    iterationPanel.setVisible(true);
 	    
@@ -307,20 +314,20 @@ private JButton loadCache;
 	    
 	    resetCache.addActionListener(new ActionListener(){  
 	    	public void actionPerformed(ActionEvent e){ 
-	    		mainController.clearFixpointCache();
+	    		mainController.clearWPCache();
 	    		prepareCalculationView();
     	   }  
 	    });  
 	    
 	    saveCache.addActionListener(new ActionListener(){  
 	    	public void actionPerformed(ActionEvent e){ 
-	    		mainController.saveFixpointCache();
+	    		mainController.saveWPCache();
     	   }  
 	    });
 	    
 	    loadCache.addActionListener(new ActionListener(){  
 	    	public void actionPerformed(ActionEvent e){ 
-	    		mainController.loadFixpointCache();
+	    		mainController.loadWPCache();
 	    		prepareCalculationView();
     	   }  
 	    });
@@ -333,19 +340,23 @@ private JButton loadCache;
 	    	    	iterationDesc.setVisible(true);
 	    	    	iterationField.setVisible(true);
 	    	    	directIteration.setSelected(false);
-	    	    	comboIteration.setSelected(false);
+	    	    	defaultIteration.setSelected(false);
 	    	    }else {
 	    	    	deltaInput.setVisible(false);
 	    	    	deltaDesc.setVisible(false);
+	    	    	iterationDesc.setVisible(false);
+	    	    	iterationField.setVisible(false);
 	    	    }
     	   }  
 	    });
 	    
-	    comboIteration.addActionListener(new ActionListener(){  
+	    defaultIteration.addActionListener(new ActionListener(){  
 	    	public void actionPerformed(ActionEvent e){ 
-	    		if (comboIteration.isSelected()) {
+	    		if (defaultIteration.isSelected()) {
 	    	    	deltaInput.setVisible(false);
 	    	    	deltaDesc.setVisible(false);
+	    	    	iterationDesc.setVisible(false);
+	    	    	iterationField.setVisible(false);
 	    	    	directIteration.setSelected(false);
 	    	    	allSigmaIteration.setSelected(false);
 	    	    }
@@ -359,13 +370,17 @@ private JButton loadCache;
 	    	    	deltaDesc.setVisible(false);
 	    	    	iterationDesc.setVisible(true);
 	    	    	iterationField.setVisible(true);
-	    	    	comboIteration.setSelected(false);
+	    	    	defaultIteration.setSelected(false);
 	    	    	allSigmaIteration.setSelected(false);
+	    	    }else {
+	    	    	iterationDesc.setVisible(false);
+	    	    	iterationField.setVisible(false);
 	    	    }
     	   }  
 	    });
 
 	    examineFixpointButton.addItemListener(new ItemListener() {
+	    	//TODO fill while loops independently from wp, simple parsing
             public void itemStateChanged(ItemEvent event) {
                 if (event.getStateChange() == ItemEvent.SELECTED) {
 	    			whileLoopScroll.setVisible(true);	
@@ -401,6 +416,7 @@ private JButton loadCache;
 	    });
 	    
 	    lfpButton.addActionListener(new ActionListener(){
+	    	//TODO if exists, take it, else display warning
 	    	public void actionPerformed(ActionEvent e){
 	    			witnessInput.setText(mainController.getLFP(currentWhileTerm));
 	    	}
@@ -499,8 +515,8 @@ private JButton loadCache;
 		return allSigmaIteration;
 	}
 	
-	public JCheckBox getComboIteration() {
-		return comboIteration;
+	public JCheckBox getDefaultIteration() {
+		return defaultIteration;
 	}
 	
 	public JCheckBox getDirectIteration() {
@@ -537,7 +553,7 @@ private JButton loadCache;
 	}
 
 	public int getIterationSelection() {
-		if(comboIteration.isSelected()) {
+		if(defaultIteration.isSelected()) {
 			return 0;
 		} else if(allSigmaIteration.isSelected()) {
 			return 1;
