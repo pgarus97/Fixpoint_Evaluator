@@ -6,6 +6,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -500,10 +501,12 @@ private JButton loadCache;
         }
     };
 
-    public String createWitnessDialogue(String C, String f, String information, String placeholder) {
-    	    	
+    /*
+     * Creates a pop out window for inputting a witness for the upside down method
+     */
+    public String createWitnessDialogue(String C, String f, String information, String placeholder, LinkedHashSet<String> reductionSet) {	    	
     	Object[] options1 = { "Test This Witness", "Try Kleene Iteration", "Exit" };
-    	Object[] options2 = { "Test This Witness", "Try Kleene Iteration", "Try Automatic Reduction", "Exit" };
+    	Object[] options2 = { "Test This Witness", "Try Kleene Iteration", "Exit", "Try Automatic Reduction" };
 
 		JPanel panel = new JPanel();
 		panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
@@ -514,15 +517,22 @@ private JButton loadCache;
 		panel.add(Box.createRigidArea(new Dimension(0, 5)));
 		panel.add(new JLabel("Input a Witness: "));
 		panel.add(Box.createRigidArea(new Dimension(0, 10)));
-		JTextField textField = new JTextField(placeholder);
-		panel.add(textField);
+		JTextField witnessInput = new JTextField(placeholder);
+		panel.add(witnessInput);
+		int result = 2;
+		if(reductionSet.isEmpty()) {
+			result = JOptionPane.showOptionDialog(null, panel, "Witness Input",
+			        JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE,
+			        null, options1, null);
+		}else {
+			result = JOptionPane.showOptionDialog(null, panel, "Witness Input",
+			        JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE,
+			        null, options2, null);
+		}
 		
-		int result = JOptionPane.showOptionDialog(null, panel, "Witness Input",
-		        JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE,
-		        null, options1, null);
 		switch(result) {
 			case 0:
-				return textField.getText();
+				return witnessInput.getText();
 			case 1:
 				mainController.setIterationSelection(0);
 				String wpResult = mainController.wp(C, f, false);
@@ -530,27 +540,11 @@ private JButton loadCache;
 				return wpResult;
 			case 2: 
 				return null;
+			case 3:
+				return mainController.automaticReduction(C,f,witnessInput.getText(),reductionSet);
 			default:
 				return null;
-		}
-		
-    	/*
-    	String witness = (String)JOptionPane.showInputDialog(
-                frame,
-                "Currently evaluating: " + C +" ("+f+")" + "\n\n" +
-                information + "\n\n" + 
-                "Input a witness: ",
-                "Witness Input",
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                null,
-                placeholder);
-    	
-				return witness;
-				//Button for kleene iteration alternative //TODO needs more custom JOptionPane, maybe as variable and not only for the string
-				//Button for automatic reduction of states that still need to be reduced
-				 * */
-				 
+		}				 
     }
     
     public void prepareEvaluationView(ArrayList<String> modelLoops) {

@@ -138,6 +138,16 @@ class WPCalculatorTest {
 	}
 	
 	@Test
+	void testAutomaticReduction() {
+		mainCalculator.setRestriction(1);
+		mainCalculator.setIterationDelta(0.1);
+		LinkedHashSet<String> testSet = new LinkedHashSet<String>();
+		testSet.add("(c=1)&(x=0)");
+		testSet.add("(c=1)&(x=1)");
+		assertEquals("iff((c=0)&(x=0),0.0;(c=0)&(x=1),1.0;(c=1)&(x=0),0.0;(c=1)&(x=1),0.0)",mainCalculator.automaticReduction("while(c=1){x=x+1}", "x", "iff((c=0)&(x=0),0.0;(c=0)&(x=1),1.0;(c=1)&(x=0),1.0;(c=1)&(x=1),1.0)", testSet));
+	}
+	
+	@Test
 	void testDefaultWhile() {	
 		
 		mainCalculator.setIterationSelection(0);

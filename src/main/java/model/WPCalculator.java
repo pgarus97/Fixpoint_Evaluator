@@ -320,9 +320,10 @@ private double iterationDelta;
 	public String upsideDownEvaluation(String C, String f, int recursionDepth) {
 		String witness = "";
 		String information = "";
+		LinkedHashSet<String> reductionSet = new LinkedHashSet<String>();
 		String placeholder = convertFixpoint("0").getContentString();
 		while(true) {
-			witness = mainController.startWitnessProcess(C,f,information,placeholder);
+			witness = mainController.startWitnessProcess(C,f,information,placeholder, reductionSet);
 			if(witness == null) {
 				return null;
 			}
@@ -337,12 +338,40 @@ private double iterationDelta;
 					return witness;
 				}else {
 					information = "Least Fixpoint not yet found. Try reducing following states: " + result.toString();
+					reductionSet = result;
 					placeholder = witness;
 				}
 			}else {
-				information ="The inputted witness was not in a correct format! Try again!";
+				information = "The inputted witness was not in a correct format! Try again!";
 			}
 		}
+	}
+	
+	
+	/*
+	 * Function that attempts to reduce a given witness and reducable states automatically until a least fixpoint is found and returns it.
+	 */
+	public String automaticReduction(String C, String f, String witness, LinkedHashSet<String> reductionSet) {
+		Fixpoint witnessObj =  new Fixpoint(witness, restriction);
+		LinkedHashSet<String> result = new LinkedHashSet<String>();
+		result.add("Initial Object");
+		while(!result.isEmpty()) {	
+			for(Map.Entry<String, String> entry : witnessObj.getContentMap().entrySet()) {
+				if(reductionSet.contains(entry.getKey())) {
+					Expression e = new Expression(entry.getValue() + "-" + iterationDelta);
+					double reductionResult = e.calculate();
+					if(reductionResult < 0) {
+						witnessObj.getContentMap().put(entry.getKey(), "0.0");
+					}else {					
+						mainController.output("Automatically reducing " + entry.getKey() +" by "+ iterationDelta, 1);
+						witnessObj.getContentMap().put(entry.getKey(), Double.toString(reductionResult));
+					}
+				}
+			}
+			mainController.output("New reduced witness: " + witnessObj.setStringFromMap(), 1);
+			result = evaluateFixpoint(C+" ("+f+")", witnessObj.getContentString(), Double.toString(iterationDelta), 1, new LinkedHashSet<String>());
+		}
+		return witnessObj.getContentString();	
 	}
 	
 	/*
@@ -384,6 +413,7 @@ private double iterationDelta;
 			String X = wp(C, result,recursionDepth);
 			result = "if("+condition+","+X+","+f+")";
 			Fixpoint currentFixpoint = convertFixpoint(result);
+			currentFixpoint.restrictFixpoint(restriction);
 			if(previousFixpoint.getContentString().equals(currentFixpoint.getContentString())) {
 				loopCondition = false;
 			}else {
@@ -444,9 +474,9 @@ private double iterationDelta;
 			mainController.output("Finished fixpoint iteration.",2,recursionDepth);
 			double roundResult = Math.round(sigmaResult * 100.0) / 100.0;
 			mainController.output("Fixpoint iteration result: " + "wp[" + C + "]("+f+") with "+ identifier +" = " + roundResult + "\n",2,recursionDepth);
-			leastFixpoint.addContentFromMap(identifier, Double.toString(roundResult));	
-			
+			leastFixpoint.addContentFromMap(identifier, Double.toString(roundResult));
 		}
+		leastFixpoint.restrictFixpoint(restriction);
 		return leastFixpoint.setStringFromMap();
 	}
 	
@@ -594,6 +624,7 @@ private double iterationDelta;
 			double roundResult = Math.round(sigmaResult * 100.0) / 100.0;
 			leastFixpoint.addContentFromMap(identifier, Double.toString(roundResult));	
 		}
+		leastFixpoint.restrictFixpoint(restriction);
 		leastFixpoint.setStringFromMap();
 		return leastFixpoint;
 	}

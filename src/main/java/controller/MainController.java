@@ -57,9 +57,21 @@ public class MainController implements ControllerHandler {
 	    return calcResult;
 	}
 	
-	public String startWitnessProcess(String C, String f, String information, String placeholder) {
-		String witness = mainView.createWitnessDialogue(C, f, information, placeholder);
-		return witness;
+	/*
+	 * Delegates the UpsideDown method GUI creation to the view
+	 */
+	@Override
+	public String startWitnessProcess(String C, String f, String information, String placeholder, LinkedHashSet<String> reductionSet) {
+		return mainView.createWitnessDialogue(C, f, information, placeholder, reductionSet);
+		
+	}
+	
+	/*
+	 * Delegates the automaticReduction command to the calculator
+	 */
+	@Override
+	public String automaticReduction(String C, String f, String witness, LinkedHashSet<String> reductionSet) {
+		return mainCalculator.automaticReduction(C,f,witness,reductionSet);
 	}
 	
 	/*
