@@ -120,7 +120,7 @@ public class MainController implements ControllerHandler {
 		output("\n" +"*************************",1);
 		output("\n" +"Starting fixpoint evaluation. Information: ",1);
 		output("Selected While-Term: " + currentWhileTerm,1);
-	    output("LFP: " + getLFP(currentWhileTerm),1); //TODO probably needs to be optional
+	    output("LFP: " + getLFP(currentWhileTerm),1);
 	    if(fixpointDelta != "" && NumberUtils.isCreatable(fixpointDelta)) {
     	    output("Delta: " + fixpointDelta ,1);
 	    }else {

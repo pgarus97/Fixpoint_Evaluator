@@ -142,8 +142,6 @@ private double iterationDelta;
 						result = directFixpointIteration(condition, whileC, f, recursionDepth+1); 
 						break;
 					case 3:
-						//TODO stop computation time for user input somehow
-
 						result = upsideDownEvaluation(C, f, recursionDepth+1);
 						if(result == null) {
 							mainController.output("Cancelled Computation.",1,recursionDepth); 
@@ -485,7 +483,6 @@ private double iterationDelta;
 	 * It takes a program while loop (currentWhile), a witness (witness), the threshold (delta), the current iteration (interationCount), and 
 	 * a set of variable assignments Y' (sigmaSet) as input.
 	 */
-	//TODO implement/remove postfixpoint functionality
 	public LinkedHashSet<String> evaluateFixpoint(String currentWhile, String witness, String delta, int iterationCount, LinkedHashSet<String> sigmaSet) {
 		Fixpoint X =  new Fixpoint(witness, restriction);
 		if(!X.getContentString().equals(witness)){
@@ -504,11 +501,7 @@ private double iterationDelta;
 				}
 			}
 		}
-		
-		//save current set for iteration comparison
-		//LinkedHashSet<String> cutSet = new LinkedHashSet<String>();
-		
-		
+
 		//save current set for iteration comparison
 		LinkedHashSet<String> previousSigmaSet = new LinkedHashSet<String>();
 		for(String copiedSigma : sigmaSet) {
@@ -526,9 +519,7 @@ private double iterationDelta;
 				mainController.output("\n" + "The inputted witness is not a post/fixpoint!",1);
 				return null;
 			}
-			/*if(Double.parseDouble(phiX.getContentMap().get(entry.getKey())) == Double.parseDouble(entry.getValue())){
-				cutSet.add(entry.getKey());
-			}*/
+
 			String XslashValue = "";
 			if(!sigmaSet.contains(entry.getKey())) {
 				XslashValue = entry.getValue();
@@ -565,15 +556,6 @@ private double iterationDelta;
 			for(String state : sigmaSet) {
 				mainController.output(state + ", ",1);
 			}
-			/*//cutting with cutSet
-			ArrayList<String> cutList = new ArrayList<String>();
-			for(String state : cutSet) {
-				if(sigmaSet.contains(state)) {
-					cutList.add(state);
-				}
-			}
-			sigmaSet.clear();
-			sigmaSet.addAll(cutList); */
 			if(!previousSigmaSet.toString().equals(sigmaSet.toString())) {
 				mainController.output("therefore continuing iteration." + "\n",1);
 				sigmaSet = evaluateFixpoint(currentWhile, X.getContentString(), delta, (iterationCount+1), sigmaSet);

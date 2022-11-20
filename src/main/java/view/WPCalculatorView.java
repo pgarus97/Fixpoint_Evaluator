@@ -87,10 +87,6 @@ private JButton resetCache;
 private JButton saveCache;
 private JButton loadCache;
 
-
-//TODO implement tips from https://stackoverflow.com/questions/62875613/cannot-refer-to-the-non-final-local-variable-display-defined-in-an-enclosing-sco
-//TODO make better input descriptions on hover
-
 	public WPCalculatorView() {
 		
 		/*
@@ -220,7 +216,6 @@ private JButton loadCache;
 	    //evaluation panel
 	    fixpointDeltaDesc = new JLabel("Input delta here:");
 	    fixpointDeltaInput = new JTextField("0.1");
-	    //TODO can change the preferred size if we put it in another panel as the boxlayout makes all components same size.
 	    fixpointDeltaInput.setPreferredSize(new Dimension (500,20));
 	    fixpointDeltaInput.setMaximumSize(fixpointDeltaInput.getPreferredSize());
 	    
@@ -383,7 +378,6 @@ private JButton loadCache;
 	    	    	iterationDesc.setVisible(true);
 	    	    	iterationField.setText("10");
 	    	    	iterationField.setVisible(true);
-	    	    	//TODO change iterationDesc on press
 	    	    	defaultIteration.setSelected(false);
 	    	    	allSigmaIteration.setSelected(false);
 	    	    	upsideDown.setSelected(false);
@@ -429,7 +423,6 @@ private JButton loadCache;
         });
 	    
 	    calcButton.addActionListener(new ActionListener(){  
-	    	//TODO log in real time somehow => https://docs.oracle.com/javase/tutorial/uiswing/concurrency/index.html#:~:text=Careful%20use%20of%20concurrency%20is%20particularly%20important%20to,must%20learn%20how%20the%20Swing%20framework%20employs%20threads.
 	    	public void actionPerformed(ActionEvent e){
 	    		if(mainController.prepareCalculationModel(restrictionField.getText(),iterationField.getText(),getIterationSelection(),deltaInput.getText()) == false) {
 	    			return;
