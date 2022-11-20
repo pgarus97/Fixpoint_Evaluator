@@ -335,7 +335,7 @@ private double iterationDelta;
 				}else if(result.isEmpty()) {
 					mainController.output("Least Fixpoint found. Continue computation of wp", 1,recursionDepth);
 					mainController.output("Least Fixpoint: " + witness, 1, recursionDepth);
-					return witness;
+					return wpCache.get(C+" ("+f+")");
 				}else {
 					information = "Least Fixpoint not yet found. Try reducing following states: " + result.toString();
 					reductionSet = result;
@@ -349,7 +349,7 @@ private double iterationDelta;
 	
 	
 	/*
-	 * Function that attempts to reduce a given witness and reducable states automatically until a least fixpoint is found and returns it.
+	 * Function that attempts to reduce a given witness and reducible states automatically until a least fixpoint is found and returns it.
 	 */
 	public String automaticReduction(String C, String f, String witness, LinkedHashSet<String> reductionSet) {
 		Fixpoint witnessObj =  new Fixpoint(witness, restriction);
@@ -383,7 +383,6 @@ private double iterationDelta;
 		mainController.output("Direct Fixpoint Iteration start. ", 2, recursionDepth);
 		String result = "0"; //X^0 initialization
 		for(int i=0; i<iterationCount; i++) {
-			//TODO increase lines for each iteration to see depth on output
 			mainController.output("-----------------------------------",2,recursionDepth);
 			mainController.output("Iteration " + (i+1) + "\n",2,recursionDepth);
 			String X = wp(C, result,recursionDepth);
@@ -486,15 +485,16 @@ private double iterationDelta;
 	 * It takes a program while loop (currentWhile), a witness (witness), the threshold (delta), the current iteration (interationCount), and 
 	 * a set of variable assignments Y' (sigmaSet) as input.
 	 */
+	//TODO implement/remove postfixpoint functionality
 	public LinkedHashSet<String> evaluateFixpoint(String currentWhile, String witness, String delta, int iterationCount, LinkedHashSet<String> sigmaSet) {
 		Fixpoint X =  new Fixpoint(witness, restriction);
 		if(!X.getContentString().equals(witness)){
-			mainController.output( "Restricted inputted witness to: " + X.getContentString(),1);
+			mainController.output("Restricted inputted witness to: " + X.getContentString(),1);
 		}
 	
-		Fixpoint phihashX = calculatePhiHash(X, currentWhile);
+		Fixpoint phiX = calculatePhi(X, currentWhile);
 		Fixpoint Xslash = new Fixpoint();
-		Fixpoint phihashXslash = new Fixpoint();
+		Fixpoint phiXslash = new Fixpoint();
 
 		//fills the initial sigmaSet (Y') if the iteration is in its first loop
 		if(iterationCount == 1) {
@@ -506,6 +506,10 @@ private double iterationDelta;
 		}
 		
 		//save current set for iteration comparison
+		//LinkedHashSet<String> cutSet = new LinkedHashSet<String>();
+		
+		
+		//save current set for iteration comparison
 		LinkedHashSet<String> previousSigmaSet = new LinkedHashSet<String>();
 		for(String copiedSigma : sigmaSet) {
 			previousSigmaSet.add(copiedSigma);
@@ -513,16 +517,18 @@ private double iterationDelta;
 
 		//checks whether the witness is a fixpoint or not
 		System.out.println("LinkedHashMap to string: " +X.getContentString());
-		System.out.println("LinkedHashMap to string: " +phihashX.getContentString());
+		System.out.println("LinkedHashMap to string: " +phiX.getContentString());
 		
 		
 		for(Map.Entry<String, String> entry : X.getContentMap().entrySet()) {
-			//test if fixpoint //TODO check if somehow postfixpoint can be implemented
-			if(Double.parseDouble(phihashX.getContentMap().get(entry.getKey())) != Double.parseDouble(entry.getValue())) {
-				mainController.output("\n" + "The inputted witness is not a fixpoint!",1);
+			//test if post/fixpoint
+			if(Double.parseDouble(phiX.getContentMap().get(entry.getKey())) < Double.parseDouble(entry.getValue())) {
+				mainController.output("\n" + "The inputted witness is not a post/fixpoint!",1);
 				return null;
 			}
-				
+			/*if(Double.parseDouble(phiX.getContentMap().get(entry.getKey())) == Double.parseDouble(entry.getValue())){
+				cutSet.add(entry.getKey());
+			}*/
 			String XslashValue = "";
 			if(!sigmaSet.contains(entry.getKey())) {
 				XslashValue = entry.getValue();
@@ -532,11 +538,11 @@ private double iterationDelta;
 			Xslash.addContentFromMap(entry.getKey(),XslashValue);
 		}
 		Xslash.setStringFromMap();
-		phihashXslash = calculatePhiHash(Xslash, currentWhile);
+		phiXslash = calculatePhi(Xslash, currentWhile);
 		
 		//removes variable assignments from the sigmaSet that do not fulfill the delta threshold
-		for(Map.Entry<String, String> entry : phihashX.getContentMap().entrySet()) {
-			double entryResult = Double.parseDouble(calculation(entry.getValue() +"-"+ phihashXslash.getContentMap().get(entry.getKey()) +">=" +delta));
+		for(Map.Entry<String, String> entry : phiX.getContentMap().entrySet()) {
+			double entryResult = Double.parseDouble(calculation(entry.getValue() +"-"+ phiXslash.getContentMap().get(entry.getKey()) +">=" +delta));
 			if(entryResult == 0.0) {
 				sigmaSet.remove(entry.getKey());
 			}
@@ -547,17 +553,27 @@ private double iterationDelta;
 		mainController.output("\n" + "Iteration " + iterationCount,1);
 		mainController.output("\n" + "X: " + X.getContentMap(),1);
 		mainController.output( "X': " + Xslash.getContentMap(),1);
-		mainController.output( "Phi-Hash (X): " + phihashX.getContentMap(),1);
-		mainController.output( "Phi-Hash (X'): " + phihashXslash.getContentMap(),1);
+		mainController.output( "Phi (X): " + phiX.getContentMap(),1);
+		mainController.output( "Phi (X'): " + phiXslash.getContentMap(),1);
 
 		if(sigmaSet.isEmpty()) {
-			mainController.output("\n" + "The hash-function's result is an empty set. This means " + phihashX.getContentString() + " is the least fixpoint." + "\n",1);
+			mainController.output("\n" + "The hash-function's result is an empty set. This means " + phiX.getContentString() + " is the least fixpoint." + "\n",1);
+			wpCache.put(currentWhile, phiX.getContentString());
 		}else {
-			mainController.output("\n" + "The hash-function's result is not an empty set. This means the witness is above the least fixpoint." ,1);
+			mainController.output("\n" + "The hash-function's result is not an empty set." ,1);
 			mainController.output("Following states are still in the result set: " ,1);
 			for(String state : sigmaSet) {
 				mainController.output(state + ", ",1);
 			}
+			/*//cutting with cutSet
+			ArrayList<String> cutList = new ArrayList<String>();
+			for(String state : cutSet) {
+				if(sigmaSet.contains(state)) {
+					cutList.add(state);
+				}
+			}
+			sigmaSet.clear();
+			sigmaSet.addAll(cutList); */
 			if(!previousSigmaSet.toString().equals(sigmaSet.toString())) {
 				mainController.output("therefore continuing iteration." + "\n",1);
 				sigmaSet = evaluateFixpoint(currentWhile, X.getContentString(), delta, (iterationCount+1), sigmaSet);
@@ -573,7 +589,7 @@ private double iterationDelta;
 	 * It takes a fixpoint as map (input), the analyzed while loop (currentWhile) and the witness in the mathematical iff-term format (input) as input
 	 * and outputs a new function as a map.
 	 */
-	private Fixpoint calculatePhiHash(Fixpoint input, String currentWhile){
+	private Fixpoint calculatePhi(Fixpoint input, String currentWhile){
 		String currentC = currentWhile.split(" ")[0];
 		String currentF = currentWhile.split(" ")[1];
 		currentF = currentF.substring(1,currentF.length()-1);

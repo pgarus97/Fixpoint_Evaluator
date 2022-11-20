@@ -30,9 +30,15 @@ Important: Multiple subprograms are to be separated with a colon ';' e.g. x=x+1;
 **Calculation Button:** Upon clicking the 'Calculation' button, all the inputs will be taken in consideration and a result will be displayed in the result window.
 
 ### Iteration methods
-Upon selecting on of the checkboxes 'Enable all-sigma fixpoint iteration','Enable direct fixpoint iteration' and 'Enable combo fixpoint iteration', a different approach to calculating while-loops will be performed. The default method for calculating the least fixpoint of while loops is the all-sigma fixpoint iteration approach. Only for this one, an additional user input is required:
+Upon selecting on of the checkboxes 'Enable all-sigma fixpoint iteration','Enable direct fixpoint iteration' and 'Enable default fixpoint iteration', a different approach to calculating while-loops will be performed. The default method for calculating the least fixpoint of while loops is the "default fixpoint iteration". The direct approach requires an additional input:
+- **Maximal Iteration Count**: This method iterates for a specified amount of times until it stops.
+
+For the all-sigma iteration, two additional user inputs are required:
+- **Minimal Iteration Count**: This miminum of how many iterations have to be performed before the software checks for a convergence.
 - **Input Delta**: A fixpoint iteration stop delta: Here you need to input a delta value, which compares the previous with the current fixpoint iteration. If the current iteration does not reach over the previous one by the amount of delta anymore, the program considers the fixpoint to be fully converged and stops the iteration.
 More about the multiple iteration methods can be read in the full paper.
+
+Finally, the least fixpoint of programs containing while-loops can also be computed interactively through the "Enable Upside-Down method" checkbox. This opens a new pop-up window every time a while-loop gets computed during the weakest pre-expectation transformer process, in which the user has to input a witness. This witness will then be evaluated as described in the next section and taken as the result if it is confirmed to be the least fixpoint. The user can furthermore choose to switch back to a traditional Kleene iteration or try the experimental automatic reduction of the program states that can still be further reduced.
 
 ### Evaluating Fixpoints
 After calculating a program that contains a while-loop with the all-sigma iteration, a new button labeled 'Evaluate Fixpoints' pops up. Here you can select all the different while-loops within the program and analyse their fixpoints further with the "Upside-Down" method. Two more inputs are needed:
