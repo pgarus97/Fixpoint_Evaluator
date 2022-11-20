@@ -6,6 +6,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -14,6 +15,7 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -41,8 +43,7 @@ private JPanel cPanel;
 private JPanel fPanel;
 private JLabel fDesc;
 private JTextField fInput;
-private JTextField usedVars;
-private JLabel usedVarsDesc;
+
 private JLabel restrictionDesc;
 private JTextField restrictionField;
 private JLabel iterationDesc;
@@ -50,17 +51,31 @@ private JTextField iterationField;
 private JLabel deltaDesc;
 private JTextField deltaInput;
 private JButton calcButton;
+private JButton convertButton;
+private JLabel convertDesc;
 private JScrollPane scroll;
 private JTextArea result;
 private JToggleButton examineFixpointButton;
+
+private JPanel iterationPanel;
+private JCheckBox defaultIteration;
+private JCheckBox upsideDown;
+private JCheckBox directIteration;
 private JCheckBox allSigmaIteration;
 private JCheckBox sigmaForwarding;
 
+private JPanel logPanel;
+private JCheckBox fileLog;
+private JCheckBox minimalLog;
+private JCheckBox detailedLog;
+
 private ArrayList<JToggleButton> whileLoops; 
+
 private JScrollPane whileLoopScroll;
 private JPanel whileLoopPanel;
 
 private JPanel evaluationPanel;
+private JPanel convertPanel;
 private JButton lfpButton;
 private JTextField witnessInput;
 private JButton fixpointEvalButton;
@@ -72,19 +87,13 @@ private JButton resetCache;
 private JButton saveCache;
 private JButton loadCache;
 
-
-
-//TODO implement tips from https://stackoverflow.com/questions/62875613/cannot-refer-to-the-non-final-local-variable-display-defined-in-an-enclosing-sco
-//TODO make better input descriptions on hover
-//TODO full log checkbox and shorten normal output
-
 	public WPCalculatorView() {
 		
 		/*
 		 * GUI implementation
 		 */
 		
-		frame = new JFrame("WP-Calculator");	
+		frame = new JFrame("Fixpoint-Evaluator");	
 	    
 		panel = new JPanel();
 		panel.setLayout(new BoxLayout(panel, BoxLayout.LINE_AXIS));
@@ -128,32 +137,72 @@ private JButton loadCache;
 	    restrictionField.setBounds(430,20,200, 20);
 	    
 	    iterationDesc = new JLabel("Input the iteration count here:");
-	    iterationDesc.setBounds(430,40,200, 20);
+	    iterationDesc.setBounds(450,40,200, 20);
+	    iterationDesc.setVisible(false);
 	    iterationField = new JTextField("");
-	    iterationField.setBounds(430,60,200, 20);
-	    
-	    usedVarsDesc = new JLabel("Enter all used variables (e.g. xyz) ");
-	    usedVarsDesc.setBounds(500,80,200, 20);
-	    usedVars = new JTextField("xc");
-	    usedVars.setBounds(500,100,200, 20);
+	    iterationField.setBounds(450,60,200, 20);
+	    iterationField.setVisible(false);
+
 	    
 	    deltaDesc = new JLabel("Input delta (fixpoint iteration stop) here:");
-	    deltaDesc.setBounds(500,120,400, 20);
+	    deltaDesc.setBounds(450,80,200, 20);
+	    deltaDesc.setVisible(false);
 		deltaInput = new JTextField("0.001");
-		deltaInput.setBounds(500,140,200, 20);
+		deltaInput.setBounds(450,100,200, 20);
+	    deltaInput.setVisible(false);
+
 
 	    calcButton = new JButton("Calculate!");
 	    calcButton.setBounds(5,100,150, 40);
 	    
-	    allSigmaIteration = new JCheckBox("Enable all-sigma fixpoint-iteration.");
-	    allSigmaIteration.setBounds(200,100,300, 50);
-	    allSigmaIteration.setSelected(true);
+	    convertDesc = new JLabel("Convert to allSigma format!");
+	    convertDesc.setBounds(500,120,400, 20);
+	    convertButton = new JButton("Convert!");
+	    convertButton.setBounds(500,140,200, 20);
+	    
+	    iterationPanel = new JPanel();
+	    iterationPanel.setBounds(190,50,220, 120);
+		iterationPanel.setLayout(new BoxLayout(iterationPanel, BoxLayout.PAGE_AXIS));
+	    
+	    allSigmaIteration = new JCheckBox("Enable all-sigma fixpoint iteration.");
+
+	    directIteration = new JCheckBox("Enable direct fixpoint iteration.");
+	    
+	    defaultIteration = new JCheckBox("Enable default fixpoint iteration.");
+	    defaultIteration.setSelected(true);
+	    
+	    upsideDown = new JCheckBox("Enable Upside-Down method.");
 	    
 	    sigmaForwarding = new JCheckBox("Enable sigma-forwarding.");
-	    sigmaForwarding.setBounds(200,135,300, 50);
+	    
+	    iterationPanel.add(defaultIteration);
+	    iterationPanel.add(allSigmaIteration);
+	    iterationPanel.add(directIteration);
+	    iterationPanel.add(upsideDown);
+	    iterationPanel.add(sigmaForwarding);
+	    iterationPanel.setVisible(true);
+	    
+	    logPanel = new JPanel();
+	    logPanel.setBounds(500,810 ,400, 20);
+		logPanel.setLayout(new BoxLayout(logPanel, BoxLayout.LINE_AXIS));
+	    
+	    fileLog = new JCheckBox("Write Log to File");
+	    
+	    minimalLog = new JCheckBox("Minimal Log");
+	    minimalLog.setSelected(true);
+	    
+	    detailedLog = new JCheckBox("Detailed Log");
+	    	    
+	    logPanel.add(fileLog);
+	    logPanel.add(Box.createRigidArea(new Dimension(10, 0)));
+	    logPanel.add(new JLabel("|"));
+	    logPanel.add(Box.createRigidArea(new Dimension(10, 0)));
+	    logPanel.add(minimalLog);
+	    logPanel.add(detailedLog);
+	    logPanel.setVisible(true);
 	    
 	    examineFixpointButton = new JToggleButton("Examine Fixpoints");
-	    examineFixpointButton.setBounds(650,20,200, 40);
+	    examineFixpointButton.setBounds(675,20,200, 40);
 	    examineFixpointButton.setVisible(false);
 	    
 	    whileLoopPanel = new JPanel();
@@ -161,13 +210,12 @@ private JButton loadCache;
 	    whileLoopPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 	    whileLoops = new ArrayList<JToggleButton>();
 	    whileLoopScroll = new JScrollPane(whileLoopPanel);
-	    whileLoopScroll.setBounds(900,50,250, 250);
+	    whileLoopScroll.setBounds(1000,50,250, 250);
 	    whileLoopScroll.setVisible(false);
 	    
 	    //evaluation panel
 	    fixpointDeltaDesc = new JLabel("Input delta here:");
 	    fixpointDeltaInput = new JTextField("0.1");
-	    //TODO can change the preferred size if we put it in another panel as the boxlayout makes all components same size.
 	    fixpointDeltaInput.setPreferredSize(new Dimension (500,20));
 	    fixpointDeltaInput.setMaximumSize(fixpointDeltaInput.getPreferredSize());
 	    
@@ -178,7 +226,7 @@ private JButton loadCache;
 	    witnessInput.setMaximumSize(witnessInput.getPreferredSize());
 	    fixpointEvalButton = new JButton("Evaluate Fixpoint");
 	    evaluationPanel = new JPanel();
-	    evaluationPanel.setBounds(900,300,250, 250);
+	    evaluationPanel.setBounds(1000,300,250, 250);
 	    evaluationPanel.setLayout(new BoxLayout(evaluationPanel, BoxLayout.PAGE_AXIS));
 	    evaluationPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 	    evaluationPanel.add(fixpointDeltaDesc);
@@ -192,6 +240,13 @@ private JButton loadCache;
 	    evaluationPanel.add(fixpointEvalButton);
 	    evaluationPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 	    evaluationPanel.setVisible(false);
+	    convertPanel = new JPanel();
+	    convertPanel.setBounds(1000,300,250, 250);
+	    convertPanel.setLayout(new BoxLayout(convertPanel, BoxLayout.PAGE_AXIS)); 
+	    convertPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+	    convertPanel.add(convertDesc);
+	    convertPanel.add(convertButton);
+	    convertPanel.setVisible(false);
 	    
 	    //cache panel
 	    cachePanel = new JPanel();
@@ -206,7 +261,7 @@ private JButton loadCache;
 	    
 	    result = new JTextArea();
 	    scroll = new JScrollPane(result);
-	    scroll.setBounds(10,200 ,800, 600); 
+	    scroll.setBounds(10,200 ,950, 600); 
 	    result.setEditable(false);
 	    
 	    /*
@@ -215,10 +270,11 @@ private JButton loadCache;
 	   
 	    frame.add(cachePanel);
 	    frame.add(evaluationPanel);
- 
+	    frame.add(convertPanel);
+	    frame.add(iterationPanel);
+	    frame.add(logPanel);
+	    
 	    frame.add(examineFixpointButton);
-	    frame.add(allSigmaIteration); 
-	    frame.add(sigmaForwarding); 
 	    frame.add(cDesc);
 	    frame.add(cInput);
 	    frame.add(fDesc);
@@ -227,8 +283,6 @@ private JButton loadCache;
 	    frame.add(restrictionField);
 	    frame.add(iterationDesc);
 	    frame.add(iterationField);
-	    frame.add(usedVars);
-	    frame.add(usedVarsDesc);
 	    frame.add(deltaDesc);
 	    frame.add(deltaInput);
 		frame.add(whileLoopScroll);
@@ -246,41 +300,113 @@ private JButton loadCache;
 	    /*
 	     * button listeners
 	     */
+	    detailedLog.addActionListener(new ActionListener() {
+	    	public void actionPerformed(ActionEvent e){ 
+	    		minimalLog.setSelected(false);
+ 		    }
+	    });
+	    
+	    minimalLog.addActionListener(new ActionListener() {
+	    	public void actionPerformed(ActionEvent e){   		
+	    			detailedLog.setSelected(false);
+	    	}
+	    });
 	    
 	    resetCache.addActionListener(new ActionListener(){  
 	    	public void actionPerformed(ActionEvent e){ 
-	    		mainController.clearFixpointCache();
+	    		mainController.clearWPCache();
+	    		prepareCalculationView();
     	   }  
 	    });  
 	    
 	    saveCache.addActionListener(new ActionListener(){  
 	    	public void actionPerformed(ActionEvent e){ 
-	    		mainController.saveFixpointCache();
+	    		mainController.saveWPCache();
     	   }  
 	    });
 	    
 	    loadCache.addActionListener(new ActionListener(){  
 	    	public void actionPerformed(ActionEvent e){ 
-	    		mainController.loadFixpointCache();
+	    		mainController.loadWPCache();
+	    		prepareCalculationView();
     	   }  
 	    });
 
 	    allSigmaIteration.addActionListener(new ActionListener(){  
 	    	public void actionPerformed(ActionEvent e){ 
 	    		if (allSigmaIteration.isSelected()) {
-	    	    	usedVars.setVisible(true);
-	    	    	usedVarsDesc.setVisible(true);
-	    	    	deltaInput.setVisible(true);
+	    			deltaInput.setText("0.001");
+	    			deltaInput.setVisible(true);
+	    	    	deltaDesc.setText("Enter delta for iteration stop.");
 	    	    	deltaDesc.setVisible(true);
+	    	    	iterationDesc.setText("Enter minimal iteration count.");
+	    	    	iterationDesc.setVisible(true);
+	    	    	iterationField.setText("5");
+	    	    	iterationField.setVisible(true);
+	    	    	directIteration.setSelected(false);
+	    	    	defaultIteration.setSelected(false);
+	    	    	upsideDown.setSelected(false);
 	    	    }else {
-	    	    	usedVars.setVisible(false);
-	    	    	usedVarsDesc.setVisible(false);
+	    	    	deltaInput.setVisible(false);
+	    	    	deltaDesc.setVisible(false);
+	    	    	iterationDesc.setVisible(false);
+	    	    	iterationField.setVisible(false);
+	    	    }
+    	   }  
+	    });
+	    
+	    defaultIteration.addActionListener(new ActionListener(){  
+	    	public void actionPerformed(ActionEvent e){ 
+	    		if (defaultIteration.isSelected()) {
+	    	    	deltaInput.setVisible(false);
+	    	    	deltaDesc.setVisible(false);
+	    	    	iterationDesc.setVisible(false);
+	    	    	iterationField.setVisible(false);
+	    	    	directIteration.setSelected(false);
+	    	    	allSigmaIteration.setSelected(false);
+	    	    	upsideDown.setSelected(false);
+	    		}
+    	   }  
+	    });
+	    
+	    directIteration.addActionListener(new ActionListener(){  
+	    	public void actionPerformed(ActionEvent e){ 
+	    		if (directIteration.isSelected()) {
+	    	    	deltaInput.setVisible(false);
+	    	    	deltaDesc.setVisible(false);
+	    	    	iterationDesc.setText("Enter maximal iteration count.");
+	    	    	iterationDesc.setVisible(true);
+	    	    	iterationField.setText("10");
+	    	    	iterationField.setVisible(true);
+	    	    	defaultIteration.setSelected(false);
+	    	    	allSigmaIteration.setSelected(false);
+	    	    	upsideDown.setSelected(false);
+	    	    }else {
+	    	    	iterationDesc.setVisible(false);
+	    	    	iterationField.setVisible(false);
+	    	    }
+    	   }  
+	    });
+    
+	    upsideDown.addActionListener(new ActionListener(){  
+	    	public void actionPerformed(ActionEvent e){ 
+	    		if (upsideDown.isSelected()) {
+	    			deltaInput.setText("0.1");
+	    	    	deltaInput.setVisible(true);
+	    	    	deltaDesc.setText("Enter delta for reducing states.");
+	    	    	deltaDesc.setVisible(true);
+	    	    	iterationDesc.setVisible(false);
+	    	    	iterationField.setVisible(false);
+	    	    	defaultIteration.setSelected(false);
+	    	    	allSigmaIteration.setSelected(false);
+	    	    	directIteration.setSelected(false);
+	    	    }else {
 	    	    	deltaInput.setVisible(false);
 	    	    	deltaDesc.setVisible(false);
 	    	    }
     	   }  
 	    });
-
+	    
 	    examineFixpointButton.addItemListener(new ItemListener() {
             public void itemStateChanged(ItemEvent event) {
                 if (event.getStateChange() == ItemEvent.SELECTED) {
@@ -288,6 +414,7 @@ private JButton loadCache;
                 } else {
 	    			whileLoopScroll.setVisible(false);
 	    			evaluationPanel.setVisible(false);
+	    	    	convertPanel.setVisible(false);
 	    			for(JToggleButton whileButton : whileLoops) {
 	            		whileButton.setSelected(false);
 	            	}
@@ -296,9 +423,8 @@ private JButton loadCache;
         });
 	    
 	    calcButton.addActionListener(new ActionListener(){  
-	    	//TODO log in real time somehow => https://docs.oracle.com/javase/tutorial/uiswing/concurrency/index.html#:~:text=Careful%20use%20of%20concurrency%20is%20particularly%20important%20to,must%20learn%20how%20the%20Swing%20framework%20employs%20threads.
 	    	public void actionPerformed(ActionEvent e){
-	    		if(mainController.prepareCalculationModel(restrictionField.getText(),iterationField.getText(),allSigmaIteration.isSelected(),usedVars.getText(),deltaInput.getText()) == false) {
+	    		if(mainController.prepareCalculationModel(restrictionField.getText(),iterationField.getText(),getIterationSelection(),deltaInput.getText()) == false) {
 	    			return;
 	    		}
 	    		prepareCalculationView();
@@ -306,10 +432,19 @@ private JButton loadCache;
     	   }  
 	    }); 
 	    
+	    convertButton.addActionListener(new ActionListener(){  
+	    	public void actionPerformed(ActionEvent e){
+	    		if(!mainController.createAllSigmaFixpoint(currentWhileTerm).isEmpty()) {
+	    	    	convertPanel.setVisible(false);
+		    		evaluationPanel.setVisible(true);
+	    		}
+	    	}  
+	    });
+	    
 	    lfpButton.addActionListener(new ActionListener(){
 	    	public void actionPerformed(ActionEvent e){
-	    		witnessInput.setText(mainController.getLFP(currentWhileTerm));
-	    	}  
+	    			witnessInput.setText(mainController.getLFP(currentWhileTerm));
+	    	}
 		}); 
 	    
 	    witnessInput.addActionListener(new ActionListener() {
@@ -340,43 +475,83 @@ private JButton loadCache;
             			whileButton.setSelected(false);
             		}
             	}
-            	evaluationPanel.setVisible(true);
     		    currentWhileTerm = selectedWhileButton.getText();
+            	if(allSigmaIteration.isSelected()) {
+            		evaluationPanel.setVisible(true);
+            	}else {
+            		if(mainController.isConverted(currentWhileTerm)) {
+                		evaluationPanel.setVisible(true);
+            		}else {
+            			convertPanel.setVisible(true);
+            		}
+            	}
+            	
             } else {
             	currentWhileTerm = "";
             	evaluationPanel.setVisible(false);
+    	    	convertPanel.setVisible(false);
             }
         }
     };
-	
-   /* public MouseAdapter fullWhileHover = new MouseAdapter() {
-        @Override
-        public void mouseEntered(MouseEvent e) {
-            System.out.println("entered");
-            label.setVisible(true);
-        }
 
-        @Override
-        public void mouseExited(MouseEvent e) {
-            System.out.println("exited");
-            label.setVisible(false);
-        }
-    }*/
-	
+    /*
+     * Creates a pop out window for inputting a witness for the upside down method
+     */
+    public String createWitnessDialogue(String C, String f, String information, String placeholder, LinkedHashSet<String> reductionSet) {	    	
+    	Object[] options1 = { "Test This Witness", "Try Kleene Iteration", "Exit" };
+    	Object[] options2 = { "Test This Witness", "Try Kleene Iteration", "Exit", "Try Automatic Reduction" };
+
+		JPanel panel = new JPanel();
+		panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
+
+		panel.add(new JLabel("Currently Evaluating: " + C +" ("+f+")"));
+		panel.add(Box.createRigidArea(new Dimension(0, 5)));
+		panel.add(new JLabel(information));
+		panel.add(Box.createRigidArea(new Dimension(0, 5)));
+		panel.add(new JLabel("Input a Witness: "));
+		panel.add(Box.createRigidArea(new Dimension(0, 10)));
+		JTextField witnessInput = new JTextField(placeholder);
+		panel.add(witnessInput);
+		int result = 2;
+		if(reductionSet.isEmpty()) {
+			result = JOptionPane.showOptionDialog(null, panel, "Witness Input",
+			        JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE,
+			        null, options1, null);
+		}else {
+			result = JOptionPane.showOptionDialog(null, panel, "Witness Input",
+			        JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE,
+			        null, options2, null);
+		}
+		
+		switch(result) {
+			case 0:
+				return witnessInput.getText();
+			case 1:
+				mainController.setIterationSelection(0);
+				String wpResult = mainController.wp(C, f, false);
+				mainController.setIterationSelection(3);
+				return wpResult;
+			case 2: 
+				return null;
+			case 3:
+				return mainController.automaticReduction(C,f,witnessInput.getText(),reductionSet);
+			default:
+				return null;
+		}				 
+    }
+    
     public void prepareEvaluationView(ArrayList<String> modelLoops) {
-		if(allSigmaIteration.isSelected()) {
-    		examineFixpointButton.setVisible(true);
-    	    int counter = 0;
-    		for (String loop: modelLoops) {	
-    			JToggleButton tempButton = new JToggleButton(loop);
-    			tempButton.addItemListener(whileLoopToggle);
-    			tempButton.setToolTipText(tempButton.getText());
-    			whileLoops.add(tempButton);
-    			whileLoopPanel.add(whileLoops.get(counter));
-    			whileLoopPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-    			counter++;
-    		}
-    	}  		
+    	examineFixpointButton.setVisible(true);
+	    int counter = 0;
+		for (String loop: modelLoops) {	
+			JToggleButton tempButton = new JToggleButton(loop);
+			tempButton.addItemListener(whileLoopToggle);
+			tempButton.setToolTipText(tempButton.getText());
+			whileLoops.add(tempButton);
+			whileLoopPanel.add(whileLoops.get(counter));
+			whileLoopPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+			counter++;
+		}		
 	}
     
 	public void prepareCalculationView() {
@@ -386,6 +561,7 @@ private JButton loadCache;
 		examineFixpointButton.setSelected(false);
 		whileLoopPanel.removeAll();
 		whileLoops.clear();
+    	convertPanel.setVisible(false);
 		updateFrame();
 		
 	}
@@ -409,7 +585,62 @@ private JButton loadCache;
 	public JCheckBox getAllSigmaIteration() {
 		return allSigmaIteration;
 	}
+	
+	public JCheckBox getDefaultIteration() {
+		return defaultIteration;
+	}
+	
+	public JCheckBox getDirectIteration() {
+		return directIteration;
+	}
+	
+	public JCheckBox getUpsideDown() {
+		return upsideDown;
+	}
+	
+	public JCheckBox getMinimalLog() {
+		return minimalLog;
+	}
+	
+	public JCheckBox getDetailedLog() {
+		return detailedLog;
+	}
+	
+	public JCheckBox getFileLog() {
+		return fileLog;
+	}
+	
+	public boolean getLogToFile() {
+		if(fileLog.isSelected()) {
+			return true;
+		}else {
+			return false;
+		}
+	}
+	
+	public int getLogLevel() {
+		if(minimalLog.isSelected()) {
+			return 1;
+		}else if(detailedLog.isSelected()){
+			return 2;
+		}
+		return 1; //default case
+	}
 
+	public int getIterationSelection() {
+		if(defaultIteration.isSelected()) {
+			return 0;
+		} else if(allSigmaIteration.isSelected()) {
+			return 1;
+		}else if(directIteration.isSelected()) {
+			return 2;
+		}else if(upsideDown.isSelected()) {
+			return 3;
+		}
+		//default case
+		return 0;
+	}
+	
 	public void setAllSigmaIteration(JCheckBox allSigmaIteration) {
 		this.allSigmaIteration = allSigmaIteration;
 	}
@@ -432,6 +663,18 @@ private JButton loadCache;
 	
 	public void setHandler(ControllerHandler controller) {
 		mainController = controller;
+	}
+
+	public ControllerHandler getHandler() {
+		return mainController;
+	}
+	
+	public ArrayList<JToggleButton> getWhileLoops() {
+		return whileLoops;
+	}
+	
+	public void setWhileLoops(ArrayList<JToggleButton> whileLoops) {
+		this.whileLoops = whileLoops;
 	}
 	
 	public void clearResult() {
