@@ -496,7 +496,16 @@ private double iterationDelta;
 		//fills the initial sigmaSet (Y') if the iteration is in its first loop
 		if(iterationCount == 1) {
 			for(Map.Entry<String, String> entry : X.getContentMap().entrySet()) {
-				if(!entry.getValue().equals("0.0")) {
+				//check if post/fixpoint 
+				System.out.println("LinkedHashMap to string: " +X.getContentString());
+				System.out.println("LinkedHashMap to string: " +phiX.getContentString());
+				
+				Double subtraction = Double.parseDouble(phiX.getContentMap().get(entry.getKey())) - Double.parseDouble(entry.getValue());
+				if(subtraction < 0) {
+					mainController.output("\n" + "The inputted witness is not a post/fixpoint!",1);
+					return null;
+				}
+				if(!entry.getValue().equals("0.0") && subtraction == 0) {
 					sigmaSet.add(entry.getKey());
 				}
 			}
@@ -507,18 +516,9 @@ private double iterationDelta;
 		for(String copiedSigma : sigmaSet) {
 			previousSigmaSet.add(copiedSigma);
 		}
-
-		//checks whether the witness is a fixpoint or not
-		System.out.println("LinkedHashMap to string: " +X.getContentString());
-		System.out.println("LinkedHashMap to string: " +phiX.getContentString());
-		
 		
 		for(Map.Entry<String, String> entry : X.getContentMap().entrySet()) {
-			//test if post/fixpoint
-			if(Double.parseDouble(phiX.getContentMap().get(entry.getKey())) < Double.parseDouble(entry.getValue())) {
-				mainController.output("\n" + "The inputted witness is not a post/fixpoint!",1);
-				return null;
-			}
+			
 
 			String XslashValue = "";
 			if(!sigmaSet.contains(entry.getKey())) {
